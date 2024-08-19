@@ -1,0 +1,21 @@
+2024/06/02-15:41:27.043 39cc Reusing MANIFEST C:\Users\ademi\OneDrive\Área de Trabalho\whatsapp-api\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2024/06/02-15:41:27.045 39cc Recovering log #2750
+2024/06/02-15:41:27.046 39cc Reusing old log C:\Users\ademi\OneDrive\Área de Trabalho\whatsapp-api\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/002750.log 
+2024/06/02-15:41:27.047 39cc Delete type=2 #2727
+2024/06/02-15:41:27.047 39cc Delete type=2 #2728
+2024/06/02-15:41:27.047 39cc Delete type=2 #2729
+2024/06/02-15:41:27.047 39cc Delete type=2 #2734
+2024/06/02-15:41:27.047 39cc Delete type=2 #2736
+2024/06/02-15:41:27.047 39cc Delete type=2 #2738
+2024/06/02-15:41:27.047 39cc Delete type=2 #2741
+2024/06/02-15:41:27.047 39cc Delete type=2 #2745
+2024/06/02-15:41:27.047 39cc Delete type=2 #2747
+2024/06/02-15:41:27.047 39cc Delete type=2 #2755
+2024/06/02-15:41:27.161 39cc Level-0 table #2757: started
+2024/06/02-15:41:27.344 39cc Level-0 table #2757: 7875 bytes OK
+2024/06/02-15:41:27.349 39cc Delete type=0 #2750
+2024/06/02-15:41:27.349 39cc Manual compaction at level-0 from '\x00n\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00o\x00\x00\x00' @ 0 : 0; will stop at '\x00o\x00\x00\x05' @ 6817471 : 1
+2024/06/02-15:41:27.349 39cc Compacting 2@0 + 4@1 files
+2024/06/02-15:41:27.631 39cc Generated table #2758@0: 50511 keys, 2249547 bytes
+2024/06/02-15:41:27.860 39cc Generated table #2759@0: 25826 keys, 2242249 bytes
+2024/06/02-15:41:27.989 39cc Generated table #2760@0: 7946 keys, 786216 bytes

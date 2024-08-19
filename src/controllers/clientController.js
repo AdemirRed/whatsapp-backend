@@ -284,6 +284,8 @@ const setStatus = async (req, res) => {
   }
 }
 
+// clientController.js
+
 /**
  * Retrieves the contacts of the current session.
  * @async
@@ -296,10 +298,13 @@ const setStatus = async (req, res) => {
 const getContacts = async (req, res) => {
   try {
     const client = sessions.get(req.params.sessionId)
+    if (!client) {
+      return res.status(404).json({ success: false, message: 'Client não encontrado' })
+    }
     const contacts = await client.getContacts()
     res.json({ success: true, contacts })
   } catch (error) {
-    sendErrorResponse(res, 500, error.message)
+    res.status(500).json({ success: false, message: error.message })
   }
 }
 

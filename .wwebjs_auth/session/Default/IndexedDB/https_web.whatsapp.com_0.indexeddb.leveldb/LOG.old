@@ -1,0 +1,19 @@
+2024/06/02-15:40:43.599 6618 Reusing MANIFEST C:\Users\ademi\OneDrive\Área de Trabalho\whatsapp-api\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2024/06/02-15:40:43.600 6618 Recovering log #2744
+2024/06/02-15:40:43.602 6618 Level-0 table #2747: started
+2024/06/02-15:40:43.631 6618 Level-0 table #2747: 8211 bytes OK
+2024/06/02-15:40:43.631 6618 Recovering log #2748
+2024/06/02-15:40:43.632 6618 Reusing old log C:\Users\ademi\OneDrive\Área de Trabalho\whatsapp-api\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/002748.log 
+2024/06/02-15:40:43.659 6618 Delete type=0 #2744
+2024/06/02-15:40:43.660 52d0 Compacting 6@0 + 3@1 files
+2024/06/02-15:40:43.689 52d0 Level-0 table #2751: started
+2024/06/02-15:40:43.717 52d0 Level-0 table #2751: 8763 bytes OK
+2024/06/02-15:40:43.721 52d0 Delete type=0 #2748
+2024/06/02-15:40:43.977 52d0 Generated table #2749@0: 50506 keys, 2249561 bytes
+2024/06/02-15:40:44.189 52d0 Generated table #2752@0: 25826 keys, 2242249 bytes
+2024/06/02-15:40:44.249 52d0 Generated table #2753@0: 7946 keys, 786216 bytes
+2024/06/02-15:40:44.377 52d0 Generated table #2754@0: 962 keys, 14271 bytes
+2024/06/02-15:40:44.377 52d0 Compacted 6@0 + 3@1 files => 5292297 bytes
+2024/06/02-15:40:44.382 52d0 compacted to: files[ 1 4 35 0 0 0 0 ]
+2024/06/02-15:40:44.383 420c Manual compaction at level-0 from '\x00j\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00k\x00\x00\x00' @ 0 : 0; will stop at '\x00o\x00\x00\x05' @ 6817471 : 1
+2024/06/02-15:40:44.383 420c Compacting 1@0 + 4@1 files

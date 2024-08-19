@@ -33,7 +33,7 @@ services:
         - traefik.http.routers.api_zdg.tls.certresolver=letsencryptresolver
         - traefik.http.routers.api_zdg.priority=1
         - traefik.http.routers.api_zdg.service=api_zdg
-        - traefik.http.services.api_zdg.loadbalancer.server.port=3000
+        - traefik.http.services.api_zdg.loadbalancer.server.port=200
         - traefik.http.services.api_zdg.loadbalancer.passHostHeader=true
 
 volumes:
