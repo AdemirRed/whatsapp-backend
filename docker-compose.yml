@@ -1,15 +1,15 @@
 version: '3.8'
 
 services:
-  api_zdg:
+  api_red:
     image: chrishubert/whatsapp-web-api:latest
     networks:
-      - comunidadezdg
+      - redblack
     volumes:
-    - api_zdg_sessions:/usr/src/app/sessions
+    - api_red_sessions:/usr/src/app/sessions
     environment:
-      - API_KEY=comunidadezdg  # OPTIONAL
-      - BASE_WEBHOOK_URL=https://api2024.comunidadezdg.com.br/localCallbackExample
+      - API_KEY=redblack  # OPTIONAL
+      - BASE_WEBHOOK_URL=https://api2024.redblack.com.br/localCallbackExample
       - ENABLE_LOCAL_CALLBACK_EXAMPLE=TRUE # OPTIONAL, NOT RECOMMENDED FOR PRODUCTION
       - MAX_ATTACHMENT_SIZE=5000000 # IN BYTES
       - SET_MESSAGES_AS_SEEN=TRUE # WILL MARK THE MESSAGES AS READ AUTOMATICALLY
@@ -28,20 +28,20 @@ services:
           memory: 2048M
       labels:
         - traefik.enable=true
-        - traefik.http.routers.api_zdg.rule=Host(`api2024.comunidadezdg.com.br`)
-        - traefik.http.routers.api_zdg.entrypoints=websecure
-        - traefik.http.routers.api_zdg.tls.certresolver=letsencryptresolver
-        - traefik.http.routers.api_zdg.priority=1
-        - traefik.http.routers.api_zdg.service=api_zdg
-        - traefik.http.services.api_zdg.loadbalancer.server.port=200
-        - traefik.http.services.api_zdg.loadbalancer.passHostHeader=true
+        - traefik.http.routers.api_red.rule=Host(`api2024.redblack.com.br`)
+        - traefik.http.routers.api_red.entrypoints=websecure
+        - traefik.http.routers.api_red.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.api_red.priority=1
+        - traefik.http.routers.api_red.service=api_red
+        - traefik.http.services.api_red.loadbalancer.server.port=200
+        - traefik.http.services.api_red.loadbalancer.passHostHeader=true
 
 volumes:
-  api_zdg_sessions:
+  api_red_sessions:
     external: true
-    name: api_zdg_sessions
+    name: api_red_sessions
 
 networks:
-  comunidadezdg:
-    name: comunidadezdg
+  redblack:
+    name: redblack
     external: true

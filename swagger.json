@@ -88,7 +88,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -156,7 +156,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -224,7 +224,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -285,7 +285,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -349,7 +349,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -510,7 +510,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -570,7 +570,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -659,7 +659,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -748,7 +748,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -808,7 +808,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -868,7 +868,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -957,7 +957,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -1046,7 +1046,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -1106,7 +1106,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -1195,7 +1195,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -1284,7 +1284,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -1373,7 +1373,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -1433,7 +1433,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -1522,7 +1522,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -1611,7 +1611,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -1671,7 +1671,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -1760,7 +1760,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -1849,7 +1849,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -1938,7 +1938,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -1988,7 +1988,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -2077,7 +2077,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -2176,7 +2176,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -2265,7 +2265,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -2364,7 +2364,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -2558,7 +2558,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -2618,7 +2618,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -2678,7 +2678,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -2767,7 +2767,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -2856,7 +2856,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -2955,7 +2955,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -3044,7 +3044,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -3133,7 +3133,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -3222,7 +3222,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -3311,7 +3311,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -3371,7 +3371,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -3460,7 +3460,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -3549,7 +3549,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -3638,7 +3638,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -3727,7 +3727,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -3826,7 +3826,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -3915,7 +3915,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -4004,7 +4004,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -4093,7 +4093,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -4182,7 +4182,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -4271,7 +4271,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -4360,7 +4360,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -4449,7 +4449,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -4538,7 +4538,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -4627,7 +4627,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -4716,7 +4716,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -4805,7 +4805,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -4894,7 +4894,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -4983,7 +4983,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -5072,7 +5072,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -5161,7 +5161,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -5260,7 +5260,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -5359,7 +5359,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -5458,7 +5458,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -5557,7 +5557,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -5656,7 +5656,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -5755,7 +5755,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -5854,7 +5854,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -5953,7 +5953,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -6052,7 +6052,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -6151,7 +6151,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -6250,7 +6250,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -6349,7 +6349,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -6448,7 +6448,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -6537,7 +6537,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -6626,7 +6626,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -6715,7 +6715,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -6804,7 +6804,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -6893,7 +6893,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -6982,7 +6982,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {
@@ -7071,7 +7071,7 @@
               "type": "string"
             },
             "description": "Unique identifier for the session (alphanumeric and - allowed)",
-            "example": "comunidadezdg"
+            "example": "redblack"
           }
         ],
         "responses": {

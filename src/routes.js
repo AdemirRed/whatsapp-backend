@@ -3,6 +3,8 @@ const routes = express.Router()
 const swaggerUi = require('swagger-ui-express')
 const swaggerDocument = require('../swagger.json')
 const { enableLocalCallbackExample, enableSwaggerEndpoint } = require('./config')
+const path = require('path')
+const axios = require('axios') // Adicione o axios para fazer requisições HTTP
 
 const middleware = require('./middleware')
 const healthController = require('./controllers/healthController')
@@ -25,6 +27,37 @@ routes.get('/ping', healthController.ping)
 if (enableLocalCallbackExample) {
   routes.post('/localCallbackExample', [middleware.apikey, middleware.rateLimiter], healthController.localCallbackExample)
 }
+
+/**
+ * ================
+ * ROOT ENDPOINT WITH ACTIONS
+ * ================
+ */
+routes.get('/', async (req, res) => {
+  const action = req.query.action
+  if (action === 'test_connection') {
+    res.json({ success: true, message: 'Connection successful' })
+  } else if (action === 'get_users') {
+    try {
+      const response = await axios.get('http://localhost/whatsapp-backend/user_session_manager.php?action=get_users')
+      const result = response.data
+      if (!result.success) {
+        res.status(500).json({ success: false, message: result.message })
+        return
+      }
+      res.json({ success: true, users: result.users })
+    } catch (error) {
+      console.error('Erro ao obter usuários:', error.message)
+      res.status(500).json({ success: false, message: 'Erro interno ao obter usuários' })
+    }
+  } else {
+    res.status(404).json({ success: false, message: 'Action not found' })
+  }
+})
+
+routes.get('/test_connection', (req, res) => {
+  res.json({ success: true, message: 'Connection successful' })
+})
 
 /**
  * ================

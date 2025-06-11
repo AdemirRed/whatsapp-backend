@@ -1,4 +1,3 @@
-
 const qr = require('qr-image')
 const { setupSession, deleteSession, validateSession, flushSessions, sessions } = require('../sessions')
 const { sendErrorResponse, waitForNestedObject } = require('../utils')
@@ -31,7 +30,7 @@ const startSession = async (req, res) => {
       }
       */
       sendErrorResponse(res, 422, setupSessionReturn.message)
-      return
+      return // Interrompe o fluxo para evitar múltiplas respostas
     }
     /* #swagger.responses[200] = {
       description: "Status of the initiated session.",
@@ -44,8 +43,13 @@ const startSession = async (req, res) => {
     */
     // wait until the client is created
     waitForNestedObject(setupSessionReturn.client, 'pupPage')
-      .then(res.json({ success: true, message: setupSessionReturn.message }))
-      .catch((err) => { sendErrorResponse(res, 500, err.message) })
+      .then(() => {
+        res.json({ success: true, message: setupSessionReturn.message })
+      })
+      .catch((err) => {
+        sendErrorResponse(res, 500, err.message)
+        // Interrompe o fluxo para evitar múltiplas respostas
+      })
   } catch (error) {
   /* #swagger.responses[500] = {
       description: "Server Failure.",
@@ -58,6 +62,7 @@ const startSession = async (req, res) => {
     */
     console.log('startSession ERROR', error)
     sendErrorResponse(res, 500, error.message)
+    // Interrompe o fluxo para evitar múltiplas respostas
   }
 }
 
@@ -100,6 +105,7 @@ const statusSession = async (req, res) => {
     }
     */
     sendErrorResponse(res, 500, error.message)
+    // Interrompe o fluxo para evitar múltiplas respostas
   }
 }
 
@@ -121,12 +127,14 @@ const sessionQrCode = async (req, res) => {
     const sessionId = req.params.sessionId
     const session = sessions.get(sessionId)
     if (!session) {
-      return res.json({ success: false, message: 'session_not_found' })
+      res.json({ success: false, message: 'session_not_found' })
+      return // Interrompe o fluxo para evitar múltiplas respostas
     }
     if (session.qr) {
-      return res.json({ success: true, qr: session.qr })
+      res.json({ success: true, qr: session.qr })
+      return // Interrompe o fluxo para evitar múltiplas respostas
     }
-    return res.json({ success: false, message: 'qr code not ready or already scanned' })
+    res.json({ success: false, message: 'qr code not ready or already scanned' })
   } catch (error) {
     console.log('sessionQrCode ERROR', error)
     /* #swagger.responses[500] = {
@@ -139,6 +147,7 @@ const sessionQrCode = async (req, res) => {
     }
     */
     sendErrorResponse(res, 500, error.message)
+    // Interrompe o fluxo para evitar múltiplas respostas
   }
 }
 
@@ -160,7 +169,8 @@ const sessionQrCodeImage = async (req, res) => {
     const sessionId = req.params.sessionId
     const session = sessions.get(sessionId)
     if (!session) {
-      return res.json({ success: false, message: 'session_not_found' })
+      res.json({ success: false, message: 'session_not_found' })
+      return // Interrompe o fluxo para evitar múltiplas respostas
     }
     if (session.qr) {
       const qrImage = qr.image(session.qr)
@@ -174,9 +184,10 @@ const sessionQrCodeImage = async (req, res) => {
       res.writeHead(200, {
         'Content-Type': 'image/png'
       })
-      return qrImage.pipe(res)
+      qrImage.pipe(res)
+      return // Interrompe o fluxo para evitar múltiplas respostas
     }
-    return res.json({ success: false, message: 'qr code not ready or already scanned' })
+    res.json({ success: false, message: 'qr code not ready or already scanned' })
   } catch (error) {
     console.log('sessionQrCodeImage ERROR', error)
     /* #swagger.responses[500] = {
@@ -189,6 +200,7 @@ const sessionQrCodeImage = async (req, res) => {
     }
     */
     sendErrorResponse(res, 500, error.message)
+    // Interrompe o fluxo para evitar múltiplas respostas
   }
 }
 
@@ -210,7 +222,8 @@ const terminateSession = async (req, res) => {
     const sessionId = req.params.sessionId
     const validation = await validateSession(sessionId)
     if (validation.message === 'session_not_found') {
-      return res.json(validation)
+      res.json(validation)
+      return // Interrompe o fluxo para evitar múltiplas respostas
     }
     await deleteSession(sessionId, validation)
     /* #swagger.responses[200] = {
@@ -235,6 +248,7 @@ const terminateSession = async (req, res) => {
     */
     console.log('terminateSession ERROR', error)
     sendErrorResponse(res, 500, error.message)
+    // Interrompe o fluxo para evitar múltiplas respostas
   }
 }
 
@@ -275,6 +289,7 @@ const terminateInactiveSessions = async (req, res) => {
     */
     console.log('terminateInactiveSessions ERROR', error)
     sendErrorResponse(res, 500, error.message)
+    // Interrompe o fluxo para evitar múltiplas respostas
   }
 }
 
@@ -315,6 +330,7 @@ const terminateAllSessions = async (req, res) => {
     */
     console.log('terminateAllSessions ERROR', error)
     sendErrorResponse(res, 500, error.message)
+    // Interrompe o fluxo para evitar múltiplas respostas
   }
 }
 

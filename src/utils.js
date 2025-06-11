@@ -8,8 +8,12 @@ const triggerWebhook = (webhookURL, sessionId, dataType, data) => {
 }
 
 // Function to send a response with error status and message
-const sendErrorResponse = (res, status, message) => {
-  res.status(status).json({ success: false, error: message })
+const sendErrorResponse = (res, statusCode, message) => {
+  if (res.headersSent) {
+    console.error('Tentativa de enviar resposta após os cabeçalhos já terem sido enviados.')
+    return
+  }
+  res.status(statusCode).json({ error: message })
 }
 
 // Function to wait for a specific item not to be null
