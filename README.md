@@ -7,25 +7,88 @@ This project is a work in progress: star it, create issues, features or pull req
 
 **NOTE**: I can't guarantee you will not be blocked by using this method, although it has worked for me. WhatsApp does not allow bots or unofficial clients on their platform, so this shouldn't be considered totally safe.
 
+## How It Works
+
+This WhatsApp Backend is a REST API wrapper built on top of the [whatsapp-web.js](https://github.com/pedroslopez/whatsapp-web.js) library. Here's how it works:
+
+### Core Architecture
+
+```mermaid
+graph TD
+    A[REST API Request] --> B[Express.js Server]
+    B --> C[Session Management]
+    C --> D[WhatsApp-Web.js Client]
+    D --> E[Puppeteer Browser]
+    E --> F[WhatsApp Web Interface]
+    F --> G[WhatsApp Servers]
+    
+    H[Webhooks] --> I[Your Application]
+    D --> H
+```
+
+### Key Components
+
+1. **Express.js Server**: Handles HTTP requests and provides REST API endpoints
+2. **Session Manager**: Manages multiple WhatsApp sessions simultaneously with persistent storage
+3. **WhatsApp-Web.js**: Core library that connects to WhatsApp Web using browser automation
+4. **Puppeteer**: Controls a headless Chrome browser that loads WhatsApp Web
+5. **Webhook System**: Sends real-time callbacks for events (messages, status changes, etc.)
+
+### Authentication Flow
+
+1. **Session Creation**: Start a new session via `/session/start/{sessionId}`
+2. **QR Code Generation**: System generates a QR code for WhatsApp authentication
+3. **QR Code Access**: Get QR code via `/session/qr/{sessionId}` (text) or `/session/qr/{sessionId}/image` (PNG)
+4. **Mobile Scanning**: Scan the QR code with your WhatsApp mobile app
+5. **Connection Established**: Once scanned, the session becomes active and ready for API calls
+
+### Message Flow
+
+1. **Send Request**: POST to `/client/sendMessage/{sessionId}` with message data
+2. **Validation**: System validates session, authentication, and message format
+3. **Processing**: Message is processed and formatted according to type
+4. **WhatsApp Delivery**: Message is sent through WhatsApp Web interface
+5. **Confirmation**: API returns delivery status and message ID
+6. **Webhooks**: Optional callbacks notify your application of events
+
+### Supported Operations
+
+- ✅ **Messages**: Send/receive text, media, location, contacts, buttons, lists
+- ✅ **Groups**: Create, manage, add/remove participants, set permissions
+- ✅ **Contacts**: Get contact info, profile pictures, status
+- ✅ **Sessions**: Multi-session support with persistence and recovery
+- ✅ **Webhooks**: Real-time event notifications
+- ✅ **Media**: Download and upload images, videos, documents, audio
+
+### 📚 Detailed Documentation
+
+For comprehensive technical details:
+- **[COMO_FUNCIONA.md](./COMO_FUNCIONA.md)** - Detailed explanation in Portuguese (Como funciona o sistema)
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Complete technical architecture documentation in English
+- **[GUIA_DE_USO.md](./GUIA_DE_USO.md)** - Practical usage guide with examples (Portuguese)
+- **[DIAGRAMAS.md](./DIAGRAMAS.md)** - Visual diagrams and flowcharts explaining the system
+
 ## Table of Contents
 
-[1. Quick Start with Docker](#quick-start-with-docker)
+[1. How It Works](#how-it-works)
 
-[2. Features](#features)
+[2. Quick Start with Docker](#quick-start-with-docker)
 
-[3. Run Locally](#run-locally)
+[3. Features](#features)
 
-[4. Testing](#testing)
+[4. Run Locally](#run-locally)
 
-[5. Documentation](#documentation)
+[5. Testing](#testing)
 
-[6. Deploy to Production](#deploy-to-production)
+[6. Documentation](#documentation)
 
-[7. Contributing](#contributing)
+[7. Deploy to Production](#deploy-to-production)
 
-[8. License](#license)
+[8. Contributing](#contributing)
 
-[9. Star History](#star-history)
+[9. License](#license)
+
+[10. Star History](#star-history)
 
 ## Quick Start with Docker
 
