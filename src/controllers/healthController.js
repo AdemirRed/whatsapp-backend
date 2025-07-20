@@ -1,5 +1,6 @@
 const fs = require('fs')
 const qrcode = require('qrcode-terminal')
+const { exec } = require('child_process')
 const { sessionFolderPath } = require('../config')
 const { sendErrorResponse } = require('../utils')
 
@@ -19,6 +20,79 @@ const ping = async (req, res) => {
   */
   try {
     res.json({ success: true, message: 'pong' })
+  } catch (error) {
+    sendErrorResponse(res, 500, error.message)
+  }
+}
+
+/**
+ * Health check endpoint with system information
+ *
+ * @function health
+ * @async
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>} - Promise that resolves once response is sent
+ */
+const health = async (req, res) => {
+  /*
+    #swagger.tags = ['Various']
+  */
+  try {
+    const healthInfo = {
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      sessionsPath: sessionFolderPath,
+      nodeVersion: process.version,
+      platform: process.platform,
+      uptime: Math.floor(process.uptime()),
+      memory: {
+        used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB',
+        total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + 'MB'
+      }
+    }
+
+    // Verificar informações do diretório de sessões
+    try {
+      const sessionsStats = fs.statSync(sessionFolderPath)
+      const sessionFiles = fs.readdirSync(sessionFolderPath)
+      
+      healthInfo.sessionDirectory = {
+        exists: true,
+        isDirectory: sessionsStats.isDirectory(),
+        filesCount: sessionFiles.length,
+        files: sessionFiles.slice(0, 10), // Primeiros 10 arquivos
+        created: sessionsStats.birthtime,
+        modified: sessionsStats.mtime
+      }
+    } catch (error) {
+      healthInfo.sessionDirectory = {
+        exists: false,
+        error: error.message
+      }
+    }
+
+    // Verificar informações do disco (Linux)
+    if (process.platform === 'linux') {
+      exec('df -h /app/sessions 2>/dev/null', (error, stdout) => {
+        if (!error && stdout) {
+          const lines = stdout.trim().split('\n')
+          if (lines.length > 1) {
+            const diskInfo = lines[1].split(/\s+/)
+            healthInfo.diskInfo = {
+              filesystem: diskInfo[0],
+              size: diskInfo[1],
+              used: diskInfo[2],
+              available: diskInfo[3],
+              usePercent: diskInfo[4],
+              mountPoint: diskInfo[5]
+            }
+          }
+        }
+      })
+    }
+
+    res.json(healthInfo)
   } catch (error) {
     sendErrorResponse(res, 500, error.message)
   }
@@ -52,4 +126,4 @@ const localCallbackExample = async (req, res) => {
   }
 }
 
-module.exports = { ping, localCallbackExample }
+module.exports = { ping, health, localCallbackExample }
