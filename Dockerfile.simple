@@ -1,7 +1,7 @@
-# Dockerfile simples para testes no Render
+# Dockerfile otimizado para Render com persistência de sessões
 FROM node:18-alpine
 
-# Instalar dependências necessárias
+# Instalar dependências do sistema
 RUN apk add --no-cache \
     chromium \
     nss \
@@ -9,35 +9,48 @@ RUN apk add --no-cache \
     harfbuzz \
     ca-certificates \
     ttf-freefont \
-    curl
+    curl \
+    dumb-init \
+    bash
 
-# Configurar Puppeteer para usar Chromium instalado
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
-ENV CHROME_BIN=/usr/bin/chromium-browser
-ENV NODE_ENV=production
+# Configurar variáveis de ambiente
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
+    CHROME_BIN=/usr/bin/chromium-browser \
+    NODE_ENV=production
+
+# Criar usuário não-root
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nextjs -u 1001
 
 # Definir diretório de trabalho
 WORKDIR /app
 
+# Criar diretório para sessões com permissões corretas
+RUN mkdir -p /app/sessions && \
+    chown -R nextjs:nodejs /app
+
 # Copiar package files
-COPY package*.json ./
+COPY --chown=nextjs:nodejs package*.json ./
 
 # Instalar dependências
-RUN npm ci --only=production
+RUN npm ci --only=production && npm cache clean --force
 
-# Copiar código fonte
-COPY . .
+# Copiar código fonte e script de inicialização
+COPY --chown=nextjs:nodejs . .
+COPY --chown=nextjs:nodejs start.sh ./
 
-# Criar diretório para sessões
-RUN mkdir -p sessions
+# Dar permissão de execução ao script
+RUN chmod +x start.sh
 
-# Expor porta
-EXPOSE 3000
+# Mudar para usuário não-root
+USER nextjs
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000/ping || exit 1
+# Verificar que o diretório de sessões existe
+RUN ls -la /app/sessions || echo "Diretório de sessões será criado na inicialização"
 
-# Iniciar aplicação
-CMD ["npm", "start"]
+# Usar dumb-init para handle signals correctly
+ENTRYPOINT ["dumb-init", "--"]
+
+# Comando para iniciar aplicação usando o script
+CMD ["./start.sh"]

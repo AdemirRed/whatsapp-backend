@@ -9,22 +9,36 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: PORT
+        value: "3000"
       - key: API_KEY
-        value: redblack
+        value: "154466"
+      - key: SESSION_ID
+        value: "154466"
       - key: BASE_WEBHOOK_URL
-        value: https://whatsapp-backend-gk8p.onrender.com/localCallbackExample
+        value: https://whatsapp-backend-ytrb.onrender.com/localCallbackExample
       - key: ENABLE_LOCAL_CALLBACK_EXAMPLE
         value: "TRUE"
+      - key: RATE_LIMIT_MAX
+        value: "1000"
+      - key: RATE_LIMIT_WINDOW_MS
+        value: "1000"
       - key: MAX_ATTACHMENT_SIZE
-        value: "5000000"
+        value: "10000000"
       - key: SET_MESSAGES_AS_SEEN
         value: "TRUE"
       - key: DISABLED_CALLBACKS
-        value: message_ack
+        value: "message_ack|message_reaction"
+      - key: WEB_VERSION
+        value: "2.2328.5"
+      - key: WEB_VERSION_CACHE_TYPE
+        value: "none"
+      - key: RECOVER_SESSIONS
+        value: "TRUE"
+      - key: SESSIONS_PATH
+        value: "/app/sessions"
       - key: ENABLE_SWAGGER_ENDPOINT
         value: "TRUE"
-      - key: PORT
-        value: "3000"
     # Configurações de persistência (se necessário)
     disk:
       name: sessions-data
