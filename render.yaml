@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: whatsapp-api
+    env: docker
+    dockerfilePath: ./Dockerfile.simple
+    dockerContext: ./
+    plan: starter # ou 'standard' se precisar de mais recursos
+    healthCheckPath: /ping
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: API_KEY
+        value: redblack
+      - key: BASE_WEBHOOK_URL
+        value: https://whatsapp-backend-gk8p.onrender.com/localCallbackExample
+      - key: ENABLE_LOCAL_CALLBACK_EXAMPLE
+        value: "TRUE"
+      - key: MAX_ATTACHMENT_SIZE
+        value: "5000000"
+      - key: SET_MESSAGES_AS_SEEN
+        value: "TRUE"
+      - key: DISABLED_CALLBACKS
+        value: message_ack
+      - key: ENABLE_SWAGGER_ENDPOINT
+        value: "TRUE"
+      - key: PORT
+        value: "3000"
+    # Configurações de persistência (se necessário)
+    disk:
+      name: sessions-data
+      mountPath: /app/sessions
+      sizeGB: 1
