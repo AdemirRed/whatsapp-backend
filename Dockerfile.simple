@@ -1,7 +1,7 @@
-# Dockerfile otimizado para Render com persistência de sessões robusta
+# Dockerfile simples para testes no Render
 FROM node:18-alpine
 
-# Instalar dependências do sistema
+# Instalar dependências necessárias
 RUN apk add --no-cache \
     chromium \
     nss \
@@ -9,57 +9,31 @@ RUN apk add --no-cache \
     harfbuzz \
     ca-certificates \
     ttf-freefont \
-    curl \
-    dumb-init \
-    bash \
-    util-linux
+    curl
 
-# Configurar variáveis de ambiente
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
-    CHROME_BIN=/usr/bin/chromium-browser \
-    NODE_ENV=production
-
-# Criar usuário não-root
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nextjs -u 1001
+# Configurar Puppeteer para usar Chromium instalado
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV CHROME_BIN=/usr/bin/chromium-browser
+ENV NODE_ENV=production
 
 # Definir diretório de trabalho
 WORKDIR /app
 
-# Criar diretório para sessões com permissões corretas
-RUN mkdir -p /app/sessions && \
-    chown -R nextjs:nodejs /app && \
-    chmod -R 755 /app/sessions
-
 # Copiar package files
-COPY --chown=nextjs:nodejs package*.json ./
+COPY package*.json ./
 
 # Instalar dependências
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci --only=production
 
-# Copiar código fonte e script de inicialização
-COPY --chown=nextjs:nodejs . .
-COPY --chown=nextjs:nodejs start.sh ./
+# Copiar código fonte
+COPY . .
 
-# Dar permissão de execução ao script
-RUN chmod +x start.sh
+# Criar diretório para sessões
+RUN mkdir -p sessions
 
-# Mudar para usuário não-root
-USER nextjs
+# Expor porta
+EXPOSE 3000
 
-# Verificar que o diretório de sessões existe e tem permissões
-RUN ls -la /app/sessions && \
-    echo "Testando escrita..." && \
-    touch /app/sessions/.test && \
-    rm /app/sessions/.test && \
-    echo "✅ Diretório de sessões OK"
-
-# Volume para persistência (será sobrescrito pelo mount do Render)
-VOLUME ["/app/sessions"]
-
-# Usar dumb-init para handle signals correctly
-ENTRYPOINT ["dumb-init", "--"]
-
-# Comando para iniciar aplicação usando o script
-CMD ["./start.sh"]
+# Iniciar aplicação
+CMD ["npm", "start"]
