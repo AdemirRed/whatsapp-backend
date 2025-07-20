@@ -1,11 +1,10 @@
 services:
-  - ty      - key: BASE_WEBHOOK_URL
-        value: https://whatsapp-backend-1-0eqq.onrender.com/localCallbackExample: web
+  - type: web
     name: whatsapp-api
-    env: docker
-    dockerfilePath: ./Dockerfile.simple
-    dockerContext: ./
-    plan: starter # ou 'standard' se precisar de mais recursos
+    env: node
+    buildCommand: npm install
+    startCommand: node server.js
+    plan: starter
     healthCheckPath: /ping
     envVars:
       - key: NODE_ENV
@@ -37,11 +36,15 @@ services:
       - key: RECOVER_SESSIONS
         value: "TRUE"
       - key: SESSIONS_PATH
-        value: "/app/sessions"
+        value: "/opt/render/project/src/sessions"
       - key: ENABLE_SWAGGER_ENDPOINT
         value: "TRUE"
-    # Configurações de persistência (se necessário)
+      - key: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
+        value: "true"
+      - key: PUPPETEER_EXECUTABLE_PATH
+        value: "/usr/bin/google-chrome"
+    # Configurações de persistência
     disk:
       name: sessions-data
-      mountPath: /app/sessions
+      mountPath: /opt/render/project/src/sessions
       sizeGB: 1
