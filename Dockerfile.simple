@@ -1,4 +1,4 @@
-# Dockerfile otimizado para Render com persistência de sessões
+# Dockerfile otimizado para Render com persistência de sessões robusta
 FROM node:18-alpine
 
 # Instalar dependências do sistema
@@ -11,7 +11,8 @@ RUN apk add --no-cache \
     ttf-freefont \
     curl \
     dumb-init \
-    bash
+    bash \
+    util-linux
 
 # Configurar variáveis de ambiente
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
@@ -28,7 +29,8 @@ WORKDIR /app
 
 # Criar diretório para sessões com permissões corretas
 RUN mkdir -p /app/sessions && \
-    chown -R nextjs:nodejs /app
+    chown -R nextjs:nodejs /app && \
+    chmod -R 755 /app/sessions
 
 # Copiar package files
 COPY --chown=nextjs:nodejs package*.json ./
@@ -46,8 +48,15 @@ RUN chmod +x start.sh
 # Mudar para usuário não-root
 USER nextjs
 
-# Verificar que o diretório de sessões existe
-RUN ls -la /app/sessions || echo "Diretório de sessões será criado na inicialização"
+# Verificar que o diretório de sessões existe e tem permissões
+RUN ls -la /app/sessions && \
+    echo "Testando escrita..." && \
+    touch /app/sessions/.test && \
+    rm /app/sessions/.test && \
+    echo "✅ Diretório de sessões OK"
+
+# Volume para persistência (será sobrescrito pelo mount do Render)
+VOLUME ["/app/sessions"]
 
 # Usar dumb-init para handle signals correctly
 ENTRYPOINT ["dumb-init", "--"]

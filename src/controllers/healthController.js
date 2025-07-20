@@ -2,9 +2,10 @@ const fs = require('fs')
 const qrcode = require('qrcode-terminal')
 const { sessionFolderPath } = require('../config')
 const { sendErrorResponse } = require('../utils')
+const { sessionManager } = require('../sessionManager')
 
 /**
- * Responds to ping request with 'pong'
+ * Responds to ping request with 'pong' and session status
  *
  * @function ping
  * @async
@@ -18,7 +19,26 @@ const ping = async (req, res) => {
     #swagger.tags = ['Various']
   */
   try {
-    res.json({ success: true, message: 'pong' })
+    const sessionStatus = sessionManager.getStatus()
+    
+    const response = { 
+      success: true, 
+      message: 'pong',
+      timestamp: new Date().toISOString(),
+      sessions: {
+        path: sessionStatus.sessionsPath,
+        count: sessionStatus.sessionCount,
+        canWrite: sessionStatus.canWrite,
+        directoryExists: sessionStatus.directoryExists
+      },
+      environment: {
+        nodeEnv: process.env.NODE_ENV,
+        isProduction: sessionStatus.isProduction,
+        recoverSessions: process.env.RECOVER_SESSIONS
+      }
+    }
+    
+    res.json(response)
   } catch (error) {
     sendErrorResponse(res, 500, error.message)
   }

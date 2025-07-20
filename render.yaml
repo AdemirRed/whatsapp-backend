@@ -40,6 +40,8 @@ services:
         value: "/app/sessions"
       - key: ENABLE_SWAGGER_ENDPOINT
         value: "TRUE"
+      - key: CLEANUP_OLD_SESSIONS
+        value: "TRUE"
     # Configurações de persistência (se necessário)
     disk:
       name: sessions-data
