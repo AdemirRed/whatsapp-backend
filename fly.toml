@@ -1,0 +1,37 @@
+# Configuração para Fly.io
+
+app = "whatsapp-backend"
+primary_region = "gru"  # São Paulo
+
+[build]
+  dockerfile = "Dockerfile.simple"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[env]
+  NODE_ENV = "production"
+  API_KEY = "154466"
+  SESSION_ID = "154466"
+  ENABLE_LOCAL_CALLBACK_EXAMPLE = "TRUE"
+  RATE_LIMIT_MAX = "1000"
+  RATE_LIMIT_WINDOW_MS = "1000"
+  MAX_ATTACHMENT_SIZE = "10000000"
+  SET_MESSAGES_AS_SEEN = "TRUE"
+  DISABLED_CALLBACKS = "message_ack|message_reaction"
+  WEB_VERSION = "2.2328.5"
+  WEB_VERSION_CACHE_TYPE = "none"
+  RECOVER_SESSIONS = "TRUE"
+  SESSIONS_PATH = "/app/sessions"
+  ENABLE_SWAGGER_ENDPOINT = "TRUE"
+
+[[mounts]]
+  source = "sessions_data"
+  destination = "/app/sessions"
+
+[machine]
+  memory = 512
