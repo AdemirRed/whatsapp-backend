@@ -1,0 +1,20 @@
+# Copie e cole essas variáveis no Railway
+
+NODE_ENV=production
+PORT=3000
+API_KEY=154466
+SESSION_ID=154466
+BASE_WEBHOOK_URL=https://whatsapp-backend-production.up.railway.app/localCallbackExample
+ENABLE_LOCAL_CALLBACK_EXAMPLE=TRUE
+RATE_LIMIT_MAX=1000
+RATE_LIMIT_WINDOW_MS=1000
+MAX_ATTACHMENT_SIZE=10000000
+SET_MESSAGES_AS_SEEN=TRUE
+DISABLED_CALLBACKS=message_ack|message_reaction
+WEB_VERSION=2.2328.5
+WEB_VERSION_CACHE_TYPE=none
+RECOVER_SESSIONS=TRUE
+SESSIONS_PATH=/app/sessions
+ENABLE_SWAGGER_ENDPOINT=TRUE
+
+# IMPORTANTE: Após o deploy, volte e atualize BASE_WEBHOOK_URL com a URL real gerada!

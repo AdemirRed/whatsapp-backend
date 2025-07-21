@@ -1,9 +1,8 @@
 services:
-  - ty      - key: BASE_WEBHOOK_URL
-        value: https://whatsapp-backend-1-0eqq.onrender.com/localCallbackExample: web
+  - type: web
     name: whatsapp-api
     env: docker
-    dockerfilePath: ./Dockerfile.simple
+    dockerfilePath: ./Dockerfile
     dockerContext: ./
     plan: starter # ou 'standard' se precisar de mais recursos
     healthCheckPath: /ping

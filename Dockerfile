@@ -1,10 +1,10 @@
 # Use the official Node.js Alpine image as the base image
-FROM node:14-alpine
+FROM node:18-alpine
 
 # Set the working directory
 WORKDIR /usr/src/app
 
-# Install Chromium
+# Install Chromium and Git
 ENV CHROME_BIN="/usr/bin/chromium-browser" \
     PUPPETEER_SKIP_CHROMIUM_DOWNLOAD="true" \
     NODE_ENV="production"
@@ -14,13 +14,14 @@ RUN set -x \
     && apk add --no-cache \
     udev \
     ttf-freefont \
-    chromium
+    chromium \
+    git
 
 # Copy package.json and package-lock.json to the working directory
 COPY package*.json ./
 
-# Install the dependencies
-RUN npm ci --only=production --ignore-scripts
+# Install the dependencies (removing --ignore-scripts to allow git dependencies)
+RUN npm ci --only=production
 
 # Copy the rest of the source code to the working directory
 COPY . .
