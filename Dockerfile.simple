@@ -9,7 +9,8 @@ RUN apk add --no-cache \
     harfbuzz \
     ca-certificates \
     ttf-freefont \
-    curl
+    curl \
+    git
 
 # Configurar Puppeteer para usar Chromium instalado
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
@@ -23,7 +24,7 @@ WORKDIR /app
 # Copiar package files
 COPY package*.json ./
 
-# Instalar dependências
+# Instalar dependências (sem --ignore-scripts pois precisamos do Git)
 RUN npm ci --only=production
 
 # Copiar código fonte

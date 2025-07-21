@@ -1,0 +1,51 @@
+# Dockerfile robusto para produção
+FROM node:18-alpine
+
+# Instalar dependências do sistema
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
+    curl \
+    git \
+    dumb-init
+
+# Configurar Puppeteer
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV CHROME_BIN=/usr/bin/chromium-browser
+ENV NODE_ENV=production
+
+# Criar usuário não-root para segurança
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nextjs -u 1001
+
+# Definir diretório de trabalho
+WORKDIR /app
+
+# Copiar package files
+COPY package*.json ./
+
+# Instalar dependências como root
+RUN npm ci --only=production && npm cache clean --force
+
+# Copiar código fonte
+COPY --chown=nextjs:nodejs . .
+
+# Criar diretório para sessões e dar permissões
+RUN mkdir -p sessions && chown -R nextjs:nodejs /app
+
+# Mudar para usuário não-root
+USER nextjs
+
+# Expor porta
+EXPOSE 3000
+
+# Usar dumb-init como PID 1
+ENTRYPOINT ["dumb-init", "--"]
+
+# Iniciar aplicação
+CMD ["npm", "start"]
