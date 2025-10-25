@@ -1,6 +1,9 @@
 const qr = require('qr-image')
+const fs = require('fs')
+const path = require('path')
 const { setupSession, deleteSession, validateSession, flushSessions, sessions } = require('../sessions')
 const { sendErrorResponse, waitForNestedObject } = require('../utils')
+const { sessionFolderPath } = require('../config')
 
 /**
  * Starts a session for the given session ID.
@@ -334,6 +337,88 @@ const terminateAllSessions = async (req, res) => {
   }
 }
 
+/**
+ * Lists all available sessions.
+ *
+ * @function
+ * @async
+ * @param {Object} req - The HTTP request object.
+ * @param {Object} res - The HTTP response object.
+ * @returns {Promise<void>}
+ * @throws {Error} If there was an error listing the sessions.
+ */
+const listSessions = async (req, res) => {
+  // #swagger.summary = 'List all sessions'
+  // #swagger.description = 'Lists all available sessions with their status.'
+  try {
+    const sessionsList = []
+    
+    // Check if sessions folder exists
+    if (!fs.existsSync(sessionFolderPath)) {
+      /* #swagger.responses[200] = {
+        description: "List of sessions.",
+        content: {
+          "application/json": {
+            schema: { "$ref": "#/definitions/ListSessionsResponse" }
+          }
+        }
+      }
+      */
+      res.json({ success: true, sessions: [] })
+      return
+    }
+
+    // Read the contents of the sessions folder
+    const files = await fs.promises.readdir(sessionFolderPath)
+    
+    // Iterate through the files in the parent folder
+    for (const file of files) {
+      // Use regular expression to extract the string from the folder name
+      const match = file.match(/^session-(.+)$/)
+      if (match && match[1]) {
+        const sessionId = match[1]
+        try {
+          const validation = await validateSession(sessionId)
+          sessionsList.push({
+            sessionId: sessionId,
+            status: validation.success ? 'CONNECTED' : validation.state || 'DISCONNECTED',
+            message: validation.message
+          })
+        } catch (error) {
+          sessionsList.push({
+            sessionId: sessionId,
+            status: 'ERROR',
+            message: error.message
+          })
+        }
+      }
+    }
+
+    /* #swagger.responses[200] = {
+      description: "List of sessions.",
+      content: {
+        "application/json": {
+          schema: { "$ref": "#/definitions/ListSessionsResponse" }
+        }
+      }
+    }
+    */
+    res.json({ success: true, sessions: sessionsList })
+  } catch (error) {
+    console.log('listSessions ERROR', error)
+    /* #swagger.responses[500] = {
+      description: "Server Failure.",
+      content: {
+        "application/json": {
+          schema: { "$ref": "#/definitions/ErrorResponse" }
+        }
+      }
+    }
+    */
+    sendErrorResponse(res, 500, error.message)
+  }
+}
+
 module.exports = {
   startSession,
   statusSession,
@@ -341,5 +426,6 @@ module.exports = {
   sessionQrCodeImage,
   terminateSession,
   terminateInactiveSessions,
-  terminateAllSessions
+  terminateAllSessions,
+  listSessions
 }
