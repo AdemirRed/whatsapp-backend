@@ -79,6 +79,11 @@ sessionRouter.get('/terminate/:sessionId', middleware.sessionNameValidation, ses
 sessionRouter.get('/terminateInactive', sessionController.terminateInactiveSessions)
 sessionRouter.get('/terminateAll', sessionController.terminateAllSessions)
 sessionRouter.get('/list', sessionController.listSessions)
+// Hibernation endpoints
+sessionRouter.get('/hibernate/:sessionId', middleware.sessionNameValidation, sessionController.hibernateSession)
+sessionRouter.get('/reactivate/:sessionId', middleware.sessionNameValidation, sessionController.reactivateSession)
+sessionRouter.get('/hibernateAll', sessionController.hibernateAllSessions)
+sessionRouter.get('/reactivateAll', sessionController.reactivateAllSessions)
 
 /**
  * ================

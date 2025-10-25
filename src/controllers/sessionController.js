@@ -1,7 +1,19 @@
 const qr = require('qr-image')
 const fs = require('fs')
 const path = require('path')
-const { setupSession, deleteSession, validateSession, flushSessions, sessions } = require('../sessions')
+const { 
+  setupSession, 
+  deleteSession, 
+  validateSession, 
+  flushSessions, 
+  sessions, 
+  hibernateSession,
+  reactivateSession,
+  hibernateAllSessions,
+  reactivateAllSessions,
+  listHibernatedSessions,
+  getCompleteSessionStatus
+} = require('../sessions')
 const { sendErrorResponse, waitForNestedObject } = require('../utils')
 const { sessionFolderPath } = require('../config')
 
@@ -338,7 +350,7 @@ const terminateAllSessions = async (req, res) => {
 }
 
 /**
- * Lists all available sessions.
+ * Lists all available sessions including hibernated ones.
  *
  * @function
  * @async
@@ -349,53 +361,12 @@ const terminateAllSessions = async (req, res) => {
  */
 const listSessions = async (req, res) => {
   // #swagger.summary = 'List all sessions'
-  // #swagger.description = 'Lists all available sessions with their status.'
+  // #swagger.description = 'Lists all available sessions with their status including hibernated sessions.'
   try {
-    const sessionsList = []
+    const result = await getCompleteSessionStatus()
     
-    // Check if sessions folder exists
-    if (!fs.existsSync(sessionFolderPath)) {
-      /* #swagger.responses[200] = {
-        description: "List of sessions.",
-        content: {
-          "application/json": {
-            schema: { "$ref": "#/definitions/ListSessionsResponse" }
-          }
-        }
-      }
-      */
-      res.json({ success: true, sessions: [] })
-      return
-    }
-
-    // Read the contents of the sessions folder
-    const files = await fs.promises.readdir(sessionFolderPath)
-    
-    // Iterate through the files in the parent folder
-    for (const file of files) {
-      // Use regular expression to extract the string from the folder name
-      const match = file.match(/^session-(.+)$/)
-      if (match && match[1]) {
-        const sessionId = match[1]
-        try {
-          const validation = await validateSession(sessionId)
-          sessionsList.push({
-            sessionId: sessionId,
-            status: validation.success ? 'CONNECTED' : validation.state || 'DISCONNECTED',
-            message: validation.message
-          })
-        } catch (error) {
-          sessionsList.push({
-            sessionId: sessionId,
-            status: 'ERROR',
-            message: error.message
-          })
-        }
-      }
-    }
-
     /* #swagger.responses[200] = {
-      description: "List of sessions.",
+      description: "List of sessions including hibernated ones.",
       content: {
         "application/json": {
           schema: { "$ref": "#/definitions/ListSessionsResponse" }
@@ -403,9 +374,177 @@ const listSessions = async (req, res) => {
       }
     }
     */
-    res.json({ success: true, sessions: sessionsList })
+    res.json(result)
   } catch (error) {
     console.log('listSessions ERROR', error)
+    /* #swagger.responses[500] = {
+      description: "Server Failure.",
+      content: {
+        "application/json": {
+          schema: { "$ref": "#/definitions/ErrorResponse" }
+        }
+      }
+    }
+    */
+    sendErrorResponse(res, 500, error.message)
+  }
+}
+
+/**
+ * Hibernates a specific session without disconnecting from WhatsApp.
+ *
+ * @function
+ * @async
+ * @param {Object} req - The HTTP request object.
+ * @param {Object} res - The HTTP response object.
+ * @param {string} req.params.sessionId - The session ID to hibernate.
+ * @returns {Promise<void>}
+ * @throws {Error} If there was an error hibernating the session.
+ */
+const hibernateSessionController = async (req, res) => {
+  // #swagger.summary = 'Hibernate session'
+  // #swagger.description = 'Hibernates a session without disconnecting from WhatsApp.'
+  try {
+    const sessionId = req.params.sessionId
+    const result = await hibernateSession(sessionId)
+    
+    /* #swagger.responses[200] = {
+      description: "Session hibernated successfully.",
+      content: {
+        "application/json": {
+          schema: { "$ref": "#/definitions/HibernateSessionResponse" }
+        }
+      }
+    }
+    */
+    res.json(result)
+  } catch (error) {
+    console.log('hibernateSession ERROR', error)
+    /* #swagger.responses[500] = {
+      description: "Server Failure.",
+      content: {
+        "application/json": {
+          schema: { "$ref": "#/definitions/ErrorResponse" }
+        }
+      }
+    }
+    */
+    sendErrorResponse(res, 500, error.message)
+  }
+}
+
+/**
+ * Reactivates a hibernated session.
+ *
+ * @function
+ * @async
+ * @param {Object} req - The HTTP request object.
+ * @param {Object} res - The HTTP response object.
+ * @param {string} req.params.sessionId - The session ID to reactivate.
+ * @returns {Promise<void>}
+ * @throws {Error} If there was an error reactivating the session.
+ */
+const reactivateSessionController = async (req, res) => {
+  // #swagger.summary = 'Reactivate hibernated session'
+  // #swagger.description = 'Reactivates a hibernated session.'
+  try {
+    const sessionId = req.params.sessionId
+    const result = await reactivateSession(sessionId)
+    
+    /* #swagger.responses[200] = {
+      description: "Session reactivated successfully.",
+      content: {
+        "application/json": {
+          schema: { "$ref": "#/definitions/ReactivateSessionResponse" }
+        }
+      }
+    }
+    */
+    res.json(result)
+  } catch (error) {
+    console.log('reactivateSession ERROR', error)
+    /* #swagger.responses[500] = {
+      description: "Server Failure.",
+      content: {
+        "application/json": {
+          schema: { "$ref": "#/definitions/ErrorResponse" }
+        }
+      }
+    }
+    */
+    sendErrorResponse(res, 500, error.message)
+  }
+}
+
+/**
+ * Hibernates all active sessions.
+ *
+ * @function
+ * @async
+ * @param {Object} req - The HTTP request object.
+ * @param {Object} res - The HTTP response object.
+ * @returns {Promise<void>}
+ * @throws {Error} If there was an error hibernating sessions.
+ */
+const hibernateAllSessionsController = async (req, res) => {
+  // #swagger.summary = 'Hibernate all sessions'
+  // #swagger.description = 'Hibernates all active sessions for maintenance.'
+  try {
+    const result = await hibernateAllSessions()
+    
+    /* #swagger.responses[200] = {
+      description: "All sessions hibernated.",
+      content: {
+        "application/json": {
+          schema: { "$ref": "#/definitions/HibernateAllSessionsResponse" }
+        }
+      }
+    }
+    */
+    res.json(result)
+  } catch (error) {
+    console.log('hibernateAllSessions ERROR', error)
+    /* #swagger.responses[500] = {
+      description: "Server Failure.",
+      content: {
+        "application/json": {
+          schema: { "$ref": "#/definitions/ErrorResponse" }
+        }
+      }
+    }
+    */
+    sendErrorResponse(res, 500, error.message)
+  }
+}
+
+/**
+ * Reactivates all hibernated sessions.
+ *
+ * @function
+ * @async
+ * @param {Object} req - The HTTP request object.
+ * @param {Object} res - The HTTP response object.
+ * @returns {Promise<void>}
+ * @throws {Error} If there was an error reactivating sessions.
+ */
+const reactivateAllSessionsController = async (req, res) => {
+  // #swagger.summary = 'Reactivate all hibernated sessions'
+  // #swagger.description = 'Reactivates all hibernated sessions after maintenance.'
+  try {
+    const result = await reactivateAllSessions()
+    
+    /* #swagger.responses[200] = {
+      description: "All hibernated sessions reactivated.",
+      content: {
+        "application/json": {
+          schema: { "$ref": "#/definitions/ReactivateAllSessionsResponse" }
+        }
+      }
+    }
+    */
+    res.json(result)
+  } catch (error) {
+    console.log('reactivateAllSessions ERROR', error)
     /* #swagger.responses[500] = {
       description: "Server Failure.",
       content: {
@@ -427,5 +566,9 @@ module.exports = {
   terminateSession,
   terminateInactiveSessions,
   terminateAllSessions,
-  listSessions
+  listSessions,
+  hibernateSession: hibernateSessionController,
+  reactivateSession: reactivateSessionController,
+  hibernateAllSessions: hibernateAllSessionsController,
+  reactivateAllSessions: reactivateAllSessionsController
 }

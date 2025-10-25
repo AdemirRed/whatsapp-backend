@@ -3,204 +3,786 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciador WhatsApp API</title>
+    <title>WhatsApp Session Manager</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             padding: 20px;
         }
-        
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
         }
-        
-        .card {
+
+        .header {
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
             background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .section h2 {
+            color: #333;
             margin-bottom: 20px;
-            padding: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #25D366;
+            padding-bottom: 10px;
         }
-        
+
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
-        
-        label {
+
+        .form-group label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
         }
-        
-        input[type="text"] {
+
+        .form-group input {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
         }
-        
-        button {
-            background-color: #25d366;
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #25D366;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
+            padding: 12px 25px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 14px;
-            margin-right: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin: 5px;
         }
-        
-        button:hover {
-            background-color: #128c7e;
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 211, 102, 0.3);
         }
-        
-        button.danger {
-            background-color: #dc3545;
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
-        
-        button.danger:hover {
-            background-color: #c82333;
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
         }
-        
-        .users-table {
-            width: 100%;
-            border-collapse: collapse;
+
+        .btn-danger:hover {
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            color: #333;
+        }
+
+        .btn-warning:hover {
+            box-shadow: 0 5px 15px rgba(255, 193, 7, 0.3);
+        }
+
+        .sessions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
             margin-top: 20px;
         }
-        
-        .users-table th, .users-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
+
+        .session-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
         }
-        
-        .users-table th {
-            background-color: #f8f9fa;
+
+        .session-card:hover {
+            transform: translateY(-5px);
         }
-        
-        .status {
-            padding: 4px 8px;
-            border-radius: 4px;
+
+        .session-card.hibernated-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 2px dashed #6c757d;
+        }
+
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .session-identity {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .profile-pic {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #25D366;
+            background: #f8f9fa;
+        }
+
+        .profile-pic-placeholder {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .session-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .session-id {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #333;
+        }
+
+        .session-phone {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
             font-size: 12px;
             font-weight: bold;
+            text-transform: uppercase;
         }
-        
-        .status.active { background-color: #d4edda; color: #155724; }
-        .status.inactive { background-color: #f8d7da; color: #721c24; }
-        .status.starting { background-color: #fff3cd; color: #856404; }
-        .status.terminated { background-color: #d1ecf1; color: #0c5460; }
-        
-        .qr-container {
+
+        .status-connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-hibernated {
+            background: #e2e3e5;
+            color: #495057;
+            border: 1px dashed #6c757d;
+        }
+
+        .status-loading {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .qr-code {
             text-align: center;
             margin: 20px 0;
         }
-        
-        .qr-code {
-            max-width: 256px;
-            border: 1px solid #ddd;
+
+        .qr-code img {
+            max-width: 200px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+        }
+
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
             border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
         }
-        
-        .message {
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 15px;
-        }
-        
-        .message.success {
-            background-color: #d4edda;
-            color: #155724;
+
+        .result-success {
+            background: #d4edda;
             border: 1px solid #c3e6cb;
+            color: #155724;
         }
-        
-        .message.error {
-            background-color: #f8d7da;
-            color: #721c24;
+
+        .result-error {
+            background: #f8d7da;
             border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .api-status {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .api-online {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .api-offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #25D366;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .refresh-btn {
+            float: right;
+            font-size: 14px;
+            padding: 8px 15px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Gerenciador WhatsApp API</h1>
-        
-        <div id="message-container"></div>
-        
-        <!-- Informações da API -->
-        <div class="card">
-            <h2>Configuração da API</h2>
-            <p><strong>URL da API:</strong> http://192.168.0.200:200</p>
-            <p><strong>Chave da API:</strong> redblack</p>
-            <p><strong>Status:</strong> <span id="apiStatus">Verificando...</span></p>
-            <button onclick="testApiConnection()">Testar Conexão</button>
+        <div class="header">
+            <h1>🚀 WhatsApp Session Manager</h1>
+            <p>Gerencie suas sessões do WhatsApp de forma simples e eficiente</p>
         </div>
-        
-        <!-- Criar Usuário -->
-        <div class="card">
-            <h2>Criar Novo Usuário</h2>
-            <form id="createUserForm">
+
+        <div class="main-content">
+            <!-- Status da API -->
+            <div id="apiStatus" class="api-status api-offline">
+                🔴 Verificando status da API...
+            </div>
+
+            <!-- Seção de Criação de Nova Sessão -->
+            <div class="section">
+                <h2>📱 Criar Nova Sessão</h2>
                 <div class="form-group">
-                    <label for="username">Nome do Usuário:</label>
-                    <input type="text" id="username" name="username" required>
+                    <label for="newSessionId">ID da Sessão:</label>
+                    <input type="text" id="newSessionId" placeholder="Digite o ID da nova sessão (ex: minha-sessao)" value="">
                 </div>
-                <div class="form-group">
-                    <label for="sessionId">ID da Sessão:</label>
-                    <input type="text" id="sessionId" name="sessionId" required>
+                <button class="btn" onclick="createSession()">Criar Sessão</button>
+                <div id="createResult" class="result-box" style="display: none;"></div>
+                
+                <div id="qrCodeSection" style="display: none;">
+                    <h3>QR Code para Conexão:</h3>
+                    <div class="qr-code">
+                        <div id="qrCodeImage"></div>
+                        <button class="btn btn-warning" onclick="refreshQR()">🔄 Atualizar QR</button>
+                    </div>
                 </div>
-                <button type="submit">Criar Usuário</button>
-            </form>
-        </div>
-        
-        <!-- Controles de Sessão Global -->
-        <div class="card">
-            <h2>Controles Globais</h2>
-            <button onclick="terminateInactiveSessions()">Terminar Sessões Inativas</button>
-            <button onclick="terminateAllSessions()" class="danger">Terminar Todas as Sessões</button>
-            <button onclick="loadUsers()">Atualizar Lista</button>
-        </div>
-        
-        
-        
-        <!-- QR Code Display -->
-        <div class="card" id="qrContainer" style="display: none;">
-            <h2>QR Code da Sessão</h2>
-            <div class="qr-container">
-                <img id="qrImage" class="qr-code" alt="QR Code">
-                <p>Escaneie este QR Code com o WhatsApp</p>
+            </div>
+
+            <!-- Seção de Gerenciamento Global -->
+            <div class="section">
+                <h2>🔧 Gerenciamento Global</h2>
+                <div style="margin-bottom: 15px;">
+                    <h3>🔄 Sessões Ativas</h3>
+                    <button class="btn btn-warning" onclick="hibernateAllSessions()">😴 Hibernar Todas</button>
+                    <button class="btn btn-danger" onclick="terminateInactive()">⏸️ Terminar Inativas</button>
+                    <button class="btn btn-danger" onclick="terminateAll()">🛑 Terminar Todas</button>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <h3>🌙 Sessões Hibernadas</h3>
+                    <button class="btn" onclick="reactivateAllSessions()">🔋 Reativar Todas</button>
+                </div>
+                <div>
+                    <h3>📊 Controle</h3>
+                    <button class="btn" onclick="loadSessions()">🔄 Recarregar Sessões</button>
+                </div>
+                <div id="globalResult" class="result-box" style="display: none;"></div>
+            </div>
+
+            <!-- Seção de Sessões Ativas -->
+            <div class="section">
+                <h2>
+                    📋 Sessões Ativas
+                    <button class="btn refresh-btn" onclick="loadSessions()">🔄 Atualizar</button>
+                </h2>
+                <div class="loading" id="sessionsLoading">
+                    <div class="spinner"></div>
+                    <p>Carregando sessões...</p>
+                </div>
+                <div id="sessionsGrid" class="sessions-grid"></div>
             </div>
         </div>
     </div>
 
     <script>
-        const API_URL = 'http://192.168.0.200:200';
+        const API_BASE = 'http://localhost:200';
+        const API_KEY = 'redblack';
+        let currentSessionForQR = null;
 
-        function showMessage(message, type) {
-            const messageContainer = document.getElementById('message-container');
-            messageContainer.innerHTML = `<div class="message ${type}">${message}</div>`;
-            setTimeout(() => messageContainer.innerHTML = '', 5000);
-        }
-
-        async function testApiConnection() {
+        // Função para fazer requisições à API
+        async function apiRequest(endpoint, method = 'GET', body = null) {
             try {
-                const response = await fetch(`${API_URL}?action=test_connection`);
-                const result = await response.json();
-                document.getElementById('apiStatus').textContent = result.status;
-                showMessage('Conexão com a API testada com sucesso!', 'success');
+                const options = {
+                    method,
+                    headers: {
+                        'accept': 'application/json',
+                        'x-api-key': API_KEY
+                    }
+                };
+
+                if (body) {
+                    options.headers['Content-Type'] = 'application/json';
+                    options.body = JSON.stringify(body);
+                }
+
+                const response = await fetch(`${API_BASE}${endpoint}`, options);
+                const data = await response.json();
+                return { success: response.ok, data, status: response.status };
             } catch (error) {
-                showMessage('Erro ao testar conexão: ' + error.message, 'error');
+                return { success: false, error: error.message };
             }
         }
 
-       
+        // Verificar status da API
+        async function checkApiStatus() {
+            const result = await apiRequest('/ping');
+            const statusDiv = document.getElementById('apiStatus');
+            
+            if (result.success && result.data.success) {
+                statusDiv.className = 'api-status api-online';
+                statusDiv.innerHTML = '🟢 API Online - ' + result.data.message;
+            } else {
+                statusDiv.className = 'api-status api-offline';
+                statusDiv.innerHTML = '🔴 API Offline';
+            }
+        }
+
+        // Criar nova sessão
+        async function createSession() {
+            const sessionId = document.getElementById('newSessionId').value.trim();
+            if (!sessionId) {
+                alert('Por favor, digite um ID para a sessão');
+                return;
+            }
+
+            const result = await apiRequest(`/session/start/${sessionId}`);
+            const resultDiv = document.getElementById('createResult');
+            
+            resultDiv.style.display = 'block';
+            
+            if (result.success) {
+                resultDiv.className = 'result-box result-success';
+                resultDiv.textContent = JSON.stringify(result.data, null, 2);
+                currentSessionForQR = sessionId;
+                
+                // Atualizar lista de sessões
+                loadSessions();
+                
+                // Aguardar um pouco e então buscar o QR code
+                setTimeout(() => {
+                    getQRCode(sessionId);
+                }, 2000);
+            } else {
+                resultDiv.className = 'result-box result-error';
+                resultDiv.textContent = `Erro: ${result.error || 'Falha na requisição'}`;
+            }
+        }
+
+        // Obter QR Code
+        async function getQRCode(sessionId) {
+            if (!sessionId) sessionId = currentSessionForQR;
+            if (!sessionId) return;
+
+            const result = await apiRequest(`/session/qr/${sessionId}`);
+            const qrSection = document.getElementById('qrCodeSection');
+            const qrImageDiv = document.getElementById('qrCodeImage');
+            
+            if (result.success && result.data.qr) {
+                // Gerar QR code usando API externa
+                const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(result.data.qr)}`;
+                qrImageDiv.innerHTML = `<img src="${qrCodeUrl}" alt="QR Code" />`;
+                qrSection.style.display = 'block';
+            } else {
+                qrImageDiv.innerHTML = '<p>QR Code não disponível</p>';
+                qrSection.style.display = 'block';
+            }
+        }
+
+        // Atualizar QR Code
+        function refreshQR() {
+            if (currentSessionForQR) {
+                getQRCode(currentSessionForQR);
+            }
+        }
+
+        // Obter status da sessão
+        async function getSessionStatus(sessionId) {
+            const result = await apiRequest(`/session/status/${sessionId}`);
+            if (result.success) {
+                return result.data.state || 'UNKNOWN';
+            }
+            return 'ERROR';
+        }
+
+        // Verificar status de uma sessão específica (com alert)
+        async function checkSessionStatus(sessionId) {
+            const result = await apiRequest(`/session/status/${sessionId}`);
+            if (result.success) {
+                const status = result.data.state || 'UNKNOWN';
+                const message = result.data.message || '';
+                alert(`Sessão: ${sessionId}\nStatus: ${getStatusText(status)}\nMensagem: ${message}`);
+            } else {
+                alert(`Erro ao verificar status da sessão: ${sessionId}`);
+            }
+        }
+
+        // Terminar sessão específica
+        async function terminateSession(sessionId) {
+            if (!confirm(`Tem certeza que deseja terminar a sessão "${sessionId}"?\n\nEsta ação irá desconectar permanentemente da sessão.`)) {
+                return;
+            }
+
+            const result = await apiRequest(`/session/terminate/${sessionId}`);
+            if (result.success) {
+                alert('Sessão terminada com sucesso!');
+                loadSessions(); // Atualizar lista
+            } else {
+                alert('Erro ao terminar sessão: ' + (result.error || 'Erro desconhecido'));
+            }
+        }
+
+        // Reativar sessão hibernada
+        async function reactivateSession(sessionId) {
+            if (!confirm(`Tem certeza que deseja reativar a sessão hibernada "${sessionId}"?`)) {
+                return;
+            }
+
+            const result = await apiRequest(`/session/reactivate/${sessionId}`);
+            if (result.success) {
+                alert('Sessão reativada com sucesso!');
+                loadSessions(); // Atualizar lista
+            } else {
+                alert('Erro ao reativar sessão: ' + (result.error || 'Erro desconhecido'));
+            }
+        }
+
+        // Hibernar sessão específica
+        async function hibernateSession(sessionId) {
+            if (!confirm(`Tem certeza que deseja hibernar a sessão "${sessionId}"?\n\nEla será pausada para manutenção, mantendo a conexão com o WhatsApp.`)) {
+                return;
+            }
+
+            const result = await apiRequest(`/session/hibernate/${sessionId}`);
+            if (result.success) {
+                alert('Sessão hibernada com sucesso!');
+                loadSessions();
+            } else {
+                alert('Erro ao hibernar sessão: ' + (result.error || (result.data && result.data.message) || 'Erro desconhecido'));
+            }
+        }
+
+        // Hibernar todas as sessões
+        async function hibernateAllSessions() {
+            if (!confirm('Tem certeza que deseja hibernar TODAS as sessões ativas?\n\nEsta ação é ideal para manutenção do sistema.')) {
+                return;
+            }
+
+            const result = await apiRequest('/session/hibernateAll');
+            const resultDiv = document.getElementById('globalResult');
+            
+            resultDiv.style.display = 'block';
+            
+            if (result.success) {
+                resultDiv.className = 'result-box result-success';
+                resultDiv.textContent = `✅ ${result.data.hibernatedCount} sessões hibernadas com sucesso!\n\n` + JSON.stringify(result.data, null, 2);
+            } else {
+                resultDiv.className = 'result-box result-error';
+                resultDiv.textContent = `Erro: ${result.error || 'Falha na requisição'}`;
+            }
+            
+            loadSessions();
+        }
+
+        // Reativar todas as sessões hibernadas
+        async function reactivateAllSessions() {
+            if (!confirm('Tem certeza que deseja reativar TODAS as sessões hibernadas?')) {
+                return;
+            }
+
+            const result = await apiRequest('/session/reactivateAll');
+            const resultDiv = document.getElementById('globalResult');
+            
+            resultDiv.style.display = 'block';
+            
+            if (result.success) {
+                resultDiv.className = 'result-box result-success';
+                resultDiv.textContent = `✅ ${result.data.reactivatedCount} sessões reativadas com sucesso!\n\n` + JSON.stringify(result.data, null, 2);
+            } else {
+                resultDiv.className = 'result-box result-error';
+                resultDiv.textContent = `Erro: ${result.error || 'Falha na requisição'}`;
+            }
+            
+            loadSessions();
+        }
+
+        // Terminar sessões inativas
+        async function terminateInactive() {
+            if (!confirm('Tem certeza que deseja terminar todas as sessões inativas?')) {
+                return;
+            }
+
+            const result = await apiRequest('/session/terminateInactive');
+            const resultDiv = document.getElementById('globalResult');
+            
+            resultDiv.style.display = 'block';
+            
+            if (result.success) {
+                resultDiv.className = 'result-box result-success';
+                resultDiv.textContent = JSON.stringify(result.data, null, 2);
+            } else {
+                resultDiv.className = 'result-box result-error';
+                resultDiv.textContent = `Erro: ${result.error || 'Falha na requisição'}`;
+            }
+            
+            loadSessions();
+        }
+
+        // Terminar todas as sessões
+        async function terminateAll() {
+            if (!confirm('Tem certeza que deseja terminar TODAS as sessões?')) {
+                return;
+            }
+
+            const result = await apiRequest('/session/terminateAll');
+            const resultDiv = document.getElementById('globalResult');
+            
+            resultDiv.style.display = 'block';
+            
+            if (result.success) {
+                resultDiv.className = 'result-box result-success';
+                resultDiv.textContent = JSON.stringify(result.data, null, 2);
+            } else {
+                resultDiv.className = 'result-box result-error';
+                resultDiv.textContent = `Erro: ${result.error || 'Falha na requisição'}`;
+            }
+            
+            loadSessions();
+        }
+
+        // Carregar sessões reais do servidor
+        async function loadSessions() {
+            const loadingDiv = document.getElementById('sessionsLoading');
+            const gridDiv = document.getElementById('sessionsGrid');
+            
+            loadingDiv.style.display = 'block';
+            gridDiv.innerHTML = '';
+
+            try {
+                const result = await apiRequest('/session/list');
+                
+                loadingDiv.style.display = 'none';
+                
+                if (!result.success || !result.data.sessions) {
+                    gridDiv.innerHTML = '<p style="text-align: center; color: #666;">Erro ao carregar sessões</p>';
+                    return;
+                }
+
+                const sessions = result.data.sessions;
+                const summary = result.data.summary;
+                
+                if (sessions.length === 0) {
+                    gridDiv.innerHTML = '<p style="text-align: center; color: #666;">Nenhuma sessão encontrada</p>';
+                    return;
+                }
+
+                // Mostrar resumo
+                const summaryHtml = `
+                    <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                        <strong>📊 Resumo:</strong> 
+                        ${summary.active} ativas • ${summary.hibernated} hibernadas • ${summary.total} total
+                    </div>
+                `;
+
+                gridDiv.innerHTML = summaryHtml + sessions.map(session => {
+                    const statusClass = getStatusClass(session.status);
+                    const statusText = getStatusText(session.status);
+                    const isHibernated = session.status === 'HIBERNATED';
+                    const isConnected = session.status === 'CONNECTED';
+                    
+                    // Gerar foto de perfil ou placeholder
+                    const profilePicHtml = session.profilePicUrl ? 
+                        `<img src="${session.profilePicUrl}" alt="Profile" class="profile-pic" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                         <div class="profile-pic-placeholder" style="display: none;">${session.sessionId.charAt(0).toUpperCase()}</div>` :
+                        `<div class="profile-pic-placeholder">${session.sessionId.charAt(0).toUpperCase()}</div>`;
+                    
+                    // Formatar número de telefone
+                    const phoneDisplay = session.phoneNumber ? 
+                        session.phoneNumber.replace('@c.us', '').replace(/(\d{2})(\d{2})(\d{5})(\d{4})/, '+$1 ($2) $3-$4') : 
+                        'Número não disponível';
+                    
+                    // Nome para exibir
+                    const displayName = session.pushName || session.sessionId;
+                    
+                    return `
+                        <div class="session-card ${isHibernated ? 'hibernated-card' : ''}">
+                            <div class="session-header">
+                                <div class="session-identity">
+                                    ${profilePicHtml}
+                                    <div class="session-details">
+                                        <div class="session-id">
+                                            ${displayName}
+                                            ${isHibernated ? ' 😴' : ''}
+                                        </div>
+                                        <div class="session-phone">${phoneDisplay}</div>
+                                    </div>
+                                </div>
+                                <div class="status-badge ${statusClass}">
+                                    ${statusText}
+                                </div>
+                            </div>
+                            <div style="margin-bottom: 10px;">
+                                <small style="color: #666;"><strong>ID:</strong> ${session.sessionId}</small><br>
+                                <small style="color: #666;"><strong>Status:</strong> ${session.message || 'N/A'}</small>
+                                ${session.hibernatedAt ? `<br><small style="color: #666;"><strong>Hibernada em:</strong> ${new Date(session.hibernatedAt).toLocaleString()}</small>` : ''}
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                ${isHibernated ? `
+                                    <button class="btn" onclick="reactivateSession('${session.sessionId}')">🔋 Reativar</button>
+                                ` : `
+                                    <button class="btn" onclick="getQRCode('${session.sessionId}')" ${isConnected ? 'disabled' : ''}>📱 QR Code</button>
+                                    <button class="btn btn-warning" onclick="hibernateSession('${session.sessionId}')">😴 Hibernar</button>
+                                `}
+                                <button class="btn btn-warning" onclick="checkSessionStatus('${session.sessionId}')">📊 Status</button>
+                                <button class="btn btn-danger" onclick="terminateSession('${session.sessionId}')">🛑 Terminar</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                gridDiv.innerHTML = '<p style="text-align: center; color: #ff0000;">Erro ao carregar sessões: ' + error + '</p>';
+            }
+        }
+
+        // Função para obter classe CSS do status
+        function getStatusClass(status) {
+            switch (status.toUpperCase()) {
+                case 'CONNECTED':
+                    return 'status-connected';
+                case 'HIBERNATED':
+                    return 'status-hibernated';
+                case 'DISCONNECTED':
+                case 'ERROR':
+                    return 'status-disconnected';
+                default:
+                    return 'status-loading';
+            }
+        }
+
+        // Função para obter texto do status em português
+        function getStatusText(status) {
+            switch (status.toUpperCase()) {
+                case 'CONNECTED':
+                    return 'CONECTADO';
+                case 'HIBERNATED':
+                    return 'HIBERNADA';
+                case 'DISCONNECTED':
+                    return 'DESCONECTADO';
+                case 'ERROR':
+                    return 'ERRO';
+                case 'OPENING':
+                    return 'ABRINDO';
+                case 'PAIRING':
+                    return 'PAREANDO';
+                case 'TIMEOUT':
+                    return 'TIMEOUT';
+                default:
+                    return status;
+            }
+        }
+
+        // Inicializar página
+        document.addEventListener('DOMContentLoaded', function() {
+            checkApiStatus();
+            loadSessions();
+            
+            // Verificar status da API a cada 30 segundos
+            setInterval(checkApiStatus, 30000);
+            
+            // Atualizar lista de sessões a cada 10 segundos
+            setInterval(loadSessions, 10000);
+        });
     </script>
 </body>
 </html>
