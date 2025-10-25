@@ -14,6 +14,7 @@ const chatController = require('./controllers/chatController')
 const groupChatController = require('./controllers/groupChatController')
 const messageController = require('./controllers/messageController')
 const contactController = require('./controllers/contactController')
+const pollController = require('./controllers/pollController')
 
 /**
  * ================
@@ -215,6 +216,21 @@ contactRouter.post('/unblock/:sessionId', [middleware.sessionNameValidation, mid
 contactRouter.post('/getFormattedNumber/:sessionId', [middleware.sessionNameValidation, middleware.sessionValidation], contactController.getFormattedNumber)
 contactRouter.post('/getCountryCode/:sessionId', [middleware.sessionNameValidation, middleware.sessionValidation], contactController.getCountryCode)
 contactRouter.post('/getProfilePicUrl/:sessionId', [middleware.sessionNameValidation, middleware.sessionValidation], contactController.getProfilePicUrl)
+
+/**
+ * ================
+ * POLL ENDPOINTS
+ * ================
+ */
+const pollRouter = express.Router()
+pollRouter.use(middleware.apikey)
+routes.use('/poll', pollRouter)
+
+pollRouter.post('/getVotes/:sessionId', [middleware.sessionNameValidation, middleware.sessionValidation], pollController.getPollVotes)
+pollRouter.post('/getChatPolls/:sessionId', [middleware.sessionNameValidation, middleware.sessionValidation], pollController.getChatPolls)
+pollRouter.get('/createInfo', pollController.createPollInfo)
+pollRouter.post('/getVotesByContact/:sessionId', [middleware.sessionNameValidation, middleware.sessionValidation], pollController.getPollVotesByContact)
+
 /**
  * ================
  * SWAGGER ENDPOINTS

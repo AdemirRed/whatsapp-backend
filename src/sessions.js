@@ -290,6 +290,13 @@ const initializeEvents = (client, sessionId) => {
       })
     })
 
+  checkIfEventisEnabled('vote_update')
+    .then(_ => {
+      client.on('vote_update', (vote) => {
+        emit('vote_update', { vote })
+      })
+    })
+
   checkIfEventisEnabled('message_revoke_everyone')
     .then(_ => {
       client.on('message_revoke_everyone', async (after, before) => {

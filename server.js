@@ -1,7 +1,11 @@
 const app = require('./src/app')
-const { baseWebhookURL } = require('./src/config')
 const fs = require('fs')
+const path = require('path')
+
+// Carregar variáveis de ambiente
 require('dotenv').config()
+
+const { baseWebhookURL } = require('./src/config')
 
 // Start the server
 const port = process.env.PORT || 3000

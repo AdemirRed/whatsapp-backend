@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Session Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #25D366;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #25D366;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 211, 102, 0.3);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            color: #333;
+        }
+
+        .btn-warning:hover {
+            box-shadow: 0 5px 15px rgba(255, 193, 7, 0.3);
+        }
+
+        .sessions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .session-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+
+        .session-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .session-card.hibernated-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 2px dashed #6c757d;
+        }
+
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .session-identity {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .profile-pic {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #25D366;
+            background: #f8f9fa;
+        }
+
+        .profile-pic-placeholder {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .session-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .session-id {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #333;
+        }
+
+        .session-phone {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-hibernated {
+            background: #e2e3e5;
+            color: #495057;
+            border: 1px dashed #6c757d;
+        }
+
+        .status-loading {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .qr-code {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .qr-code img {
+            max-width: 200px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+        }
+
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .result-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .result-error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .api-status {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .api-online {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .api-offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #25D366;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .refresh-btn {
+            float: right;
+            font-size: 14px;
+            padding: 8px 15px;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease-out;
+            overflow: hidden;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: white;
+            padding: 20px;
+            position: relative;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .close {
+            color: white;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            right: 20px;
+            top: 15px;
+        }
+
+        .close:hover {
+            opacity: 0.7;
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .info-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .info-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #25D366;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #555;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-value {
+            color: #333;
+            font-size: 1.1rem;
+            word-break: break-all;
+        }
+
+        .info-value.large {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+        }
+
+        .profile-header .profile-pic {
+            width: 60px;
+            height: 60px;
+        }
+
+        .profile-header .profile-pic-placeholder {
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .status-indicator.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-indicator.hibernated {
+            background: #e2e3e5;
+            color: #495057;
+        }
+
+        .status-indicator.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .copy-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-left: 10px;
+            transition: background 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: #5a6268;
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+        }
+
+        .btn-info:hover {
+            box-shadow: 0 5px 15px rgba(23, 162, 184, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 WhatsApp Session Manager</h1>
+            <p>Gerencie suas sessões do WhatsApp de forma simples e eficiente</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Status da API -->
+            <div id="apiStatus" class="api-status api-offline">
+                🔴 Verificando status da API...
+            </div>
+
+            <!-- Seção de Criação de Nova Sessão -->
+            <div class="section">
+                <h2>📱 Criar Nova Sessão</h2>
+                <div class="form-group">
+                    <label for="newSessionId">ID da Sessão:</label>
+                    <input type="text" id="newSessionId" placeholder="Digite o ID da nova sessão (ex: minha-sessao)" value="">
+                </div>
+                <button class="btn" onclick="createSession()">Criar Sessão</button>
+                <div id="createResult" class="result-box" style="display: none;"></div>
+                
+                <div id="qrCodeSection" style="display: none;">
+                    <h3>QR Code para Conexão:</h3>
+                    <div class="qr-code">
+                        <div id="qrCodeImage"></div>
+                        <button class="btn btn-warning" onclick="refreshQR()">🔄 Atualizar QR</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção de Gerenciamento Global -->
+            <div class="section">
+                <h2>🔧 Gerenciamento Global</h2>
+                <div style="margin-bottom: 15px;">
+                    <h3>🔄 Sessões Ativas</h3>
+                    <button class="btn btn-warning" onclick="hibernateAllSessions()">😴 Hibernar Todas</button>
+                    <button class="btn btn-danger" onclick="terminateInactive()">⏸️ Terminar Inativas</button>
+                    <button class="btn btn-danger" onclick="terminateAll()">🛑 Terminar Todas</button>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <h3>🌙 Sessões Hibernadas</h3>
+                    <button class="btn" onclick="reactivateAllSessions()">🔋 Reativar Todas</button>
+                </div>
+                <div>
+                    <h3>📊 Controle</h3>
+                    <button class="btn" onclick="loadSessions()">🔄 Recarregar Sessões</button>
+                </div>
+                <div id="globalResult" class="result-box" style="display: none;"></div>
+            </div>
+
+            <!-- Seção de Sessões Ativas -->
+            <div class="section">
+                <h2>
+                    📋 Sessões Ativas
+                    <button class="btn refresh-btn" onclick="loadSessions()">🔄 Atualizar</button>
+                </h2>
+                <div class="loading" id="sessionsLoading">
+                    <div class="spinner"></div>
+                    <p>Carregando sessões...</p>
+                </div>
+                <div id="sessionsGrid" class="sessions-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Informações da Sessão -->
+    <div id="sessionInfoModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <h2>📱 Informações da Sessão</h2>
+            </div>
+            <div class="modal-body">
+                <!-- Loading -->
+                <div id="modalLoading" style="text-align: center; padding: 20px;">
+                    <div class="spinner"></div>
+                    <p>Carregando informações...</p>
+                </div>
+                
+                <!-- Conteúdo do Modal -->
+                <div id="modalContent" style="display: none;">
+                    <!-- Cabeçalho com foto e nome -->
+                    <div class="profile-header">
+                        <img id="modalProfileImg" src="" alt="Foto de Perfil" style="display: none;">
+                        <div class="profile-info">
+                            <h3 id="modalSessionTitle">Carregando...</h3>
+                            <p id="modalSessionStatus">Verificando status...</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Grid de informações -->
+                    <div id="sessionInfoGrid" class="info-grid">
+                        <!-- Informações serão preenchidas via JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:200';
+        const API_KEY = 'redblack';
+        let currentSessionForQR = null;
+
+        // Função para fazer requisições à API
+        async function apiRequest(endpoint, method = 'GET', body = null) {
+            try {
+                const options = {
+                    method,
+                    headers: {
+                        'accept': 'application/json',
+                        'x-api-key': API_KEY
+                    }
+                };
+
+                if (body) {
+                    options.headers['Content-Type'] = 'application/json';
+                    options.body = JSON.stringify(body);
+                }
+
+                const response = await fetch(`${API_BASE}${endpoint}`, options);
+                const data = await response.json();
+                return { success: response.ok, data, status: response.status };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+
+        // Verificar status da API
+        async function checkApiStatus() {
+            const result = await apiRequest('/ping');
+            const statusDiv = document.getElementById('apiStatus');
+            
+            if (result.success && result.data.success) {
+                statusDiv.className = 'api-status api-online';
+                statusDiv.innerHTML = '🟢 API Online - ' + result.data.message;
+            } else {
+                statusDiv.className = 'api-status api-offline';
+                statusDiv.innerHTML = '🔴 API Offline';
+            }
+        }
+
+        // Criar nova sessão
+        async function createSession() {
+            const sessionId = document.getElementById('newSessionId').value.trim();
+            if (!sessionId) {
+                alert('Por favor, digite um ID para a sessão');
+                return;
+            }
+
+            const result = await apiRequest(`/session/start/${sessionId}`);
+            const resultDiv = document.getElementById('createResult');
+            
+            resultDiv.style.display = 'block';
+            
+            if (result.success) {
+                resultDiv.className = 'result-box result-success';
+                resultDiv.textContent = JSON.stringify(result.data, null, 2);
+                currentSessionForQR = sessionId;
+                
+                // Atualizar lista de sessões
+                loadSessions();
+                
+                // Aguardar um pouco e então buscar o QR code
+                setTimeout(() => {
+                    getQRCode(sessionId);
+                }, 2000);
+            } else {
+                resultDiv.className = 'result-box result-error';
+                resultDiv.textContent = `Erro: ${result.error || 'Falha na requisição'}`;
+            }
+        }
+
+        // Obter QR Code
+        async function getQRCode(sessionId) {
+            if (!sessionId) sessionId = currentSessionForQR;
+            if (!sessionId) return;
+
+            const result = await apiRequest(`/session/qr/${sessionId}`);
+            const qrSection = document.getElementById('qrCodeSection');
+            const qrImageDiv = document.getElementById('qrCodeImage');
+            
+            if (result.success && result.data.qr) {
+                // Gerar QR code usando API externa
+                const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(result.data.qr)}`;
+                qrImageDiv.innerHTML = `<img src="${qrCodeUrl}" alt="QR Code" />`;
+                qrSection.style.display = 'block';
+            } else {
+                qrImageDiv.innerHTML = '<p>QR Code não disponível</p>';
+                qrSection.style.display = 'block';
+            }
+        }
+
+        // Atualizar QR Code
+        function refreshQR() {
+            if (currentSessionForQR) {
+                getQRCode(currentSessionForQR);
+            }
+        }
+
+        // Obter status da sessão
+        async function getSessionStatus(sessionId) {
+            const result = await apiRequest(`/session/status/${sessionId}`);
+            if (result.success) {
+                return result.data.state || 'UNKNOWN';
+            }
+            return 'ERROR';
+        }
+
+        // Verificar status de uma sessão específica (com alert)
+        async function checkSessionStatus(sessionId) {
+            const result = await apiRequest(`/session/status/${sessionId}`);
+            if (result.success) {
+                const status = result.data.state || 'UNKNOWN';
+                const message = result.data.message || '';
+                alert(`Sessão: ${sessionId}\nStatus: ${getStatusText(status)}\nMensagem: ${message}`);
+            } else {
+                alert(`Erro ao verificar status da sessão: ${sessionId}`);
+            }
+        }
+
+        // Terminar sessão específica
+        async function terminateSession(sessionId) {
+            if (!confirm(`Tem certeza que deseja terminar a sessão "${sessionId}"?\n\nEsta ação irá desconectar permanentemente da sessão.`)) {
+                return;
+            }
+
+            const result = await apiRequest(`/session/terminate/${sessionId}`);
+            if (result.success) {
+                alert('Sessão terminada com sucesso!');
+                loadSessions(); // Atualizar lista
+            } else {
+                alert('Erro ao terminar sessão: ' + (result.error || 'Erro desconhecido'));
+            }
+        }
+
+        // Reativar sessão hibernada
+        async function reactivateSession(sessionId) {
+            if (!confirm(`Tem certeza que deseja reativar a sessão hibernada "${sessionId}"?`)) {
+                return;
+            }
+
+            const result = await apiRequest(`/session/reactivate/${sessionId}`);
+            if (result.success) {
+                alert('Sessão reativada com sucesso!');
+                loadSessions(); // Atualizar lista
+            } else {
+                alert('Erro ao reativar sessão: ' + (result.error || 'Erro desconhecido'));
+            }
+        }
+
+        // Hibernar sessão específica
+        async function hibernateSession(sessionId) {
+            if (!confirm(`Tem certeza que deseja hibernar a sessão "${sessionId}"?\n\nEla será pausada para manutenção, mantendo a conexão com o WhatsApp.`)) {
+                return;
+            }
+
+            const result = await apiRequest(`/session/hibernate/${sessionId}`);
+            if (result.success) {
+                alert('Sessão hibernada com sucesso!');
+                loadSessions();
+            } else {
+                alert('Erro ao hibernar sessão: ' + (result.error || (result.data && result.data.message) || 'Erro desconhecido'));
+            }
+        }
+
+        // Hibernar todas as sessões
+        async function hibernateAllSessions() {
+            if (!confirm('Tem certeza que deseja hibernar TODAS as sessões ativas?\n\nEsta ação é ideal para manutenção do sistema.')) {
+                return;
+            }
+
+            const result = await apiRequest('/session/hibernateAll');
+            const resultDiv = document.getElementById('globalResult');
+            
+            resultDiv.style.display = 'block';
+            
+            if (result.success) {
+                resultDiv.className = 'result-box result-success';
+                resultDiv.textContent = `✅ ${result.data.hibernatedCount} sessões hibernadas com sucesso!\n\n` + JSON.stringify(result.data, null, 2);
+            } else {
+                resultDiv.className = 'result-box result-error';
+                resultDiv.textContent = `Erro: ${result.error || 'Falha na requisição'}`;
+            }
+            
+            loadSessions();
+        }
+
+        // Reativar todas as sessões hibernadas
+        async function reactivateAllSessions() {
+            if (!confirm('Tem certeza que deseja reativar TODAS as sessões hibernadas?')) {
+                return;
+            }
+
+            const result = await apiRequest('/session/reactivateAll');
+            const resultDiv = document.getElementById('globalResult');
+            
+            resultDiv.style.display = 'block';
+            
+            if (result.success) {
+                resultDiv.className = 'result-box result-success';
+                resultDiv.textContent = `✅ ${result.data.reactivatedCount} sessões reativadas com sucesso!\n\n` + JSON.stringify(result.data, null, 2);
+            } else {
+                resultDiv.className = 'result-box result-error';
+                resultDiv.textContent = `Erro: ${result.error || 'Falha na requisição'}`;
+            }
+            
+            loadSessions();
+        }
+
+        // Terminar sessões inativas
+        async function terminateInactive() {
+            if (!confirm('Tem certeza que deseja terminar todas as sessões inativas?')) {
+                return;
+            }
+
+            const result = await apiRequest('/session/terminateInactive');
+            const resultDiv = document.getElementById('globalResult');
+            
+            resultDiv.style.display = 'block';
+            
+            if (result.success) {
+                resultDiv.className = 'result-box result-success';
+                resultDiv.textContent = JSON.stringify(result.data, null, 2);
+            } else {
+                resultDiv.className = 'result-box result-error';
+                resultDiv.textContent = `Erro: ${result.error || 'Falha na requisição'}`;
+            }
+            
+            loadSessions();
+        }
+
+        // Terminar todas as sessões
+        async function terminateAll() {
+            if (!confirm('Tem certeza que deseja terminar TODAS as sessões?')) {
+                return;
+            }
+
+            const result = await apiRequest('/session/terminateAll');
+            const resultDiv = document.getElementById('globalResult');
+            
+            resultDiv.style.display = 'block';
+            
+            if (result.success) {
+                resultDiv.className = 'result-box result-success';
+                resultDiv.textContent = JSON.stringify(result.data, null, 2);
+            } else {
+                resultDiv.className = 'result-box result-error';
+                resultDiv.textContent = `Erro: ${result.error || 'Falha na requisição'}`;
+            }
+            
+            loadSessions();
+        }
+
+        // Carregar sessões reais do servidor
+        async function loadSessions() {
+            const loadingDiv = document.getElementById('sessionsLoading');
+            const gridDiv = document.getElementById('sessionsGrid');
+            
+            loadingDiv.style.display = 'block';
+            gridDiv.innerHTML = '';
+
+            try {
+                const result = await apiRequest('/session/list');
+                
+                loadingDiv.style.display = 'none';
+                
+                if (!result.success || !result.data.sessions) {
+                    gridDiv.innerHTML = '<p style="text-align: center; color: #666;">Erro ao carregar sessões</p>';
+                    return;
+                }
+
+                const sessions = result.data.sessions;
+                const summary = result.data.summary;
+                
+                if (sessions.length === 0) {
+                    gridDiv.innerHTML = '<p style="text-align: center; color: #666;">Nenhuma sessão encontrada</p>';
+                    return;
+                }
+
+                // Mostrar resumo
+                const summaryHtml = `
+                    <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                        <strong>📊 Resumo:</strong> 
+                        ${summary.active} ativas • ${summary.hibernated} hibernadas • ${summary.total} total
+                    </div>
+                `;
+
+                gridDiv.innerHTML = summaryHtml + sessions.map(session => {
+                    const statusClass = getStatusClass(session.status);
+                    const statusText = getStatusText(session.status);
+                    const isHibernated = session.status === 'HIBERNATED';
+                    const isConnected = session.status === 'CONNECTED';
+                    
+                    // Gerar foto de perfil ou placeholder
+                    const profilePicHtml = session.profilePicUrl ? 
+                        `<img src="${session.profilePicUrl}" alt="Profile" class="profile-pic" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                         <div class="profile-pic-placeholder" style="display: none;">${session.sessionId.charAt(0).toUpperCase()}</div>` :
+                        `<div class="profile-pic-placeholder">${session.sessionId.charAt(0).toUpperCase()}</div>`;
+                    
+                    // Formatar número de telefone
+                    const phoneDisplay = session.phoneNumber ? 
+                        session.phoneNumber.replace('@c.us', '').replace(/(\d{2})(\d{2})(\d{5})(\d{4})/, '+$1 ($2) $3-$4') : 
+                        'Número não disponível';
+                    
+                    // Nome para exibir
+                    const displayName = session.pushName || session.sessionId;
+                    
+                    return `
+                        <div class="session-card ${isHibernated ? 'hibernated-card' : ''}">
+                            <div class="session-header">
+                                <div class="session-identity">
+                                    ${profilePicHtml}
+                                    <div class="session-details">
+                                        <div class="session-id">
+                                            ${displayName}
+                                            ${isHibernated ? ' 😴' : ''}
+                                        </div>
+                                        <div class="session-phone">${phoneDisplay}</div>
+                                    </div>
+                                </div>
+                                <div class="status-badge ${statusClass}">
+                                    ${statusText}
+                                </div>
+                            </div>
+                            <div style="margin-bottom: 10px;">
+                                <small style="color: #666;"><strong>ID:</strong> ${session.sessionId}</small><br>
+                                <small style="color: #666;"><strong>Status:</strong> ${session.message || 'N/A'}</small>
+                                ${session.hibernatedAt ? `<br><small style="color: #666;"><strong>Hibernada em:</strong> ${new Date(session.hibernatedAt).toLocaleString()}</small>` : ''}
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                ${isHibernated ? `
+                                    <button class="btn" onclick="reactivateSession('${session.sessionId}')">🔋 Reativar</button>
+                                ` : `
+                                    <button class="btn" onclick="getQRCode('${session.sessionId}')" ${isConnected ? 'disabled' : ''}>📱 QR Code</button>
+                                    <button class="btn btn-warning" onclick="hibernateSession('${session.sessionId}')">😴 Hibernar</button>
+                                `}
+                                <button class="btn btn-info" onclick="showSessionInfo('${session.sessionId}')">ℹ️ Info</button>
+                                <button class="btn btn-warning" onclick="checkSessionStatus('${session.sessionId}')">📊 Status</button>
+                                <button class="btn btn-danger" onclick="terminateSession('${session.sessionId}')">🛑 Terminar</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                gridDiv.innerHTML = '<p style="text-align: center; color: #ff0000;">Erro ao carregar sessões: ' + error + '</p>';
+            }
+        }
+
+        // Função para obter classe CSS do status
+        function getStatusClass(status) {
+            switch (status.toUpperCase()) {
+                case 'CONNECTED':
+                    return 'status-connected';
+                case 'HIBERNATED':
+                    return 'status-hibernated';
+                case 'DISCONNECTED':
+                case 'ERROR':
+                    return 'status-disconnected';
+                default:
+                    return 'status-loading';
+            }
+        }
+
+        // Função para obter texto do status em português
+        function getStatusText(status) {
+            switch (status.toUpperCase()) {
+                case 'CONNECTED':
+                    return 'CONECTADO';
+                case 'HIBERNATED':
+                    return 'HIBERNADA';
+                case 'DISCONNECTED':
+                    return 'DESCONECTADO';
+                case 'ERROR':
+                    return 'ERRO';
+                case 'OPENING':
+                    return 'ABRINDO';
+                case 'PAIRING':
+                    return 'PAREANDO';
+                case 'TIMEOUT':
+                    return 'TIMEOUT';
+                default:
+                    return status;
+            }
+        }
+
+        // Função para exibir informações detalhadas da sessão
+        async function showSessionInfo(sessionId) {
+            try {
+                const modal = document.getElementById('sessionInfoModal');
+                const modalContent = document.getElementById('modalContent');
+                const modalLoading = document.getElementById('modalLoading');
+                
+                // Verificar se os elementos existem
+                if (!modal || !modalContent || !modalLoading) {
+                    console.error('Elementos do modal não encontrados');
+                    alert('Erro: Modal não encontrado. Recarregue a página.');
+                    return;
+                }
+                
+                // Mostrar o modal
+                modal.style.display = 'block';
+                
+                // Mostrar loading
+                modalContent.style.display = 'none';
+                modalLoading.style.display = 'block';
+                
+                // Buscar informações detalhadas da sessão
+                const response = await fetch(`${API_BASE}/client/getClassInfo/${sessionId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': API_KEY
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Erro ao buscar informações: ${response.status}`);
+                }
+                
+                const sessionInfo = await response.json();
+                
+                // Preencher o modal com as informações
+                populateSessionModal(sessionId, sessionInfo);
+                
+                // Ocultar loading e mostrar conteúdo
+                modalLoading.style.display = 'none';
+                modalContent.style.display = 'block';
+                
+            } catch (error) {
+                console.error('Erro ao buscar informações da sessão:', error);
+                alert(`Erro ao buscar informações da sessão: ${error.message}`);
+                closeModal();
+            }
+        }
+        
+        // Função para preencher o modal com informações da sessão
+        function populateSessionModal(sessionId, sessionInfo) {
+            // Atualizar cabeçalho do modal
+            const profileImg = document.getElementById('modalProfileImg');
+            const sessionTitle = document.getElementById('modalSessionTitle');
+            const sessionStatus = document.getElementById('modalSessionStatus');
+            
+            // Verificar se os elementos existem antes de manipulá-los
+            if (!profileImg || !sessionTitle || !sessionStatus) {
+                console.error('Elementos do modal não encontrados');
+                return;
+            }
+            
+            // Usar foto de perfil se disponível
+            if (sessionInfo.profilePicUrl) {
+                profileImg.src = sessionInfo.profilePicUrl;
+                profileImg.style.display = 'block';
+            } else {
+                profileImg.style.display = 'none';
+            }
+            
+            sessionTitle.textContent = sessionInfo.pushname || sessionInfo.wid?.user || sessionId;
+            
+            // Status da sessão
+            const statusColor = sessionInfo.isConnected ? '#28a745' : '#dc3545';
+            sessionStatus.innerHTML = `<span style="color: ${statusColor};">● ${sessionInfo.isConnected ? 'Conectado' : 'Desconectado'}</span>`;
+            
+            // Preencher informações detalhadas
+            const infoGrid = document.getElementById('sessionInfoGrid');
+            if (!infoGrid) {
+                console.error('Grid de informações não encontrado');
+                return;
+            }
+            
+            infoGrid.innerHTML = `
+                <div class="info-item">
+                    <strong>Session ID:</strong>
+                    <span>${sessionId}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Nome:</strong>
+                    <span>${sessionInfo.pushname || 'N/A'}</span>
+                </div>
+                <div class="info-item">
+                    <strong>WhatsApp ID:</strong>
+                    <span>${sessionInfo.wid?.user || 'N/A'}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Servidor:</strong>
+                    <span>${sessionInfo.wid?.server || 'N/A'}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Status:</strong>
+                    <span style="color: ${statusColor};">${sessionInfo.isConnected ? 'Conectado' : 'Desconectado'}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Plataforma:</strong>
+                    <span>${sessionInfo.platform || 'N/A'}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Versão WA:</strong>
+                    <span>${sessionInfo.wa_version || 'N/A'}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Localização:</strong>
+                    <span>${sessionInfo.locales || 'N/A'}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Bateria:</strong>
+                    <span>${sessionInfo.battery ? `${sessionInfo.battery}%` : 'N/A'}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Carregando:</strong>
+                    <span>${sessionInfo.plugged !== undefined ? (sessionInfo.plugged ? 'Sim' : 'Não') : 'N/A'}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Pode Receber Msg:</strong>
+                    <span>${sessionInfo.canReceiveMessage !== undefined ? (sessionInfo.canReceiveMessage ? 'Sim' : 'Não') : 'N/A'}</span>
+                </div>
+                <div class="info-item">
+                    <strong>É Business:</strong>
+                    <span>${sessionInfo.isBusiness !== undefined ? (sessionInfo.isBusiness ? 'Sim' : 'Não') : 'N/A'}</span>
+                </div>
+            `;
+        }
+        
+        // Função para fechar o modal
+        function closeModal() {
+            const modal = document.getElementById('sessionInfoModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Fechar modal ao clicar fora dele
+        window.onclick = function(event) {
+            const modal = document.getElementById('sessionInfoModal');
+            if (modal && event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Inicializar página
+        document.addEventListener('DOMContentLoaded', function() {
+            checkApiStatus();
+            loadSessions();
+            
+            // Verificar status da API a cada 30 segundos
+            setInterval(checkApiStatus, 30000);
+            
+            // Atualizar lista de sessões a cada 10 segundos
+            setInterval(loadSessions, 10000);
+        });
+    </script>
+</body>
+</html>

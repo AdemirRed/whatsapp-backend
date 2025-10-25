@@ -3,307 +3,619 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhatsApp Session Manager</title>
+    <title>WhatsApp Session Manager - Dark Pro</title>
     <style>
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+            background: #0a0a0b;
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 119, 198, 0.15) 0%, transparent 50%);
             min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
+            color: #e1e5e9;
+            line-height: 1.6;
+            overflow-x: hidden;
         }
 
         .header {
-            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
+            background: rgba(18, 18, 20, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
         }
 
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            max-width: none;
         }
 
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo .icon {
+            font-size: 1.8rem;
+        }
+
+        .api-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .api-status.online {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .api-status.offline {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
         }
 
         .main-content {
-            padding: 30px;
-        }
-
-        .section {
-            margin-bottom: 40px;
-            padding: 25px;
-            border: 1px solid #e0e0e0;
-            border-radius: 10px;
-            background: white;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-        }
-
-        .section h2 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-            border-bottom: 2px solid #25D366;
-            padding-bottom: 10px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #555;
-        }
-
-        .form-group input {
+            padding: 20px 25px;
             width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
         }
 
-        .form-group input:focus {
-            outline: none;
-            border-color: #25D366;
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
         }
 
-        .btn {
-            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            transition: all 0.3s;
-            margin: 5px;
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
         }
 
-        .btn:hover {
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.08);
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(37, 211, 102, 0.3);
+            border-color: rgba(255, 255, 255, 0.2);
         }
 
-        .btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
+        .stat-card .icon {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            opacity: 0.8;
         }
 
-        .btn-danger {
-            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        .stat-card .number {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 4px;
         }
 
-        .btn-danger:hover {
-            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+        .stat-card .label {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            font-weight: 500;
         }
 
-        .btn-warning {
-            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
-            color: #333;
+        .controls-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            backdrop-filter: blur(20px);
         }
 
-        .btn-warning:hover {
-            box-shadow: 0 5px 15px rgba(255, 193, 7, 0.3);
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #f1f5f9;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .control-group {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .control-group:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .control-group h3 {
+            margin-bottom: 15px;
+            color: #f1f5f9;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sessions-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 25px;
+            backdrop-filter: blur(20px);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
         .sessions-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 18px;
         }
 
         .session-card {
-            border: 1px solid #e0e0e0;
-            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
             padding: 20px;
-            background: white;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(15px);
+        }
+
+        .session-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
         }
 
         .session-card:hover {
-            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-3px);
+            border-color: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
-        .session-card.hibernated-card {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border: 2px dashed #6c757d;
+        .session-card.hibernated {
+            background: rgba(251, 191, 36, 0.1);
+            border-color: rgba(251, 191, 36, 0.3);
+        }
+
+        .session-card.hibernated::before {
+            background: linear-gradient(90deg, #fbbf24, #f59e0b);
         }
 
         .session-header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .session-identity {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+            gap: 15px;
+            margin-bottom: 18px;
         }
 
         .profile-pic {
             width: 50px;
             height: 50px;
             border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.2);
             object-fit: cover;
-            border: 2px solid #25D366;
-            background: #f8f9fa;
+            transition: all 0.3s ease;
         }
 
-        .profile-pic-placeholder {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
-            display: flex;
+        .profile-pic:hover {
+            transform: scale(1.05);
+            border-color: #667eea;
+        }
+
+        .session-info h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #f1f5f9;
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+
+        .session-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .session-status.connected {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .session-status.hibernated {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        .session-status.disconnected {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .session-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .session-buttons .btn:last-child {
+            grid-column: span 2;
+        }
+
+        .btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 18px;
-        }
-
-        .session-details {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .session-id {
-            font-weight: bold;
-            font-size: 1.2rem;
-            color: #333;
-        }
-
-        .session-phone {
-            font-size: 0.9rem;
-            color: #666;
-            margin-top: 2px;
-        }
-
-        .status-badge {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        .status-connected {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-disconnected {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .status-hibernated {
-            background: #e2e3e5;
-            color: #495057;
-            border: 1px dashed #6c757d;
-        }
-
-        .status-loading {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .qr-code {
+            gap: 6px;
             text-align: center;
-            margin: 20px 0;
+            white-space: nowrap;
+            border: 1px solid transparent;
         }
 
-        .qr-code img {
-            max-width: 200px;
-            border: 2px solid #ddd;
-            border-radius: 10px;
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-primary {
+            background: rgba(59, 130, 246, 0.8);
+            color: white;
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+
+        .btn-primary:hover {
+            background: rgba(59, 130, 246, 1);
+        }
+
+        .btn-success {
+            background: rgba(34, 197, 94, 0.8);
+            color: white;
+            border-color: rgba(34, 197, 94, 0.5);
+        }
+
+        .btn-success:hover {
+            background: rgba(34, 197, 94, 1);
+        }
+
+        .btn-warning {
+            background: rgba(251, 191, 36, 0.8);
+            color: #1a1a1a;
+            border-color: rgba(251, 191, 36, 0.5);
+        }
+
+        .btn-warning:hover {
+            background: rgba(251, 191, 36, 1);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.8);
+            color: white;
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 1);
+        }
+
+        .btn-info {
+            background: rgba(14, 165, 233, 0.8);
+            color: white;
+            border-color: rgba(14, 165, 233, 0.5);
+        }
+
+        .btn-info:hover {
+            background: rgba(14, 165, 233, 1);
+        }
+
+        .btn-secondary {
+            background: rgba(100, 116, 139, 0.8);
+            color: white;
+            border-color: rgba(100, 116, 139, 0.5);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(100, 116, 139, 1);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .form-control {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.05);
+            color: #f1f5f9;
+            min-width: 200px;
+        }
+
+        .form-control::placeholder {
+            color: #94a3b8;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .global-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
         .result-box {
-            margin-top: 20px;
+            margin-top: 15px;
             padding: 15px;
             border-radius: 8px;
-            font-family: monospace;
-            font-size: 14px;
+            font-family: 'Courier New', monospace;
             white-space: pre-wrap;
-            max-height: 300px;
+            max-height: 250px;
             overflow-y: auto;
+            font-size: 0.85rem;
         }
 
         .result-success {
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #22c55e;
         }
 
         .result-error {
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
         }
 
-        .api-status {
-            text-align: center;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-weight: bold;
-        }
-
-        .api-online {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .api-offline {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .loading {
+        /* Modal Styles */
+        .modal {
             display: none;
-            text-align: center;
-            margin: 20px;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: #1a1a1c;
+            margin: 3% auto;
+            padding: 0;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 90vh;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: slideIn 0.3s ease;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px 25px;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .close {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-50%) rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 25px;
+            overflow-y: auto;
+            flex: 1;
+            background: #1a1a1c;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            margin-bottom: 25px;
+            padding: 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .profile-header img {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .profile-info h3 {
+            font-size: 1.3rem;
+            color: #f1f5f9;
+            margin-bottom: 5px;
+        }
+
+        .profile-info p {
+            margin: 0;
+            font-size: 0.95rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .info-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(3px);
+        }
+
+        .info-item strong {
+            color: #f1f5f9;
+            font-weight: 600;
+            flex-shrink: 0;
+            min-width: 120px;
+        }
+
+        .info-item span {
+            color: #94a3b8;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            text-align: right;
+            word-break: break-all;
         }
 
         .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #25D366;
-            border-radius: 50%;
             width: 40px;
             height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin: 0 auto 10px;
+            margin: 20px auto;
         }
 
         @keyframes spin {
@@ -311,76 +623,428 @@
             100% { transform: rotate(360deg); }
         }
 
-        .refresh-btn {
-            float: right;
-            font-size: 14px;
-            padding: 8px 15px;
+        .loading-text {
+            text-align: center;
+            color: #94a3b8;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.connected {
+            background: #22c55e;
+        }
+
+        .status-indicator.hibernated {
+            background: #fbbf24;
+        }
+
+        .status-indicator.disconnected {
+            background: #ef4444;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 15px;
+            }
+
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+                padding: 12px 15px;
+            }
+
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .sessions-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .session-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .session-buttons .btn:last-child {
+                grid-column: span 1;
+            }
+
+            .modal-content {
+                margin: 5% auto;
+                width: 95%;
+                max-height: 95vh;
+            }
+
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .info-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+
+            .info-item span {
+                text-align: left;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .form-control {
+                min-width: auto;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .fade-in {
+            animation: fadeInUp 0.5s ease;
+        }
+
+        @keyframes fadeInUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+
+        .empty-state .icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #94a3b8;
+        }
+
+        .empty-state p {
+            font-size: 1rem;
+            opacity: 0.8;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🚀 WhatsApp Session Manager</h1>
-            <p>Gerencie suas sessões do WhatsApp de forma simples e eficiente</p>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="icon">📱</span>
+                <h1>WhatsApp Session Manager</h1>
+            </div>
+            <div class="api-status" id="apiStatus">
+                <span class="status-indicator"></span>
+                Verificando...
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Stats Dashboard -->
+        <div class="stats-grid" id="statsGrid">
+            <!-- Stats will be populated here -->
         </div>
 
-        <div class="main-content">
-            <!-- Status da API -->
-            <div id="apiStatus" class="api-status api-offline">
-                🔴 Verificando status da API...
-            </div>
-
-            <!-- Seção de Criação de Nova Sessão -->
-            <div class="section">
-                <h2>📱 Criar Nova Sessão</h2>
-                <div class="form-group">
-                    <label for="newSessionId">ID da Sessão:</label>
-                    <input type="text" id="newSessionId" placeholder="Digite o ID da nova sessão (ex: minha-sessao)" value="">
+        <!-- Controls Section -->
+        <div class="controls-section">
+            <h2 class="section-title">🎛️ Controles do Sistema</h2>
+            <div class="controls-grid">
+                <!-- Session Controls -->
+                <div class="control-group">
+                    <h3>📝 Criar Nova Sessão</h3>
+                    <div class="input-group">
+                        <input type="text" id="sessionIdInput" class="form-control" placeholder="Digite o ID da sessão">
+                        <button class="btn btn-primary" onclick="createSession()">
+                            ➕ Criar
+                        </button>
+                    </div>
                 </div>
-                <button class="btn" onclick="createSession()">Criar Sessão</button>
-                <div id="createResult" class="result-box" style="display: none;"></div>
-                
-                <div id="qrCodeSection" style="display: none;">
-                    <h3>QR Code para Conexão:</h3>
-                    <div class="qr-code">
-                        <div id="qrCodeImage"></div>
-                        <button class="btn btn-warning" onclick="refreshQR()">🔄 Atualizar QR</button>
+
+                <!-- QR Code -->
+                <div class="control-group">
+                    <h3>📲 Obter QR Code</h3>
+                    <div class="input-group">
+                        <input type="text" id="qrSessionIdInput" class="form-control" placeholder="ID da sessão para QR">
+                        <button class="btn btn-info" onclick="getQRCodeManual()">
+                            🔗 QR Code
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Send Message -->
+                <div class="control-group">
+                    <h3>💬 Enviar Mensagem</h3>
+                    <div class="input-group">
+                        <input type="text" id="messageSessionId" class="form-control" placeholder="ID da sessão">
+                        <input type="text" id="messageNumber" class="form-control" placeholder="Número (ex: 5511999999999 ou 555199999999@c.us)">
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="messageText" class="form-control" placeholder="Sua mensagem">
+                        <button class="btn btn-success" onclick="sendMessage()">
+                            📤 Enviar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Poll Management -->
+                <div class="control-group">
+                    <h3>📊 Gerenciar Enquetes (Polls)</h3>
+                    <div class="input-group">
+                        <input type="text" id="pollSessionId" class="form-control" placeholder="ID da sessão">
+                        <input type="text" id="pollChatId" class="form-control" placeholder="Chat ID (ex: 555199999999@c.us)">
+                    </div>
+                    <div class="input-group">
+                        <button class="btn btn-info" onclick="getChatPolls()">
+                            📋 Listar Enquetes do Chat
+                        </button>
+                        <button class="btn btn-primary" onclick="showPollVotesModal()">
+                            🗳️ Ver Votos por ID
+                        </button>
+                    </div>
+                    <div class="input-group">
+                        <button class="btn btn-success" onclick="showCreatePollModal()">
+                            ➕ Criar Enquete
+                        </button>
+                        <button class="btn btn-warning" onclick="showContactVotesModal()">
+                            👤 Votos por Contato
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Global Controls -->
+                <div class="control-group">
+                    <h3>🌐 Controles Globais</h3>
+                    <div class="global-controls">
+                        <button class="btn btn-warning" onclick="hibernateAllSessions()">
+                            😴 Hibernar Todas
+                        </button>
+                        <button class="btn btn-success" onclick="reactivateAllSessions()">
+                            🔋 Reativar Todas
+                        </button>
+                        <button class="btn btn-danger" onclick="terminateInactive()">
+                            🗑️ Limpar Inativas
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Seção de Gerenciamento Global -->
-            <div class="section">
-                <h2>🔧 Gerenciamento Global</h2>
-                <div style="margin-bottom: 15px;">
-                    <h3>🔄 Sessões Ativas</h3>
-                    <button class="btn btn-warning" onclick="hibernateAllSessions()">😴 Hibernar Todas</button>
-                    <button class="btn btn-danger" onclick="terminateInactive()">⏸️ Terminar Inativas</button>
-                    <button class="btn btn-danger" onclick="terminateAll()">🛑 Terminar Todas</button>
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <h3>🌙 Sessões Hibernadas</h3>
-                    <button class="btn" onclick="reactivateAllSessions()">🔋 Reativar Todas</button>
-                </div>
-                <div>
-                    <h3>📊 Controle</h3>
-                    <button class="btn" onclick="loadSessions()">🔄 Recarregar Sessões</button>
-                </div>
-                <div id="globalResult" class="result-box" style="display: none;"></div>
-            </div>
+            <!-- Result Box -->
+            <div id="globalResult" class="result-box" style="display: none;"></div>
+        </div>
 
-            <!-- Seção de Sessões Ativas -->
-            <div class="section">
-                <h2>
-                    📋 Sessões Ativas
-                    <button class="btn refresh-btn" onclick="loadSessions()">🔄 Atualizar</button>
-                </h2>
-                <div class="loading" id="sessionsLoading">
+        <!-- Sessions Section -->
+        <div class="sessions-section">
+            <div class="section-header">
+                <h2 class="section-title">📋 Sessões Ativas</h2>
+                <button class="btn btn-primary" onclick="loadSessions()">
+                    🔄 Atualizar Lista
+                </button>
+            </div>
+            <div class="sessions-grid" id="sessionsContainer">
+                <!-- Sessions will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Informações da Sessão -->
+    <div id="sessionInfoModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <h2>📱 Informações da Sessão</h2>
+            </div>
+            <div class="modal-body">
+                <!-- Loading -->
+                <div id="modalLoading" style="text-align: center; padding: 20px;">
                     <div class="spinner"></div>
-                    <p>Carregando sessões...</p>
+                    <p class="loading-text">Carregando informações...</p>
                 </div>
-                <div id="sessionsGrid" class="sessions-grid"></div>
+                
+                <!-- Conteúdo do Modal -->
+                <div id="modalContent" style="display: none;">
+                    <!-- Cabeçalho com foto e nome -->
+                    <div class="profile-header">
+                        <img id="modalProfileImg" src="" alt="Foto de Perfil" style="display: none;">
+                        <div class="profile-info">
+                            <h3 id="modalSessionTitle">Carregando...</h3>
+                            <p id="modalSessionStatus">Verificando status...</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Grid de informações -->
+                    <div id="sessionInfoGrid" class="info-grid">
+                        <!-- Informações serão preenchidas via JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para Enquetes -->
+        <div id="pollModal" class="modal" style="display: none;">
+            <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+                <div class="modal-header">
+                    <span class="close" onclick="document.getElementById('pollModal').style.display='none'">&times;</span>
+                    <h2 id="pollModalTitle">📊 Enquetes do Chat</h2>
+                </div>
+                
+                <!-- Loading -->
+                <div id="pollModalLoading" style="text-align: center; padding: 20px;">
+                    <div class="loading-spinner"></div>
+                    <p class="loading-text">Carregando enquetes...</p>
+                </div>
+                
+                <!-- Conteúdo das enquetes -->
+                <div id="pollModalContent" style="display: none;">
+                    <div id="pollsList">
+                        <!-- Enquetes serão preenchidas via JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para buscar votos por ID -->
+        <div id="pollVotesModal" class="modal" style="display: none;">
+            <div class="modal-content" style="max-width: 600px;">
+                <div class="modal-header">
+                    <span class="close" onclick="document.getElementById('pollVotesModal').style.display='none'">&times;</span>
+                    <h2>🗳️ Buscar Votos da Enquete</h2>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group">
+                        <input type="text" id="pollVoteSessionId" class="form-control" placeholder="ID da sessão">
+                        <input type="text" id="pollVoteMessageId" class="form-control" placeholder="ID da mensagem da enquete">
+                    </div>
+                    <div class="input-group">
+                        <button class="btn btn-primary" onclick="getPollVotes()">
+                            🔍 Buscar Votos
+                        </button>
+                    </div>
+                    <div id="pollVotesResult" style="margin-top: 20px;">
+                        <!-- Resultados serão exibidos aqui -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para criar enquete -->
+        <div id="createPollModal" class="modal" style="display: none;">
+            <div class="modal-content" style="max-width: 600px;">
+                <div class="modal-header">
+                    <span class="close" onclick="document.getElementById('createPollModal').style.display='none'">&times;</span>
+                    <h2>➕ Criar Nova Enquete</h2>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group">
+                        <input type="text" id="createPollSessionId" class="form-control" placeholder="ID da sessão">
+                        <input type="text" id="createPollChatId" class="form-control" placeholder="Chat ID (ex: 555199999999@c.us)">
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="createPollName" class="form-control" placeholder="Pergunta da enquete">
+                    </div>
+                    <div id="pollOptionsContainer">
+                        <div class="input-group">
+                            <input type="text" class="form-control poll-option" placeholder="Opção 1">
+                            <input type="text" class="form-control poll-option" placeholder="Opção 2">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <button type="button" class="btn btn-secondary" onclick="addPollOption()">+ Adicionar Opção</button>
+                        <label style="color: #94a3b8;">
+                            <input type="checkbox" id="allowMultipleAnswers"> Permitir múltiplas respostas
+                        </label>
+                    </div>
+                    <div class="input-group">
+                        <button class="btn btn-success" onclick="createPoll()">
+                            📊 Criar Enquete
+                        </button>
+                    </div>
+                    <div id="createPollResult" style="margin-top: 20px;">
+                        <!-- Resultado será exibido aqui -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para buscar votos por contato -->
+        <div id="contactVotesModal" class="modal" style="display: none;">
+            <div class="modal-content" style="max-width: 700px;">
+                <div class="modal-header">
+                    <span class="close" onclick="document.getElementById('contactVotesModal').style.display='none'">&times;</span>
+                    <h2>👤 Votos por Contato</h2>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group">
+                        <input type="text" id="contactVotesSessionId" class="form-control" placeholder="ID da sessão">
+                        <input type="text" id="contactVotesPhone" class="form-control" placeholder="Número do telefone (ex: 555199999999)">
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="contactVotesChatId" class="form-control" placeholder="Chat ID (opcional - busca em todos se vazio)">
+                        <button class="btn btn-primary" onclick="getContactVotes()">
+                            🔍 Buscar Votos
+                        </button>
+                    </div>
+                    <div id="contactVotesResult" style="margin-top: 20px;">
+                        <!-- Resultados serão exibidos aqui -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para exibir votos detalhados de uma enquete -->
+    <div id="pollVotesDetailModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2>🗳️ Votos Detalhados da Enquete</h2>
+                <span class="close" onclick="document.getElementById('pollVotesDetailModal').style.display='none'">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="pollVotesDetailContainer">
+                    <!-- Votos detalhados serão exibidos aqui -->
+                </div>
             </div>
         </div>
     </div>
@@ -389,6 +1053,263 @@
         const API_BASE = 'http://localhost:200';
         const API_KEY = 'redblack';
         let currentSessionForQR = null;
+
+        // =====================================
+        // FUNÇÕES PARA GERENCIAR ENQUETES
+        // =====================================
+
+        // Mostrar modal para criar enquete
+        function showCreatePollModal() {
+            document.getElementById('createPollModal').style.display = 'block';
+        }
+
+        // Mostrar modal para buscar votos por ID
+        function showPollVotesModal() {
+            document.getElementById('pollVotesModal').style.display = 'block';
+        }
+
+        // Mostrar modal para buscar votos por contato
+        function showContactVotesModal() {
+            document.getElementById('contactVotesModal').style.display = 'block';
+        }
+
+        // Adicionar nova opção na criação de enquete
+        function addPollOption() {
+            const container = document.getElementById('pollOptionsContainer');
+            const currentOptions = container.querySelectorAll('.poll-option').length;
+            
+            if (currentOptions >= 12) {
+                alert('Máximo de 12 opções permitidas');
+                return;
+            }
+            
+            const newGroup = document.createElement('div');
+            newGroup.className = 'input-group';
+            newGroup.innerHTML = `
+                <input type="text" class="form-control poll-option" placeholder="Opção ${currentOptions + 1}">
+                <button type="button" class="btn btn-danger" onclick="this.parentElement.remove()">×</button>
+            `;
+            container.appendChild(newGroup);
+        }
+
+        // Criar enquete usando endpoint sendMessage
+        async function createPoll() {
+            const sessionId = document.getElementById('createPollSessionId').value.trim();
+            const chatId = document.getElementById('createPollChatId').value.trim();
+            const pollName = document.getElementById('createPollName').value.trim();
+            const allowMultipleAnswers = document.getElementById('allowMultipleAnswers').checked;
+            
+            if (!sessionId || !chatId || !pollName) {
+                alert('Por favor, preencha Session ID, Chat ID e a pergunta da enquete');
+                return;
+            }
+
+            // Formatar chatId se necessário
+            let formattedChatId = chatId;
+            if (!chatId.includes('@')) {
+                formattedChatId = chatId + '@c.us';
+            }
+
+            // Coletar opções
+            const pollOptions = [];
+            const optionInputs = document.querySelectorAll('.poll-option');
+            
+            optionInputs.forEach(input => {
+                const value = input.value.trim();
+                if (value) {
+                    pollOptions.push(value);
+                }
+            });
+
+            if (pollOptions.length < 2) {
+                alert('A enquete deve ter pelo menos 2 opções');
+                return;
+            }
+
+            try {
+                // Usar endpoint sendMessage com contentType Poll
+                const result = await apiRequest(`/client/sendMessage/${sessionId}`, 'POST', {
+                    chatId: formattedChatId,
+                    contentType: 'Poll',
+                    content: {
+                        pollName: pollName,
+                        pollOptions: pollOptions,
+                        options: {
+                            allowMultipleAnswers: allowMultipleAnswers
+                        }
+                    }
+                });
+                
+                const resultDiv = document.getElementById('createPollResult');
+                
+                if (result.success) {
+                    resultDiv.innerHTML = `
+                        <div style="color: #10b981; padding: 15px; background: rgba(16, 185, 129, 0.1); border-radius: 8px;">
+                            ✅ Enquete criada com sucesso!<br>
+                            <small>ID da mensagem: ${result.data && result.data.id ? result.data.id._serialized || result.data.id : 'N/A'}</small>
+                        </div>
+                    `;
+                    
+                    // Limpar formulário
+                    document.getElementById('createPollSessionId').value = '';
+                    document.getElementById('createPollChatId').value = '';
+                    document.getElementById('createPollName').value = '';
+                    document.getElementById('allowMultipleAnswers').checked = false;
+                    
+                    // Resetar opções para apenas 2
+                    const container = document.getElementById('pollOptionsContainer');
+                    container.innerHTML = `
+                        <div class="input-group">
+                            <input type="text" class="form-control poll-option" placeholder="Opção 1">
+                            <input type="text" class="form-control poll-option" placeholder="Opção 2">
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div style="color: #ef4444; padding: 15px; background: rgba(239, 68, 68, 0.1); border-radius: 8px;">
+                            ❌ Erro ao criar enquete: ${result.error}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Erro ao criar enquete:', error);
+                document.getElementById('createPollResult').innerHTML = `
+                    <div style="color: #ef4444; padding: 15px; background: rgba(239, 68, 68, 0.1); border-radius: 8px;">
+                        ❌ Erro ao criar enquete: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Obter enquetes de um chat
+        async function getChatPolls() {
+            const sessionId = document.getElementById('pollSessionId').value.trim();
+            const chatId = document.getElementById('pollChatId').value.trim();
+            
+            if (!sessionId || !chatId) {
+                alert('Por favor, preencha o ID da sessão e o Chat ID');
+                return;
+            }
+
+            // Formatar chatId se necessário
+            let formattedChatId = chatId;
+            if (!chatId.includes('@')) {
+                formattedChatId = chatId + '@c.us';
+            }
+
+            try {
+                // Mostrar modal e loading
+                const modal = document.getElementById('pollModal');
+                const modalLoading = document.getElementById('pollModalLoading');
+                const modalContent = document.getElementById('pollModalContent');
+                
+                modal.style.display = 'block';
+                modalLoading.style.display = 'block';
+                modalContent.style.display = 'none';
+                
+                // Fazer requisição
+                const result = await apiRequest(`/poll/getChatPolls/${sessionId}`, 'POST', {
+                    chatId: formattedChatId,
+                    limit: 50
+                });
+                
+                if (result.success) {
+                    displayChatPolls(result.data.polls, formattedChatId);
+                    modalLoading.style.display = 'none';
+                    modalContent.style.display = 'block';
+                } else {
+                    alert(`❌ Erro ao obter enquetes: ${result.error}`);
+                    modal.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Erro ao obter enquetes:', error);
+                alert(`❌ Erro ao obter enquetes: ${error.message}`);
+                document.getElementById('pollModal').style.display = 'none';
+            }
+        }
+
+        // Obter votos de contato
+        async function getContactVotes() {
+            const sessionId = document.getElementById('contactVotesSessionId').value.trim();
+            const phoneNumber = document.getElementById('contactVotesPhone').value.trim();
+            const chatId = document.getElementById('contactVotesChatId').value.trim();
+            
+            if (!sessionId || !phoneNumber) {
+                alert('Por favor, preencha o ID da sessão e o número do telefone');
+                return;
+            }
+
+            try {
+                const requestBody = {
+                    phoneNumber: phoneNumber,
+                    limit: 100
+                };
+                
+                if (chatId) {
+                    // Formatar chatId se necessário
+                    requestBody.chatId = chatId.includes('@') ? chatId : chatId + '@c.us';
+                }
+
+                const result = await apiRequest(`/poll/getVotesByContact/${sessionId}`, 'POST', requestBody);
+                
+                const resultDiv = document.getElementById('contactVotesResult');
+                
+                if (result.success) {
+                    const responseData = result.data;
+                    const votes = responseData.votes || [];
+                    
+                    if (votes.length === 0) {
+                        resultDiv.innerHTML = `
+                            <div style="text-align: center; padding: 20px; color: #94a3b8;">
+                                📭 Nenhum voto encontrado para este contato
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    const votesHtml = votes.map(vote => `
+                        <div style="margin: 15px 0; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                            <div style="font-weight: bold; color: #60a5fa; margin-bottom: 8px;">
+                                🗳️ ${vote.pollName}
+                            </div>
+                            <div style="color: #10b981; margin-bottom: 5px;">
+                                ✅ Votou em: <strong>${vote.selectedOption}</strong>
+                            </div>
+                            <div style="color: #94a3b8; font-size: 0.9rem;">
+                                📅 ${new Date(vote.timestamp * 1000).toLocaleString()}<br>
+                                💬 Chat: ${vote.chatName}<br>
+                                🆔 Mensagem: <code style="background: rgba(255,255,255,0.1); padding: 2px 4px; border-radius: 4px;">${vote.messageId}</code>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    resultDiv.innerHTML = `
+                        <div style="background: #1a1a1c; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); padding: 20px;">
+                            <h4 style="color: #fff; margin-bottom: 15px;">
+                                👤 Votos de ${responseData.contact || phoneNumber} (Total: ${responseData.totalVotes || votes.length})
+                            </h4>
+                            <div style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 15px;">
+                                Pesquisado em ${responseData.searchedChats || 'N/A'} chat(s)
+                            </div>
+                            ${votesHtml}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div style="color: #ef4444; padding: 15px; background: rgba(239, 68, 68, 0.1); border-radius: 8px;">
+                            ❌ Erro: ${result.error}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Erro ao obter votos do contato:', error);
+                document.getElementById('contactVotesResult').innerHTML = `
+                    <div style="color: #ef4444; padding: 15px; background: rgba(239, 68, 68, 0.1); border-radius: 8px;">
+                        ❌ Erro: ${error.message}
+                    </div>
+                `;
+            }
+        }
 
         // Função para fazer requisições à API
         async function apiRequest(endpoint, method = 'GET', body = null) {
@@ -408,157 +1329,544 @@
 
                 const response = await fetch(`${API_BASE}${endpoint}`, options);
                 const data = await response.json();
-                return { success: response.ok, data, status: response.status };
+
+                return {
+                    success: response.ok,
+                    data: data,
+                    error: response.ok ? null : (data.message || `HTTP ${response.status}`)
+                };
             } catch (error) {
-                return { success: false, error: error.message };
+                return {
+                    success: false,
+                    data: null,
+                    error: error.message
+                };
             }
+        }
+
+        // Exibir enquetes do chat no modal
+        function displayChatPolls(polls, chatId) {
+            const container = document.getElementById('pollsContainer');
+            
+            if (!polls || polls.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #94a3b8;">
+                        📭 Nenhuma enquete encontrada neste chat
+                    </div>
+                `;
+                return;
+            }
+
+            const pollsHtml = polls.map(poll => {
+                const totalVotes = poll.votes.reduce((sum, option) => sum + option.count, 0);
+                
+                const optionsHtml = poll.votes.map(option => {
+                    const percentage = totalVotes > 0 ? Math.round((option.count / totalVotes) * 100) : 0;
+                    return `
+                        <div style="margin: 8px 0; padding: 8px; background: rgba(255,255,255,0.03); border-radius: 6px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <span style="color: #e2e8f0;">${option.name}</span>
+                                <span style="color: #60a5fa; font-weight: bold;">${option.count} voto(s)</span>
+                            </div>
+                            <div style="width: 100%; background: rgba(255,255,255,0.1); border-radius: 10px; height: 6px;">
+                                <div style="width: ${percentage}%; background: linear-gradient(90deg, #3b82f6, #60a5fa); height: 100%; border-radius: 10px; transition: width 0.3s ease;"></div>
+                            </div>
+                            <div style="color: #94a3b8; font-size: 0.8rem; margin-top: 2px;">${percentage}%</div>
+                        </div>
+                    `;
+                }).join('');
+
+                return `
+                    <div style="margin: 20px 0; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h4 style="color: #fff; margin: 0; flex: 1;">🗳️ ${poll.name}</h4>
+                            <button onclick="getPollVotes('${poll.id}')" style="background: #3b82f6; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">
+                                Ver Votos
+                            </button>
+                        </div>
+                        <div style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 15px;">
+                            📊 Total de votos: <strong style="color: #60a5fa;">${totalVotes}</strong> | 
+                            📅 ${new Date(poll.timestamp * 1000).toLocaleString()} | 
+                            🆔 <code style="background: rgba(255,255,255,0.1); padding: 2px 4px; border-radius: 4px;">${poll.id}</code>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            ${optionsHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `
+                <div style="background: #1a1a1c; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); padding: 20px;">
+                    <h3 style="color: #fff; margin-bottom: 15px;">📊 Enquetes do Chat</h3>
+                    <div style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px;">
+                        💬 Chat: <code style="background: rgba(255,255,255,0.1); padding: 2px 4px; border-radius: 4px;">${chatId}</code><br>
+                        📈 Total de enquetes: ${polls.length}
+                    </div>
+                    ${pollsHtml}
+                </div>
+            `;
+        }
+
+        // Obter votos detalhados de uma enquete
+        async function getPollVotes(pollId) {
+            const sessionId = document.getElementById('pollSessionId').value.trim();
+            
+            if (!sessionId) {
+                alert('Session ID não informado');
+                return;
+            }
+
+            try {
+                const result = await apiRequest(`/poll/getVotes/${sessionId}`, 'POST', {
+                    pollId: pollId
+                });
+                
+                if (result.success) {
+                    displayPollVotes(result.data.votes, result.data.pollName, pollId);
+                } else {
+                    alert(`❌ Erro ao obter votos: ${result.error}`);
+                }
+            } catch (error) {
+                console.error('Erro ao obter votos da enquete:', error);
+                alert(`❌ Erro ao obter votos: ${error.message}`);
+            }
+        }
+
+        // Exibir votos detalhados no modal
+        function displayPollVotes(votes, pollName, pollId) {
+            const modal = document.getElementById('pollVotesDetailModal');
+            const container = document.getElementById('pollVotesDetailContainer');
+            
+            if (!votes || votes.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #94a3b8;">
+                        📭 Nenhum voto encontrado para esta enquete
+                    </div>
+                `;
+                modal.style.display = 'block';
+                return;
+            }
+
+            const votesHtml = votes.map(vote => `
+                <div style="margin: 15px 0; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div style="font-weight: bold; color: #60a5fa;">
+                            👤 ${vote.voterName}
+                        </div>
+                        <div style="color: #94a3b8; font-size: 0.9rem;">
+                            📱 ${vote.voterPhone}
+                        </div>
+                    </div>
+                    <div style="color: #10b981; margin-bottom: 5px;">
+                        ✅ Escolha: <strong>${vote.selectedOption}</strong>
+                    </div>
+                    <div style="color: #94a3b8; font-size: 0.85rem;">
+                        📅 ${new Date(vote.timestamp * 1000).toLocaleString()}
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = `
+                <div style="background: #1a1a1c; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); padding: 20px;">
+                    <h3 style="color: #fff; margin-bottom: 15px;">🗳️ ${pollName}</h3>
+                    <div style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px;">
+                        🆔 Poll ID: <code style="background: rgba(255,255,255,0.1); padding: 2px 4px; border-radius: 4px;">${pollId}</code><br>
+                        👥 Total de votos: ${votes.length}
+                    </div>
+                    ${votesHtml}
+                </div>
+            `;
+            
+            modal.style.display = 'block';
         }
 
         // Verificar status da API
         async function checkApiStatus() {
-            const result = await apiRequest('/ping');
-            const statusDiv = document.getElementById('apiStatus');
+            const result = await apiRequest('/health');
+            const statusElement = document.getElementById('apiStatus');
             
-            if (result.success && result.data.success) {
-                statusDiv.className = 'api-status api-online';
-                statusDiv.innerHTML = '🟢 API Online - ' + result.data.message;
+            if (result.success) {
+                statusElement.className = 'api-status online';
+                statusElement.innerHTML = '<span class="status-indicator connected"></span>API Online';
             } else {
-                statusDiv.className = 'api-status api-offline';
-                statusDiv.innerHTML = '🔴 API Offline';
+                statusElement.className = 'api-status offline';
+                statusElement.innerHTML = '<span class="status-indicator disconnected"></span>API Offline';
             }
+        }
+
+        // Atualizar estatísticas do dashboard
+        async function updateStats() {
+            const result = await apiRequest('/session/list');
+            if (!result.success) return;
+
+            // Verificar se result.data.sessions existe, senão usar result.data
+            const sessions = Array.isArray(result.data.sessions) ? result.data.sessions : 
+                           Array.isArray(result.data) ? result.data : [];
+            const connected = sessions.filter(s => s.status === 'CONNECTED').length;
+            const hibernated = sessions.filter(s => s.status === 'HIBERNATED').length;
+            const disconnected = sessions.filter(s => s.status === 'DISCONNECTED').length;
+            const total = sessions.length;
+
+            const statsGrid = document.getElementById('statsGrid');
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="icon">📊</div>
+                    <div class="number">${total}</div>
+                    <div class="label">Total de Sessões</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">✅</div>
+                    <div class="number">${connected}</div>
+                    <div class="label">Conectadas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">😴</div>
+                    <div class="number">${hibernated}</div>
+                    <div class="label">Hibernadas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">❌</div>
+                    <div class="number">${disconnected}</div>
+                    <div class="label">Desconectadas</div>
+                </div>
+            `;
+        }
+
+        // Carregar lista de sessões
+        async function loadSessions() {
+            const result = await apiRequest('/session/list');
+            const container = document.getElementById('sessionsContainer');
+            
+            // Debug: log da resposta da API
+            console.log('API Response:', result);
+            
+            if (!result.success) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">❌</div>
+                        <h3>Erro ao carregar sessões</h3>
+                        <p>${result.error}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Verificar se result.data.sessions existe, senão usar result.data
+            const sessions = Array.isArray(result.data.sessions) ? result.data.sessions : 
+                           Array.isArray(result.data) ? result.data : [];
+            
+            console.log('Sessions:', sessions);
+            
+            if (sessions.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📱</div>
+                        <h3>Nenhuma sessão encontrada</h3>
+                        <p>Crie uma nova sessão para começar</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = sessions.map(session => {
+                const isConnected = session.status === 'CONNECTED';
+                const isHibernated = session.status === 'HIBERNATED';
+                const statusClass = isConnected ? 'connected' : (isHibernated ? 'hibernated' : 'disconnected');
+                const statusText = isConnected ? 'Conectado' : (isHibernated ? 'Hibernada' : 'Desconectado');
+                
+                return `
+                    <div class="session-card ${isHibernated ? 'hibernated' : ''} fade-in">
+                        <div class="session-header">
+                            ${session.profilePicUrl && session.profilePicUrl.startsWith('http') ? `
+                                <img src="${session.profilePicUrl}" alt="Foto de Perfil" class="profile-pic" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="profile-pic" style="background: linear-gradient(135deg, #667eea, #764ba2); display: none; align-items: center; justify-content: center; color: white; font-size: 1.2rem;">
+                                    👤
+                                </div>
+                            ` : `
+                                <div class="profile-pic" style="background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem;">
+                                    👤
+                                </div>
+                            `}
+                            <div class="session-info">
+                                <h3>${session.pushName || session.sessionId}</h3>
+                                <div class="session-status ${statusClass}">
+                                    <span class="status-indicator ${statusClass}"></span>
+                                    ${statusText}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="session-buttons">
+                            ${isHibernated ? `
+                                <button class="btn btn-success" onclick="reactivateSession('${session.sessionId}')">
+                                    🔋 Reativar
+                                </button>
+                            ` : `
+                                <button class="btn btn-primary" onclick="getQRCode('${session.sessionId}')" ${isConnected ? 'disabled' : ''}>
+                                    📱 QR Code
+                                </button>
+                                <button class="btn btn-warning" onclick="hibernateSession('${session.sessionId}')">
+                                    😴 Hibernar
+                                </button>
+                            `}
+                            <button class="btn btn-info" onclick="showSessionInfo('${session.sessionId}')">
+                                ℹ️ Info
+                            </button>
+                            <button class="btn btn-secondary" onclick="checkSessionStatus('${session.sessionId}')">
+                                📊 Status
+                            </button>
+                            <button class="btn btn-danger" onclick="terminateSession('${session.sessionId}')">
+                                🛑 Terminar
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Atualizar estatísticas também
+            updateStats();
         }
 
         // Criar nova sessão
         async function createSession() {
-            const sessionId = document.getElementById('newSessionId').value.trim();
+            const sessionId = document.getElementById('sessionIdInput').value.trim();
             if (!sessionId) {
                 alert('Por favor, digite um ID para a sessão');
                 return;
             }
 
-            const result = await apiRequest(`/session/start/${sessionId}`);
-            const resultDiv = document.getElementById('createResult');
-            
-            resultDiv.style.display = 'block';
+            const result = await apiRequest(`/session/start/${sessionId}`, 'GET');
             
             if (result.success) {
-                resultDiv.className = 'result-box result-success';
-                resultDiv.textContent = JSON.stringify(result.data, null, 2);
-                currentSessionForQR = sessionId;
-                
-                // Atualizar lista de sessões
+                alert('✅ Sessão criada com sucesso!');
+                document.getElementById('sessionIdInput').value = '';
                 loadSessions();
-                
-                // Aguardar um pouco e então buscar o QR code
-                setTimeout(() => {
-                    getQRCode(sessionId);
-                }, 2000);
             } else {
-                resultDiv.className = 'result-box result-error';
-                resultDiv.textContent = `Erro: ${result.error || 'Falha na requisição'}`;
+                alert(`❌ Erro ao criar sessão: ${result.error}`);
             }
         }
 
         // Obter QR Code
         async function getQRCode(sessionId) {
-            if (!sessionId) sessionId = currentSessionForQR;
-            if (!sessionId) return;
-
-            const result = await apiRequest(`/session/qr/${sessionId}`);
-            const qrSection = document.getElementById('qrCodeSection');
-            const qrImageDiv = document.getElementById('qrCodeImage');
+            currentSessionForQR = sessionId;
             
-            if (result.success && result.data.qr) {
-                // Gerar QR code usando API externa
-                const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(result.data.qr)}`;
-                qrImageDiv.innerHTML = `<img src="${qrCodeUrl}" alt="QR Code" />`;
-                qrSection.style.display = 'block';
-            } else {
-                qrImageDiv.innerHTML = '<p>QR Code não disponível</p>';
-                qrSection.style.display = 'block';
+            try {
+                // Usar endpoint de imagem para QR Code
+                const qrImageUrl = `${API_BASE}/session/qr/${sessionId}/image`;
+                console.log('QR Image URL:', qrImageUrl);
+                
+                // Fazer fetch da imagem com headers de autenticação
+                const response = await fetch(qrImageUrl, {
+                    method: 'GET',
+                    headers: {
+                        'x-api-key': API_KEY,
+                        'accept': 'image/png'
+                    }
+                });
+                
+                console.log('QR Response status:', response.status);
+                
+                if (response.ok) {
+                    // Verificar se URL.createObjectURL está disponível
+                    if (typeof URL !== 'undefined' && URL.createObjectURL) {
+                        // Converter resposta para blob e criar URL local
+                        const blob = await response.blob();
+                        const blobUrl = URL.createObjectURL(blob);
+                        
+                        console.log('QR Blob URL created:', blobUrl);
+                        console.log('Showing QR modal for:', sessionId);
+                        
+                        // Criar modal para mostrar QR
+                        showQRModal(blobUrl, sessionId);
+                    } else {
+                        // Fallback: usar URL direta com headers
+                        console.log('URL.createObjectURL não disponível, usando URL direta');
+                        showQRModal(qrImageUrl, sessionId);
+                    }
+                } else {
+                    alert(`❌ Erro ao obter QR Code: QR não disponível (Status: ${response.status})`);
+                }
+            } catch (error) {
+                console.error('Erro ao obter QR Code:', error);
+                alert(`❌ Erro ao obter QR Code: ${error.message}`);
             }
         }
 
-        // Atualizar QR Code
-        function refreshQR() {
-            if (currentSessionForQR) {
-                getQRCode(currentSessionForQR);
-            }
+        function showQRModal(qrUrl, sessionId) {
+            console.log('showQRModal called with:', qrUrl, sessionId);
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.style.zIndex = '9999'; // Z-index mais alto para garantir que apareça na frente
+            
+            // Função para fechar o modal e limpar recursos
+            const closeModal = () => {
+                try {
+                    // Só tentar revogar se for uma URL blob e se URL.revokeObjectURL existir
+                    if (qrUrl && qrUrl.startsWith('blob:') && typeof URL !== 'undefined' && URL.revokeObjectURL) {
+                        URL.revokeObjectURL(qrUrl);
+                        console.log('Blob URL revogada com sucesso');
+                    }
+                } catch (error) {
+                    console.log('Erro ao revogar URL do blob:', error);
+                }
+                modal.remove();
+            };
+            
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 400px; text-align: center; margin: 10% auto; background: #1a1a1c; border-radius: 16px; padding: 20px;">
+                    <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; margin-bottom: 20px;">
+                        <span class="close" style="float: right; font-size: 28px; color: #aaa; cursor: pointer;">&times;</span>
+                        <h2 style="color: #fff; margin: 0;">📱 QR Code - ${sessionId}</h2>
+                    </div>
+                    <div class="modal-body">
+                        <p style="color: #94a3b8; margin-bottom: 20px;">Escaneie este QR Code com o WhatsApp:</p>
+                        <img src="${qrUrl}" alt="QR Code" style="width: 100%; max-width: 300px; border-radius: 10px; border: 2px solid rgba(255,255,255,0.1);" 
+                             onerror="console.log('Erro ao carregar imagem QR:', this.src); this.style.display='none'; this.nextElementSibling.style.display='block';"
+                             onload="console.log('QR Image loaded successfully');">
+                        <div style="display: none; padding: 20px; color: #ef4444; background: rgba(239, 68, 68, 0.1); border-radius: 8px; margin: 10px 0;">
+                            ❌ Erro ao carregar QR Code. Tente novamente.
+                        </div>
+                        <p style="margin-top: 15px; color: #64748b; font-size: 0.9rem;">
+                            Abra o WhatsApp > Dispositivos conectados > Conectar um dispositivo
+                        </p>
+                    </div>
+                </div>
+            `;
+            
+            // Adicionar event listener para fechar
+            const closeBtn = modal.querySelector('.close');
+            closeBtn.addEventListener('click', closeModal);
+            
+            // Fechar ao clicar fora do modal
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+            
+            console.log('Appending modal to body');
+            document.body.appendChild(modal);
+            console.log('Modal appended, checking visibility...');
+            console.log('Modal display style:', modal.style.display);
+            console.log('Modal in DOM:', document.body.contains(modal));
         }
 
-        // Obter status da sessão
-        async function getSessionStatus(sessionId) {
-            const result = await apiRequest(`/session/status/${sessionId}`);
+        // Obter QR Code manual
+        async function getQRCodeManual() {
+            const sessionId = document.getElementById('qrSessionIdInput').value.trim();
+            if (!sessionId) {
+                alert('Por favor, digite o ID da sessão');
+                return;
+            }
+            
+            await getQRCode(sessionId);
+            document.getElementById('qrSessionIdInput').value = '';
+        }
+
+        // Enviar mensagem
+        async function sendMessage() {
+            const sessionId = document.getElementById('messageSessionId').value.trim();
+            const number = document.getElementById('messageNumber').value.trim();
+            const message = document.getElementById('messageText').value.trim();
+            
+            if (!sessionId || !number || !message) {
+                alert('Por favor, preencha todos os campos');
+                return;
+            }
+
+            // Formatear número para o formato correto se necessário
+            let chatId = number;
+            if (!chatId.includes('@')) {
+                chatId = chatId + '@c.us';
+            }
+
+            const result = await apiRequest(`/client/sendMessage/${sessionId}`, 'POST', {
+                chatId: chatId,
+                contentType: "string",
+                content: message
+            });
+            
             if (result.success) {
-                return result.data.state || 'UNKNOWN';
+                alert('✅ Mensagem enviada com sucesso!');
+                document.getElementById('messageSessionId').value = '';
+                document.getElementById('messageNumber').value = '';
+                document.getElementById('messageText').value = '';
+            } else {
+                alert(`❌ Erro ao enviar mensagem: ${result.error}`);
             }
-            return 'ERROR';
         }
 
-        // Verificar status de uma sessão específica (com alert)
+        // Verificar status da sessão
         async function checkSessionStatus(sessionId) {
             const result = await apiRequest(`/session/status/${sessionId}`);
+            
             if (result.success) {
-                const status = result.data.state || 'UNKNOWN';
-                const message = result.data.message || '';
-                alert(`Sessão: ${sessionId}\nStatus: ${getStatusText(status)}\nMensagem: ${message}`);
+                alert(`📊 Status da sessão ${sessionId}:\n\n${JSON.stringify(result.data, null, 2)}`);
             } else {
-                alert(`Erro ao verificar status da sessão: ${sessionId}`);
+                alert(`❌ Erro ao verificar status: ${result.error}`);
             }
         }
 
-        // Terminar sessão específica
+        // Terminar sessão
         async function terminateSession(sessionId) {
-            if (!confirm(`Tem certeza que deseja terminar a sessão "${sessionId}"?\n\nEsta ação irá desconectar permanentemente da sessão.`)) {
+            if (!confirm(`⚠️ Tem certeza que deseja terminar a sessão "${sessionId}"?`)) {
                 return;
             }
 
-            const result = await apiRequest(`/session/terminate/${sessionId}`);
+            const result = await apiRequest(`/session/terminate/${sessionId}`, 'GET');
+            
             if (result.success) {
-                alert('Sessão terminada com sucesso!');
-                loadSessions(); // Atualizar lista
-            } else {
-                alert('Erro ao terminar sessão: ' + (result.error || 'Erro desconhecido'));
-            }
-        }
-
-        // Reativar sessão hibernada
-        async function reactivateSession(sessionId) {
-            if (!confirm(`Tem certeza que deseja reativar a sessão hibernada "${sessionId}"?`)) {
-                return;
-            }
-
-            const result = await apiRequest(`/session/reactivate/${sessionId}`);
-            if (result.success) {
-                alert('Sessão reativada com sucesso!');
-                loadSessions(); // Atualizar lista
-            } else {
-                alert('Erro ao reativar sessão: ' + (result.error || 'Erro desconhecido'));
-            }
-        }
-
-        // Hibernar sessão específica
-        async function hibernateSession(sessionId) {
-            if (!confirm(`Tem certeza que deseja hibernar a sessão "${sessionId}"?\n\nEla será pausada para manutenção, mantendo a conexão com o WhatsApp.`)) {
-                return;
-            }
-
-            const result = await apiRequest(`/session/hibernate/${sessionId}`);
-            if (result.success) {
-                alert('Sessão hibernada com sucesso!');
+                alert('✅ Sessão terminada com sucesso!');
                 loadSessions();
             } else {
-                alert('Erro ao hibernar sessão: ' + (result.error || (result.data && result.data.message) || 'Erro desconhecido'));
+                alert(`❌ Erro ao terminar sessão: ${result.error}`);
+            }
+        }
+
+        // Hibernar sessão
+        async function hibernateSession(sessionId) {
+            try {
+                const result = await apiRequest(`/session/hibernate/${sessionId}`, 'GET');
+                
+                if (result.success) {
+                    alert(`✅ Sessão "${sessionId}" hibernada com sucesso!\n\nA sessão foi pausada mas mantém a conexão com o WhatsApp.`);
+                    loadSessions();
+                } else {
+                    alert('❌ Erro ao hibernar sessão: ' + (result.error || (result.data && result.data.message) || 'Erro desconhecido'));
+                }
+            } catch (error) {
+                console.error('Erro ao hibernar sessão:', error);
+                alert('❌ Erro ao hibernar sessão: ' + error.message);
+            }
+        }
+
+        // Reativar sessão
+        async function reactivateSession(sessionId) {
+            try {
+                const result = await apiRequest(`/session/reactivate/${sessionId}`, 'GET');
+                
+                if (result.success) {
+                    alert(`✅ Sessão "${sessionId}" reativada com sucesso!\n\nA sessão voltou ao estado ativo.`);
+                    loadSessions();
+                } else {
+                    alert('❌ Erro ao reativar sessão: ' + (result.error || (result.data && result.data.message) || 'Erro desconhecido'));
+                }
+            } catch (error) {
+                console.error('Erro ao reativar sessão:', error);
+                alert('❌ Erro ao reativar sessão: ' + error.message);
             }
         }
 
         // Hibernar todas as sessões
         async function hibernateAllSessions() {
-            if (!confirm('Tem certeza que deseja hibernar TODAS as sessões ativas?\n\nEsta ação é ideal para manutenção do sistema.')) {
+            if (!confirm('⚠️ Tem certeza que deseja hibernar TODAS as sessões ativas?\n\nEsta ação é ideal para manutenção do sistema.')) {
                 return;
             }
 
-            const result = await apiRequest('/session/hibernateAll');
+            const result = await apiRequest('/session/hibernateAll', 'GET');
             const resultDiv = document.getElementById('globalResult');
             
             resultDiv.style.display = 'block';
@@ -568,7 +1876,7 @@
                 resultDiv.textContent = `✅ ${result.data.hibernatedCount} sessões hibernadas com sucesso!\n\n` + JSON.stringify(result.data, null, 2);
             } else {
                 resultDiv.className = 'result-box result-error';
-                resultDiv.textContent = `Erro: ${result.error || 'Falha na requisição'}`;
+                resultDiv.textContent = `❌ Erro: ${result.error || 'Falha na requisição'}`;
             }
             
             loadSessions();
@@ -576,11 +1884,11 @@
 
         // Reativar todas as sessões hibernadas
         async function reactivateAllSessions() {
-            if (!confirm('Tem certeza que deseja reativar TODAS as sessões hibernadas?')) {
+            if (!confirm('⚠️ Tem certeza que deseja reativar TODAS as sessões hibernadas?')) {
                 return;
             }
 
-            const result = await apiRequest('/session/reactivateAll');
+            const result = await apiRequest('/session/reactivateAll', 'GET');
             const resultDiv = document.getElementById('globalResult');
             
             resultDiv.style.display = 'block';
@@ -590,7 +1898,7 @@
                 resultDiv.textContent = `✅ ${result.data.reactivatedCount} sessões reativadas com sucesso!\n\n` + JSON.stringify(result.data, null, 2);
             } else {
                 resultDiv.className = 'result-box result-error';
-                resultDiv.textContent = `Erro: ${result.error || 'Falha na requisição'}`;
+                resultDiv.textContent = `❌ Erro: ${result.error || 'Falha na requisição'}`;
             }
             
             loadSessions();
@@ -598,177 +1906,345 @@
 
         // Terminar sessões inativas
         async function terminateInactive() {
-            if (!confirm('Tem certeza que deseja terminar todas as sessões inativas?')) {
+            if (!confirm('⚠️ Tem certeza que deseja terminar todas as sessões inativas?')) {
                 return;
             }
 
-            const result = await apiRequest('/session/terminateInactive');
+            const result = await apiRequest('/session/terminateInactive', 'GET');
             const resultDiv = document.getElementById('globalResult');
             
             resultDiv.style.display = 'block';
             
             if (result.success) {
                 resultDiv.className = 'result-box result-success';
-                resultDiv.textContent = JSON.stringify(result.data, null, 2);
+                resultDiv.textContent = `✅ ${result.data.terminatedCount} sessões inativas terminadas!\n\n` + JSON.stringify(result.data, null, 2);
             } else {
                 resultDiv.className = 'result-box result-error';
-                resultDiv.textContent = `Erro: ${result.error || 'Falha na requisição'}`;
+                resultDiv.textContent = `❌ Erro: ${result.error || 'Falha na requisição'}`;
             }
             
             loadSessions();
         }
 
-        // Terminar todas as sessões
-        async function terminateAll() {
-            if (!confirm('Tem certeza que deseja terminar TODAS as sessões?')) {
+        // Função para exibir informações detalhadas da sessão
+        async function showSessionInfo(sessionId) {
+            try {
+                const modal = document.getElementById('sessionInfoModal');
+                const modalContent = document.getElementById('modalContent');
+                const modalLoading = document.getElementById('modalLoading');
+                
+                // Verificar se os elementos existem
+                if (!modal || !modalContent || !modalLoading) {
+                    console.error('Elementos do modal não encontrados');
+                    alert('❌ Erro: Modal não encontrado. Recarregue a página.');
+                    return;
+                }
+                
+                // Mostrar o modal
+                modal.style.display = 'block';
+                
+                // Mostrar loading
+                modalContent.style.display = 'none';
+                modalLoading.style.display = 'block';
+                
+                // Buscar informações detalhadas da sessão usando o endpoint correto
+                const response = await fetch(`${API_BASE}/client/${sessionId}/getClassInfo`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': API_KEY
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Erro ao buscar informações: ${response.status}`);
+                }
+                
+                const sessionData = await response.json();
+                
+                console.log('Session Info Response:', sessionData);
+                
+                // Preencher o modal com as informações
+                populateSessionModal(sessionId, sessionData);
+                
+                // Ocultar loading e mostrar conteúdo
+                modalLoading.style.display = 'none';
+                modalContent.style.display = 'block';
+                
+            } catch (error) {
+                console.error('Erro ao buscar informações da sessão:', error);
+                alert(`❌ Erro ao buscar informações da sessão: ${error.message}`);
+                closeModal();
+            }
+        }
+        
+        // Função para preencher o modal com informações da sessão
+        function populateSessionModal(sessionId, response) {
+            // Atualizar cabeçalho do modal
+            const profileImg = document.getElementById('modalProfileImg');
+            const sessionTitle = document.getElementById('modalSessionTitle');
+            const sessionStatus = document.getElementById('modalSessionStatus');
+            
+            // Verificar se os elementos existem antes de manipulá-los
+            if (!profileImg || !sessionTitle || !sessionStatus) {
+                console.error('Elementos do modal não encontrados');
                 return;
             }
 
-            const result = await apiRequest('/session/terminateAll');
-            const resultDiv = document.getElementById('globalResult');
+            // Extrair sessionInfo da resposta
+            const sessionInfo = response.sessionInfo || response;
             
-            resultDiv.style.display = 'block';
-            
-            if (result.success) {
-                resultDiv.className = 'result-box result-success';
-                resultDiv.textContent = JSON.stringify(result.data, null, 2);
+            // Usar foto de perfil se disponível
+            if (sessionInfo.profilePicUrl) {
+                profileImg.src = sessionInfo.profilePicUrl;
+                profileImg.style.display = 'block';
             } else {
-                resultDiv.className = 'result-box result-error';
-                resultDiv.textContent = `Erro: ${result.error || 'Falha na requisição'}`;
+                profileImg.style.display = 'none';
             }
             
-            loadSessions();
+            sessionTitle.textContent = sessionInfo.pushname || sessionInfo.wid?.user || sessionId;
+            
+            // Status da sessão (assumir conectado se há sessionInfo)
+            const isConnected = response.success && sessionInfo;
+            const statusColor = isConnected ? '#22c55e' : '#ef4444';
+            sessionStatus.innerHTML = `<span style="color: ${statusColor};">● ${isConnected ? 'Conectado' : 'Desconectado'}</span>`;
+            
+            // Preencher informações detalhadas
+            const infoGrid = document.getElementById('sessionInfoGrid');
+            if (!infoGrid) {
+                console.error('Grid de informações não encontrado');
+                return;
+            }
+            
+            infoGrid.innerHTML = `
+                <div class="info-item">
+                    <strong>Session ID:</strong>
+                    <span>${sessionId}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Nome:</strong>
+                    <span>${sessionInfo.pushname || 'N/A'}</span>
+                </div>
+                <div class="info-item">
+                    <strong>WhatsApp ID:</strong>
+                    <span>${sessionInfo.wid?.user || sessionInfo.me?.user || 'N/A'}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Servidor:</strong>
+                    <span>${sessionInfo.wid?.server || sessionInfo.me?.server || 'N/A'}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Status:</strong>
+                    <span style="color: ${statusColor};">${isConnected ? 'Conectado' : 'Desconectado'}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Plataforma:</strong>
+                    <span>${sessionInfo.platform || 'N/A'}</span>
+                </div>
+                <div class="info-item">
+                    <strong>WhatsApp Serialized:</strong>
+                    <span>${sessionInfo.wid?._serialized || sessionInfo.me?._serialized || 'N/A'}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Tipo de Conta:</strong>
+                    <span>${sessionInfo.platform === 'smba' ? 'Business' : 'Pessoal'}</span>
+                </div>
+            `;
+        }
+        
+        // Função para fechar o modal
+        function closeModal() {
+            const modal = document.getElementById('sessionInfoModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
         }
 
-        // Carregar sessões reais do servidor
-        async function loadSessions() {
-            const loadingDiv = document.getElementById('sessionsLoading');
-            const gridDiv = document.getElementById('sessionsGrid');
+        // =====================================
+        // FUNÇÕES PARA GERENCIAR ENQUETES
+        // =====================================
+
+        // Obter enquetes de um chat
+        async function getChatPolls() {
+            const sessionId = document.getElementById('pollSessionId').value.trim();
+            const chatId = document.getElementById('pollChatId').value.trim();
             
-            loadingDiv.style.display = 'block';
-            gridDiv.innerHTML = '';
+            if (!sessionId || !chatId) {
+                alert('Por favor, preencha o ID da sessão e o Chat ID');
+                return;
+            }
+
+            // Formatar chatId se necessário
+            let formattedChatId = chatId;
+            if (!chatId.includes('@')) {
+                formattedChatId = chatId + '@c.us';
+            }
 
             try {
-                const result = await apiRequest('/session/list');
+                // Mostrar modal e loading
+                const modal = document.getElementById('pollModal');
+                const modalLoading = document.getElementById('pollModalLoading');
+                const modalContent = document.getElementById('pollModalContent');
                 
-                loadingDiv.style.display = 'none';
+                modal.style.display = 'block';
+                modalLoading.style.display = 'block';
+                modalContent.style.display = 'none';
                 
-                if (!result.success || !result.data.sessions) {
-                    gridDiv.innerHTML = '<p style="text-align: center; color: #666;">Erro ao carregar sessões</p>';
-                    return;
+                // Fazer requisição
+                const result = await apiRequest(`/poll/getChatPolls/${sessionId}`, 'POST', {
+                    chatId: formattedChatId,
+                    limit: 50
+                });
+                
+                if (result.success) {
+                    displayChatPolls(result.polls, formattedChatId);
+                    modalLoading.style.display = 'none';
+                    modalContent.style.display = 'block';
+                } else {
+                    alert(`❌ Erro ao obter enquetes: ${result.error}`);
+                    modal.style.display = 'none';
                 }
+            } catch (error) {
+                console.error('Erro ao obter enquetes:', error);
+                alert(`❌ Erro ao obter enquetes: ${error.message}`);
+                document.getElementById('pollModal').style.display = 'none';
+            }
+        }
 
-                const sessions = result.data.sessions;
-                const summary = result.data.summary;
-                
-                if (sessions.length === 0) {
-                    gridDiv.innerHTML = '<p style="text-align: center; color: #666;">Nenhuma sessão encontrada</p>';
-                    return;
-                }
-
-                // Mostrar resumo
-                const summaryHtml = `
-                    <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; text-align: center;">
-                        <strong>📊 Resumo:</strong> 
-                        ${summary.active} ativas • ${summary.hibernated} hibernadas • ${summary.total} total
+        // Exibir enquetes do chat
+        function displayChatPolls(polls, chatId) {
+            const pollsList = document.getElementById('pollsList');
+            const modalTitle = document.getElementById('pollModalTitle');
+            
+            modalTitle.textContent = `📊 Enquetes do Chat (${chatId}) - Total: ${polls.length}`;
+            
+            if (polls.length === 0) {
+                pollsList.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #94a3b8;">
+                        📭 Nenhuma enquete encontrada neste chat
                     </div>
                 `;
-
-                gridDiv.innerHTML = summaryHtml + sessions.map(session => {
-                    const statusClass = getStatusClass(session.status);
-                    const statusText = getStatusText(session.status);
-                    const isHibernated = session.status === 'HIBERNATED';
-                    const isConnected = session.status === 'CONNECTED';
-                    
-                    // Gerar foto de perfil ou placeholder
-                    const profilePicHtml = session.profilePicUrl ? 
-                        `<img src="${session.profilePicUrl}" alt="Profile" class="profile-pic" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                         <div class="profile-pic-placeholder" style="display: none;">${session.sessionId.charAt(0).toUpperCase()}</div>` :
-                        `<div class="profile-pic-placeholder">${session.sessionId.charAt(0).toUpperCase()}</div>`;
-                    
-                    // Formatar número de telefone
-                    const phoneDisplay = session.phoneNumber ? 
-                        session.phoneNumber.replace('@c.us', '').replace(/(\d{2})(\d{2})(\d{5})(\d{4})/, '+$1 ($2) $3-$4') : 
-                        'Número não disponível';
-                    
-                    // Nome para exibir
-                    const displayName = session.pushName || session.sessionId;
-                    
-                    return `
-                        <div class="session-card ${isHibernated ? 'hibernated-card' : ''}">
-                            <div class="session-header">
-                                <div class="session-identity">
-                                    ${profilePicHtml}
-                                    <div class="session-details">
-                                        <div class="session-id">
-                                            ${displayName}
-                                            ${isHibernated ? ' 😴' : ''}
+                return;
+            }
+            
+            pollsList.innerHTML = polls.map(poll => {
+                const optionsHtml = poll.votes.map(vote => `
+                    <div style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                        <div style="font-weight: bold; color: #60a5fa;">📊 ${vote.option}</div>
+                        <div style="color: #94a3b8; font-size: 0.9rem;">
+                            ${vote.count} votos
+                            ${vote.voters.length > 0 ? `
+                                <div style="margin-top: 5px;">
+                                    <strong>Votantes:</strong>
+                                    ${vote.voters.map(voter => `
+                                        <div style="font-size: 0.8rem; color: #cbd5e1; margin-left: 10px;">
+                                            • ${voter.contactId} (${new Date(voter.timestamp * 1000).toLocaleString()})
                                         </div>
-                                        <div class="session-phone">${phoneDisplay}</div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('');
+                
+                return `
+                    <div style="margin: 20px 0; padding: 20px; background: #1a1a1c; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                        <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 15px;">
+                            <h4 style="color: #fff; margin: 0;">🗳️ ${poll.pollName}</h4>
+                            <span style="color: #94a3b8; font-size: 0.9rem;">
+                                ${new Date(poll.timestamp * 1000).toLocaleString()}
+                            </span>
+                        </div>
+                        
+                        <div style="margin-bottom: 10px;">
+                            <span style="color: #94a3b8; font-size: 0.9rem;">
+                                Total de votos: ${poll.totalVotes} | 
+                                Múltiplas respostas: ${poll.allowMultipleAnswers ? 'Sim' : 'Não'} |
+                                ID: <code style="background: rgba(255,255,255,0.1); padding: 2px 4px; border-radius: 4px;">${poll.messageId}</code>
+                            </span>
+                        </div>
+                        
+                        <div>
+                            ${optionsHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Mostrar modal para buscar votos por ID
+        function showPollVotesModal() {
+            document.getElementById('pollVotesModal').style.display = 'block';
+        }
+
+        // Obter votos de uma enquete específica por ID
+        async function getPollVotes() {
+            const sessionId = document.getElementById('pollVoteSessionId').value.trim();
+            const messageId = document.getElementById('pollVoteMessageId').value.trim();
+            
+            if (!sessionId || !messageId) {
+                alert('Por favor, preencha o ID da sessão e o ID da mensagem');
+                return;
+            }
+
+            try {
+                const result = await apiRequest(`/poll/getVotes/${sessionId}`, 'POST', {
+                    messageId: messageId
+                });
+                
+                const resultDiv = document.getElementById('pollVotesResult');
+                
+                if (result.success) {
+                    const poll = result.poll;
+                    const optionsHtml = poll.votes.map(vote => `
+                        <div style="margin: 15px 0; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                            <div style="font-weight: bold; color: #60a5fa; margin-bottom: 10px;">
+                                📊 ${vote.option} (${vote.votes.length} votos)
+                            </div>
+                            ${vote.votes.map(v => `
+                                <div style="margin: 5px 0; padding: 8px; background: rgba(255,255,255,0.03); border-radius: 6px; font-size: 0.9rem;">
+                                    <strong style="color: #cbd5e1;">${v.contactId}</strong>
+                                    <div style="color: #94a3b8; font-size: 0.8rem;">
+                                        ${new Date(v.timestamp * 1000).toLocaleString()}
+                                        ${v.selectedOptions ? ` - Opções: ${v.selectedOptions.join(', ')}` : ''}
                                     </div>
                                 </div>
-                                <div class="status-badge ${statusClass}">
-                                    ${statusText}
-                                </div>
+                            `).join('')}
+                        </div>
+                    `).join('');
+                    
+                    resultDiv.innerHTML = `
+                        <div style="background: #1a1a1c; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); padding: 20px;">
+                            <h4 style="color: #fff; margin-bottom: 15px;">🗳️ ${poll.pollName}</h4>
+                            <div style="margin-bottom: 15px; color: #94a3b8; font-size: 0.9rem;">
+                                Total de votos: ${poll.totalVotes} | 
+                                Múltiplas respostas: ${poll.allowMultipleAnswers ? 'Sim' : 'Não'}
                             </div>
-                            <div style="margin-bottom: 10px;">
-                                <small style="color: #666;"><strong>ID:</strong> ${session.sessionId}</small><br>
-                                <small style="color: #666;"><strong>Status:</strong> ${session.message || 'N/A'}</small>
-                                ${session.hibernatedAt ? `<br><small style="color: #666;"><strong>Hibernada em:</strong> ${new Date(session.hibernatedAt).toLocaleString()}</small>` : ''}
-                            </div>
-                            <div style="margin-bottom: 15px;">
-                                ${isHibernated ? `
-                                    <button class="btn" onclick="reactivateSession('${session.sessionId}')">🔋 Reativar</button>
-                                ` : `
-                                    <button class="btn" onclick="getQRCode('${session.sessionId}')" ${isConnected ? 'disabled' : ''}>📱 QR Code</button>
-                                    <button class="btn btn-warning" onclick="hibernateSession('${session.sessionId}')">😴 Hibernar</button>
-                                `}
-                                <button class="btn btn-warning" onclick="checkSessionStatus('${session.sessionId}')">📊 Status</button>
-                                <button class="btn btn-danger" onclick="terminateSession('${session.sessionId}')">🛑 Terminar</button>
-                            </div>
+                            ${optionsHtml}
                         </div>
                     `;
-                }).join('');
+                } else {
+                    resultDiv.innerHTML = `
+                        <div style="color: #ef4444; padding: 15px; background: rgba(239, 68, 68, 0.1); border-radius: 8px;">
+                            ❌ Erro: ${result.error}
+                        </div>
+                    `;
+                }
             } catch (error) {
-                loadingDiv.style.display = 'none';
-                gridDiv.innerHTML = '<p style="text-align: center; color: #ff0000;">Erro ao carregar sessões: ' + error + '</p>';
+                console.error('Erro ao obter votos:', error);
+                document.getElementById('pollVotesResult').innerHTML = `
+                    <div style="color: #ef4444; padding: 15px; background: rgba(239, 68, 68, 0.1); border-radius: 8px;">
+                        ❌ Erro: ${error.message}
+                    </div>
+                `;
             }
         }
 
-        // Função para obter classe CSS do status
-        function getStatusClass(status) {
-            switch (status.toUpperCase()) {
-                case 'CONNECTED':
-                    return 'status-connected';
-                case 'HIBERNATED':
-                    return 'status-hibernated';
-                case 'DISCONNECTED':
-                case 'ERROR':
-                    return 'status-disconnected';
-                default:
-                    return 'status-loading';
-            }
-        }
-
-        // Função para obter texto do status em português
-        function getStatusText(status) {
-            switch (status.toUpperCase()) {
-                case 'CONNECTED':
-                    return 'CONECTADO';
-                case 'HIBERNATED':
-                    return 'HIBERNADA';
-                case 'DISCONNECTED':
-                    return 'DESCONECTADO';
-                case 'ERROR':
-                    return 'ERRO';
-                case 'OPENING':
-                    return 'ABRINDO';
-                case 'PAIRING':
-                    return 'PAREANDO';
-                case 'TIMEOUT':
-                    return 'TIMEOUT';
-                default:
-                    return status;
+        // Fechar modal ao clicar fora dele
+        window.onclick = function(event) {
+            const modal = document.getElementById('sessionInfoModal');
+            if (modal && event.target === modal) {
+                closeModal();
             }
         }
 

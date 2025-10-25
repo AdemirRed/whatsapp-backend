@@ -1,5 +1,6 @@
 // Load environment variables from .env file
-require('dotenv').config()
+const path = require('path')
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') })
 
 // setup global const
 const sessionFolderPath = process.env.SESSIONS_PATH || './sessions'
