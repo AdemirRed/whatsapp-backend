@@ -35,6 +35,20 @@
         }
       }
     },
+    "/health": {
+      "get": {
+        "tags": [
+          "Various"
+        ],
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/localCallbackExample": {
       "post": {
         "tags": [
@@ -70,6 +84,42 @@
             "apiKeyAuth": []
           }
         ]
+      }
+    },
+    "/": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/test_connection": {
+      "get": {
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
       }
     },
     "/session/start/{sessionId}": {
@@ -483,6 +533,232 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/session/list": {
+      "get": {
+        "tags": [
+          "Session"
+        ],
+        "summary": "List all sessions",
+        "description": "Lists all available sessions with their status including hibernated sessions.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of sessions including hibernated ones.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListSessionsResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/session/hibernate/{sessionId}": {
+      "get": {
+        "tags": [
+          "Session"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unique identifier for the session (alphanumeric and - allowed)",
+            "example": "redblack"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session hibernated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HibernateSessionResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/session/reactivate/{sessionId}": {
+      "get": {
+        "tags": [
+          "Session"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unique identifier for the session (alphanumeric and - allowed)",
+            "example": "redblack"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session reactivated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReactivateSessionResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/session/hibernateAll": {
+      "get": {
+        "tags": [
+          "Session"
+        ],
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "All sessions hibernated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HibernateAllSessionsResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/session/reactivateAll": {
+      "get": {
+        "tags": [
+          "Session"
+        ],
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
                 }
               }
             }
@@ -1409,6 +1685,9 @@
                 }
               }
             }
+          },
+          "500": {
+            "description": "Internal Server Error"
           }
         },
         "security": [
@@ -1724,7 +2003,7 @@
                   "number": {
                     "type": "string",
                     "description": "The number or ID ('@c.us' will be automatically appended if not specified)",
-                    "example": "5515998566622"
+                    "example": "6281288888888"
                   }
                 }
               }
@@ -1736,7 +2015,7 @@
                   "number": {
                     "type": "string",
                     "description": "The number or ID ('@c.us' will be automatically appended if not specified)",
-                    "example": "5515998566622"
+                    "example": "6281288888888"
                   }
                 }
               }
@@ -1813,7 +2092,7 @@
                   "number": {
                     "type": "string",
                     "description": "The number or ID ('@c.us' will be automatically appended if not specified)",
-                    "example": "5515998566622"
+                    "example": "6281288888888"
                   }
                 }
               }
@@ -1825,7 +2104,7 @@
                   "number": {
                     "type": "string",
                     "description": "The number or ID ('@c.us' will be automatically appended if not specified)",
-                    "example": "5515998566622"
+                    "example": "6281288888888"
                   }
                 }
               }
@@ -1902,7 +2181,7 @@
                   "contactId": {
                     "type": "string",
                     "description": "The contact ID's of profile",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -1914,7 +2193,7 @@
                   "contactId": {
                     "type": "string",
                     "description": "The contact ID's of profile",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -2435,14 +2714,14 @@
               "examples": {
                 "string": {
                   "value": {
-                    "chatId": "5515998566622@c.us",
+                    "chatId": "6281288888888@c.us",
                     "contentType": "string",
-                    "content": "Seja bem vindo a Comunidade ZDG!"
+                    "content": "Hello World!"
                   }
                 },
                 "MessageMedia": {
                   "value": {
-                    "chatId": "5515998566622@c.us",
+                    "chatId": "6281288888888@c.us",
                     "contentType": "MessageMedia",
                     "content": {
                       "mimetype": "image/jpeg",
@@ -2453,14 +2732,14 @@
                 },
                 "MessageMediaFromURL": {
                   "value": {
-                    "chatId": "5515998566622@c.us",
+                    "chatId": "6281288888888@c.us",
                     "contentType": "MessageMediaFromURL",
                     "content": "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=Example"
                   }
                 },
                 "Location": {
                   "value": {
-                    "chatId": "5515998566622@c.us",
+                    "chatId": "6281288888888@c.us",
                     "contentType": "Location",
                     "content": {
                       "latitude": -6.2,
@@ -2471,27 +2750,27 @@
                 },
                 "Buttons": {
                   "value": {
-                    "chatId": "5515998566622@c.us",
+                    "chatId": "6281288888888@c.us",
                     "contentType": "Buttons",
                     "content": {
-                      "body": "Seja bem vindo a Comunidade ZDG!",
+                      "body": "Hello World!",
                       "buttons": [
                         {
                           "body": "button 1"
                         }
                       ],
-                      "title": "Seja bem vindo a Comunidade ZDG!",
-                      "footer": "Seja bem vindo a Comunidade ZDG!"
+                      "title": "Hello World!",
+                      "footer": "Hello World!"
                     }
                   }
                 },
                 "List": {
                   "value": {
-                    "chatId": "5515998566622@c.us",
+                    "chatId": "6281288888888@c.us",
                     "contentType": "List",
                     "content": {
-                      "body": "Seja bem vindo a Comunidade ZDG!",
-                      "buttonText": "Seja bem vindo a Comunidade ZDG!",
+                      "body": "Hello World!",
+                      "buttonText": "Hello World!",
                       "sections": [
                         {
                           "title": "sectionTitle",
@@ -2507,14 +2786,14 @@
                           ]
                         }
                       ],
-                      "title": "Seja bem vindo a Comunidade ZDG!",
-                      "footer": "Seja bem vindo a Comunidade ZDG!"
+                      "title": "Hello World!",
+                      "footer": "Hello World!"
                     }
                   }
                 },
                 "Contact": {
                   "value": {
-                    "chatId": "5515998566622@c.us",
+                    "chatId": "6281288888888@c.us",
                     "contentType": "Contact",
                     "content": {
                       "contactId": "6281288888889@c.us"
@@ -2523,7 +2802,7 @@
                 },
                 "Poll": {
                   "value": {
-                    "chatId": "5515998566622@c.us",
+                    "chatId": "6281288888888@c.us",
                     "contentType": "Poll",
                     "content": {
                       "pollName": "Cats or Dogs?",
@@ -3424,7 +3703,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -3436,7 +3715,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -3513,7 +3792,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -3525,7 +3804,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -3602,7 +3881,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -3614,7 +3893,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -3691,7 +3970,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -3703,7 +3982,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -3717,7 +3996,8 @@
         "tags": [
           "Chat"
         ],
-        "description": "",
+        "summary": "Fetch messages from chat with advanced options",
+        "description": "Retrieves messages from a specific chat with optional enhanced information including reactions, mentions, quoted messages, media details, and contacts. This is a powerful endpoint that can provide comprehensive message data in a single request.",
         "parameters": [
           {
             "name": "sessionId",
@@ -3726,13 +4006,167 @@
             "schema": {
               "type": "string"
             },
-            "description": "Unique identifier for the session (alphanumeric and - allowed)",
+            "description": "Session ID",
             "example": "redblack"
           }
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Messages fetched successfully",
+            "@content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "messages": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "object",
+                            "example": {
+                              "_serialized": "true_555197756708@c.us_3EB0XXXXX"
+                            }
+                          },
+                          "body": {
+                            "type": "string",
+                            "example": "Hello, how are you?"
+                          },
+                          "type": {
+                            "type": "string",
+                            "example": "chat"
+                          },
+                          "timestamp": {
+                            "type": "number",
+                            "example": 1698765432
+                          },
+                          "from": {
+                            "type": "string",
+                            "example": "555197756708@c.us"
+                          },
+                          "to": {
+                            "type": "string",
+                            "example": "555198804804@c.us"
+                          },
+                          "fromMe": {
+                            "type": "boolean",
+                            "example": false
+                          },
+                          "hasMedia": {
+                            "type": "boolean",
+                            "example": false
+                          },
+                          "hasQuotedMsg": {
+                            "type": "boolean",
+                            "example": false
+                          },
+                          "hasReaction": {
+                            "type": "boolean",
+                            "example": false
+                          },
+                          "_enhanced": {
+                            "type": "object",
+                            "description": "Enhanced information (only present if requested)",
+                            "properties": {
+                              "reactions": {
+                                "type": "array",
+                                "description": "Emoji reactions to this message",
+                                "example": [
+                                  {
+                                    "id": "555199999999@c.us",
+                                    "reaction": "👍",
+                                    "timestamp": 1698765500
+                                  }
+                                ]
+                              },
+                              "mentions": {
+                                "type": "array",
+                                "description": "Mentioned contacts in this message",
+                                "example": [
+                                  {
+                                    "id": "555188888888@c.us",
+                                    "name": "Maria",
+                                    "number": "5551888888888"
+                                  }
+                                ]
+                              },
+                              "quotedMessage": {
+                                "type": "object",
+                                "description": "The message that was quoted/replied to",
+                                "example": {
+                                  "id": "true_555197756708@c.us_3EB0YYYYY",
+                                  "body": "Original message",
+                                  "from": "555197756708@c.us"
+                                }
+                              },
+                              "mediaInfo": {
+                                "type": "object",
+                                "description": "Media metadata without downloading",
+                                "example": {
+                                  "mimetype": "image/jpeg",
+                                  "filename": "photo.jpg",
+                                  "filesize": 245678,
+                                  "downloadable": true
+                                }
+                              },
+                              "contacts": {
+                                "type": "array",
+                                "description": "Contact cards shared in message",
+                                "example": [
+                                  {
+                                    "id": "555177777777@c.us",
+                                    "name": "Pedro Santos"
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "enhanced": {
+                      "type": "object",
+                      "description": "Enhancement metadata (only present if enhancements requested)",
+                      "properties": {
+                        "includeReactions": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "includeMentions": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "includeQuoted": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "includeMedia": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "includeContacts": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "totalMessages": {
+                          "type": "number",
+                          "example": 10
+                        },
+                        "processedAt": {
+                          "type": "string",
+                          "example": "2025-10-30T15:30:00.000Z"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "403": {
             "description": "Forbidden.",
@@ -3745,7 +4179,7 @@
             }
           },
           "404": {
-            "description": "Not Found.",
+            "description": "Session or chat not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -3763,6 +4197,9 @@
                 }
               }
             }
+          },
+          "500": {
+            "description": "Internal server error"
           }
         },
         "security": [
@@ -3776,33 +4213,102 @@
             "application/json": {
               "schema": {
                 "type": "object",
+                "required": [
+                  "chatId"
+                ],
                 "properties": {
                   "chatId": {
                     "type": "string",
-                    "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "description": "Unique whatsApp identifier for the given Chat (either group or personal)",
+                    "example": "555197756708@c.us"
                   },
                   "searchOptions": {
                     "type": "object",
-                    "description": "Search options for fetching messages",
-                    "example": "{}"
+                    "description": "Search options for fetching messages (limit, fromMe, etc)",
+                    "properties": {
+                      "limit": {
+                        "type": "number",
+                        "example": 50
+                      },
+                      "fromMe": {
+                        "type": "boolean",
+                        "example": false
+                      }
+                    },
+                    "example": {
+                      "limit": 50
+                    }
+                  },
+                  "includeReactions": {
+                    "type": "boolean",
+                    "description": "Include emoji reactions on messages (adds _enhanced.reactions array)",
+                    "example": false
+                  },
+                  "includeMentions": {
+                    "type": "boolean",
+                    "description": "Include @mentioned contacts in messages (adds _enhanced.mentions array)",
+                    "example": false
+                  },
+                  "includeQuoted": {
+                    "type": "boolean",
+                    "description": "Include quoted/replied messages (adds _enhanced.quotedMessage object)",
+                    "example": false
+                  },
+                  "includeMedia": {
+                    "type": "boolean",
+                    "description": "Include detailed media information without downloading (adds _enhanced.mediaInfo object)",
+                    "example": false
+                  },
+                  "includeContacts": {
+                    "type": "boolean",
+                    "description": "Include contact card information for vcard messages (adds _enhanced.contacts array)",
+                    "example": false
                   }
                 }
-              }
-            },
-            "application/xml": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "chatId": {
-                    "type": "string",
-                    "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
-                  },
-                  "searchOptions": {
-                    "type": "object",
-                    "description": "Search options for fetching messages",
-                    "example": "{}"
+              },
+              "examples": {
+                "basic": {
+                  "summary": "Basic fetch (no enhancements)",
+                  "value": {
+                    "chatId": "555197756708@c.us",
+                    "searchOptions": {
+                      "limit": 50
+                    }
+                  }
+                },
+                "withReactions": {
+                  "summary": "Fetch with reactions",
+                  "value": {
+                    "chatId": "555197756708@c.us",
+                    "searchOptions": {
+                      "limit": 20
+                    },
+                    "includeReactions": true
+                  }
+                },
+                "withMentionsAndQuoted": {
+                  "summary": "Fetch with mentions and quoted messages",
+                  "value": {
+                    "chatId": "555197756708-1234567890@g.us",
+                    "searchOptions": {
+                      "limit": 30
+                    },
+                    "includeMentions": true,
+                    "includeQuoted": true
+                  }
+                },
+                "fullEnhanced": {
+                  "summary": "Fetch with all enhancements",
+                  "value": {
+                    "chatId": "555197756708@c.us",
+                    "searchOptions": {
+                      "limit": 10
+                    },
+                    "includeReactions": true,
+                    "includeMentions": true,
+                    "includeQuoted": true,
+                    "includeMedia": true,
+                    "includeContacts": true
                   }
                 }
               }
@@ -3879,7 +4385,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -3891,7 +4397,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -3968,7 +4474,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -3980,7 +4486,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -4057,7 +4563,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -4069,7 +4575,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -4146,7 +4652,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -4158,7 +4664,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -4235,7 +4741,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -4247,7 +4753,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -4324,7 +4830,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -4336,7 +4842,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -4413,7 +4919,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -4425,7 +4931,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -4502,7 +5008,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -4514,7 +5020,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -4591,7 +5097,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -4603,7 +5109,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -4680,7 +5186,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -4692,7 +5198,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -4769,7 +5275,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -4781,7 +5287,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -4858,7 +5364,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -4870,7 +5376,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -4947,7 +5453,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -4959,7 +5465,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -5036,7 +5542,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -5048,7 +5554,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -5125,7 +5631,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -5137,7 +5643,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the given Chat (either group or personnal)",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -5214,7 +5720,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "The Chat id which contains the message",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   },
                   "messageId": {
                     "type": "string",
@@ -5231,7 +5737,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "The Chat id which contains the message",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   },
                   "messageId": {
                     "type": "string",
@@ -5313,7 +5819,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "The Chat id which contains the message",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   },
                   "messageId": {
                     "type": "string",
@@ -5330,7 +5836,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "The Chat id which contains the message",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   },
                   "messageId": {
                     "type": "string",
@@ -5412,7 +5918,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "The Chat id which contains the message",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   },
                   "messageId": {
                     "type": "string",
@@ -5429,7 +5935,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "The Chat id which contains the message",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   },
                   "messageId": {
                     "type": "string",
@@ -5511,7 +6017,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "The Chat id which contains the message",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   },
                   "messageId": {
                     "type": "string",
@@ -5528,7 +6034,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "The Chat id which contains the message",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   },
                   "messageId": {
                     "type": "string",
@@ -5610,7 +6116,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "The Chat id which contains the message",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   },
                   "messageId": {
                     "type": "string",
@@ -5627,7 +6133,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "The Chat id which contains the message",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   },
                   "messageId": {
                     "type": "string",
@@ -5709,7 +6215,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "The Chat id which contains the message",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   },
                   "messageId": {
                     "type": "string",
@@ -5726,7 +6232,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "The Chat id which contains the message",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   },
                   "messageId": {
                     "type": "string",
@@ -5808,7 +6314,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "The Chat id which contains the message",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   },
                   "messageId": {
                     "type": "string",
@@ -5825,7 +6331,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "The Chat id which contains the message",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   },
                   "messageId": {
                     "type": "string",
@@ -5907,7 +6413,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "The Chat id which contains the message",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   },
                   "messageId": {
                     "type": "string",
@@ -5924,7 +6430,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "The Chat id which contains the message",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   },
                   "messageId": {
                     "type": "string",
@@ -6006,7 +6512,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "The Chat id which contains the message",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   },
                   "messageId": {
                     "type": "string",
@@ -6023,7 +6529,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "The Chat id which contains the message",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   },
                   "messageId": {
                     "type": "string",
@@ -6105,7 +6611,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "The Chat id which contains the message",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   },
                   "messageId": {
                     "type": "string",
@@ -6122,7 +6628,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "The Chat id which contains the message",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   },
                   "messageId": {
                     "type": "string",
@@ -6204,7 +6710,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "The Chat id which contains the message",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   },
                   "messageId": {
                     "type": "string",
@@ -6221,7 +6727,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "The Chat id which contains the message",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   },
                   "messageId": {
                     "type": "string",
@@ -6303,7 +6809,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "The Chat id which contains the message",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   },
                   "messageId": {
                     "type": "string",
@@ -6320,7 +6826,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "The Chat id which contains the message",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   },
                   "messageId": {
                     "type": "string",
@@ -6402,7 +6908,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "The Chat id which contains the message",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   },
                   "messageId": {
                     "type": "string",
@@ -6419,7 +6925,7 @@
                   "chatId": {
                     "type": "string",
                     "description": "The Chat id which contains the message",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   },
                   "messageId": {
                     "type": "string",
@@ -6501,7 +7007,7 @@
                   "contactId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the contact",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -6513,7 +7019,7 @@
                   "contactId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the contact",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -6590,7 +7096,7 @@
                   "contactId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the contact",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -6602,7 +7108,7 @@
                   "contactId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the contact",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -6679,7 +7185,7 @@
                   "contactId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the contact",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -6691,7 +7197,7 @@
                   "contactId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the contact",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -6768,7 +7274,7 @@
                   "contactId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the contact",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -6780,7 +7286,7 @@
                   "contactId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the contact",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -6857,7 +7363,7 @@
                   "contactId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the contact",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -6869,7 +7375,7 @@
                   "contactId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the contact",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -6946,7 +7452,7 @@
                   "contactId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the contact",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -6958,7 +7464,7 @@
                   "contactId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the contact",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -7035,7 +7541,7 @@
                   "contactId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the contact",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -7047,7 +7553,7 @@
                   "contactId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the contact",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -7124,7 +7630,7 @@
                   "contactId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the contact",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
                   }
                 }
               }
@@ -7136,7 +7642,1048 @@
                   "contactId": {
                     "type": "string",
                     "description": "Unique whatsApp identifier for the contact",
-                    "example": "5515998566622@c.us"
+                    "example": "6281288888888@c.us"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/poll/getVotes/{sessionId}": {
+      "post": {
+        "tags": [
+          "Contact"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unique identifier for the session (alphanumeric and - allowed)",
+            "example": "redblack"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Poll votes retrieved successfully",
+            "@content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "votes": {
+                      "type": "array",
+                      "description": "Array of poll votes"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "messageId": {
+                    "type": "string",
+                    "description": "The ID of the poll message"
+                  }
+                }
+              },
+              "examples": {
+                "default": {
+                  "value": {
+                    "messageId": "false_123456789@c.us_ABC123"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/poll/getChatPolls/{sessionId}": {
+      "post": {
+        "tags": [
+          "Contact"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unique identifier for the session (alphanumeric and - allowed)",
+            "example": "redblack"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "chatId": {
+                    "type": "string",
+                    "description": "The Chat id to search for polls"
+                  },
+                  "limit": {
+                    "type": "number",
+                    "description": "Number of messages to search (default: 50)"
+                  }
+                }
+              },
+              "examples": {
+                "default": {
+                  "value": {
+                    "chatId": "123456789@c.us",
+                    "limit": 50
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/poll/createInfo": {
+      "get": {
+        "tags": [
+          "Contact"
+        ],
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "contactId": {
+                    "type": "string",
+                    "description": "Unique whatsApp identifier for the contact",
+                    "example": "6281288888888@c.us"
+                  }
+                }
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "contactId": {
+                    "type": "string",
+                    "description": "Unique whatsApp identifier for the contact",
+                    "example": "6281288888888@c.us"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/poll/getVotesByContact/{sessionId}": {
+      "post": {
+        "tags": [
+          "Contact"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unique identifier for the session (alphanumeric and - allowed)",
+            "example": "redblack"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "phoneNumber": {
+                    "type": "string",
+                    "description": "The phone number to search votes for"
+                  },
+                  "chatId": {
+                    "type": "string",
+                    "description": "Optional: Chat ID to limit search"
+                  },
+                  "limit": {
+                    "type": "number",
+                    "description": "Number of messages to search (default: 100)"
+                  }
+                }
+              },
+              "examples": {
+                "default": {
+                  "value": {
+                    "phoneNumber": "555199999999",
+                    "chatId": "555199999999@c.us",
+                    "limit": 100
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/viewonce/getMedia/{sessionId}": {
+      "post": {
+        "tags": [
+          "View Once"
+        ],
+        "summary": "Get view once media from chat",
+        "description": "Retrieves all view once (disappearing) photos and videos from a specific chat. These are media files that are meant to be viewed only once before disappearing.",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Session ID",
+            "example": "redblack"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "View once media retrieved successfully",
+            "@content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "chatId": {
+                          "type": "string",
+                          "example": "555197756708@c.us"
+                        },
+                        "totalFound": {
+                          "type": "number",
+                          "example": 5
+                        },
+                        "returned": {
+                          "type": "number",
+                          "example": 5
+                        },
+                        "includeExpired": {
+                          "type": "boolean",
+                          "example": false
+                        },
+                        "messages": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "example": "true_555197756708@c.us_3EB0XXXXX"
+                              },
+                              "from": {
+                                "type": "string",
+                                "example": "555197756708@c.us"
+                              },
+                              "timestamp": {
+                                "type": "number",
+                                "example": 1698765432
+                              },
+                              "type": {
+                                "type": "string",
+                                "example": "image"
+                              },
+                              "hasMedia": {
+                                "type": "boolean",
+                                "example": true
+                              },
+                              "isViewOnce": {
+                                "type": "boolean",
+                                "example": true
+                              },
+                              "viewed": {
+                                "type": "boolean",
+                                "example": false
+                              },
+                              "canDownload": {
+                                "type": "boolean",
+                                "example": true
+                              },
+                              "mimetype": {
+                                "type": "string",
+                                "example": "image/jpeg"
+                              },
+                              "caption": {
+                                "type": "string",
+                                "example": "Check this out!"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "chatId"
+                ],
+                "properties": {
+                  "chatId": {
+                    "type": "string",
+                    "description": "The Chat ID to search for view once media",
+                    "example": "555197756708@c.us"
+                  },
+                  "limit": {
+                    "type": "number",
+                    "description": "Maximum number of messages to fetch (default: 50)",
+                    "example": 50
+                  },
+                  "includeExpired": {
+                    "type": "boolean",
+                    "description": "Include expired view once messages (default: false)",
+                    "example": false
+                  }
+                }
+              },
+              "examples": {
+                "default": {
+                  "value": {
+                    "chatId": "555197756708@c.us",
+                    "limit": 50,
+                    "includeExpired": false
+                  }
+                },
+                "includeExpired": {
+                  "value": {
+                    "chatId": "555197756708@c.us",
+                    "limit": 100,
+                    "includeExpired": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/viewonce/download/{sessionId}": {
+      "post": {
+        "tags": [
+          "View Once"
+        ],
+        "summary": "Download view once media",
+        "description": "Downloads media from a specific view once message. This allows saving disappearing photos/videos before they expire. Use with caution and respect privacy.",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Session ID",
+            "example": "redblack"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "View once media downloaded successfully",
+            "@content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "media": {
+                          "type": "object",
+                          "properties": {
+                            "mimetype": {
+                              "type": "string",
+                              "example": "image/jpeg"
+                            },
+                            "data": {
+                              "type": "string",
+                              "example": "base64encodeddata..."
+                            },
+                            "filename": {
+                              "type": "string",
+                              "example": "viewonce_1698765432.jpg"
+                            }
+                          }
+                        },
+                        "metadata": {
+                          "type": "object",
+                          "properties": {
+                            "messageId": {
+                              "type": "string",
+                              "example": "true_555197756708@c.us_3EB0XXXXX"
+                            },
+                            "from": {
+                              "type": "string",
+                              "example": "555197756708@c.us"
+                            },
+                            "timestamp": {
+                              "type": "number",
+                              "example": 1698765432
+                            },
+                            "type": {
+                              "type": "string",
+                              "example": "image"
+                            },
+                            "isViewOnce": {
+                              "type": "boolean",
+                              "example": true
+                            },
+                            "downloadedAt": {
+                              "type": "number",
+                              "example": 1698765500
+                            },
+                            "warning": {
+                              "type": "string",
+                              "example": "This is view once media that was meant to be seen only once. Handle responsibly."
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session or message not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error or media expired"
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "messageId",
+                  "chatId"
+                ],
+                "properties": {
+                  "messageId": {
+                    "type": "string",
+                    "description": "The message ID containing view once media",
+                    "example": "3EB0XXXXXXXXXXXXX"
+                  },
+                  "chatId": {
+                    "type": "string",
+                    "description": "The Chat ID where the message is located",
+                    "example": "555197756708@c.us"
+                  },
+                  "force": {
+                    "type": "boolean",
+                    "description": "Force download even if expired or already viewed (default: false)",
+                    "example": false
+                  }
+                }
+              },
+              "examples": {
+                "default": {
+                  "value": {
+                    "messageId": "3EB0XXXXXXXXXXXXX",
+                    "chatId": "555197756708@c.us",
+                    "force": false
+                  }
+                },
+                "forceDownload": {
+                  "value": {
+                    "messageId": "3EB0XXXXXXXXXXXXX",
+                    "chatId": "555197756708@c.us",
+                    "force": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/viewonce/getStats/{sessionId}": {
+      "post": {
+        "tags": [
+          "View Once"
+        ],
+        "summary": "Get view once statistics",
+        "description": "Retrieves statistics about view once messages in a specific chat, including counts by type, status, sender, and date.",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Session ID",
+            "example": "redblack"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "View once statistics retrieved successfully",
+            "@content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "chatId": {
+                          "type": "string",
+                          "example": "555197756708@c.us"
+                        },
+                        "periodDays": {
+                          "type": "number",
+                          "example": 30
+                        },
+                        "cutoffDate": {
+                          "type": "string",
+                          "example": "2025-10-01T00:00:00.000Z"
+                        },
+                        "stats": {
+                          "type": "object",
+                          "properties": {
+                            "totalMessages": {
+                              "type": "number",
+                              "example": 150
+                            },
+                            "viewOnceMessages": {
+                              "type": "number",
+                              "example": 12
+                            },
+                            "images": {
+                              "type": "number",
+                              "example": 8
+                            },
+                            "videos": {
+                              "type": "number",
+                              "example": 4
+                            },
+                            "viewed": {
+                              "type": "number",
+                              "example": 7
+                            },
+                            "unviewed": {
+                              "type": "number",
+                              "example": 5
+                            },
+                            "fromMe": {
+                              "type": "number",
+                              "example": 3
+                            },
+                            "fromOthers": {
+                              "type": "number",
+                              "example": 9
+                            },
+                            "byDate": {
+                              "type": "object",
+                              "example": {
+                                "2025-10-30": 2,
+                                "2025-10-29": 3
+                              }
+                            },
+                            "bySender": {
+                              "type": "object",
+                              "example": {
+                                "me": 3,
+                                "555197756708@c.us": 9
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "chatId"
+                ],
+                "properties": {
+                  "chatId": {
+                    "type": "string",
+                    "description": "The Chat ID to analyze",
+                    "example": "555197756708@c.us"
+                  },
+                  "days": {
+                    "type": "number",
+                    "description": "Number of days to look back (default: 30)",
+                    "example": 30
+                  }
+                }
+              },
+              "examples": {
+                "last30days": {
+                  "value": {
+                    "chatId": "555197756708@c.us",
+                    "days": 30
+                  }
+                },
+                "last7days": {
+                  "value": {
+                    "chatId": "555197756708@c.us",
+                    "days": 7
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/viewonce/getChats/{sessionId}": {
+      "post": {
+        "tags": [
+          "View Once"
+        ],
+        "summary": "List chats with view once messages",
+        "description": "Scans chats to find which ones contain view once messages. Returns a list of chats sorted by the number of view once messages found.",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Session ID",
+            "example": "redblack"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chats with view once messages retrieved successfully",
+            "@content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "totalChatsChecked": {
+                          "type": "number",
+                          "example": 50
+                        },
+                        "chatsWithViewOnce": {
+                          "type": "number",
+                          "example": 5
+                        },
+                        "chats": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "chatId": {
+                                "type": "string",
+                                "example": "555197756708@c.us"
+                              },
+                              "name": {
+                                "type": "string",
+                                "example": "João Silva"
+                              },
+                              "isGroup": {
+                                "type": "boolean",
+                                "example": false
+                              },
+                              "viewOnceCount": {
+                                "type": "number",
+                                "example": 12
+                              },
+                              "lastActivity": {
+                                "type": "number",
+                                "example": 1698765432
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "limit": {
+                    "type": "number",
+                    "description": "Maximum number of chats to check (default: 50)",
+                    "example": 50
+                  }
+                }
+              },
+              "examples": {
+                "default": {
+                  "value": {
+                    "limit": 50
+                  }
+                },
+                "checkAll": {
+                  "value": {
+                    "limit": 100
                   }
                 }
               }

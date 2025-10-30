@@ -1,4 +1,4 @@
-const sessions = require('../sessions')
+const { sessions } = require('../sessions')
 const { sendErrorResponse } = require('../utils')
 
 /**
@@ -19,12 +19,116 @@ const { sendErrorResponse } = require('../utils')
  * @returns {Promise<void>}
  */
 const getViewOnceMedia = async (req, res) => {
+  /*
+    #swagger.summary = 'Get view once media from chat'
+    #swagger.description = 'Retrieves all view once (disappearing) photos and videos from a specific chat. These are media files that are meant to be viewed only once before disappearing.'
+    #swagger.tags = ['View Once']
+    #swagger.parameters['sessionId'] = {
+      in: 'path',
+      description: 'Session ID',
+      required: true,
+      type: 'string',
+      example: 'redblack'
+    }
+    #swagger.requestBody = {
+      required: true,
+      '@content': {
+        "application/json": {
+          schema: {
+            type: 'object',
+            required: ['chatId'],
+            properties: {
+              chatId: {
+                type: 'string',
+                description: 'The Chat ID to search for view once media',
+                example: '555197756708@c.us'
+              },
+              limit: {
+                type: 'number',
+                description: 'Maximum number of messages to fetch (default: 50)',
+                example: 50
+              },
+              includeExpired: {
+                type: 'boolean',
+                description: 'Include expired view once messages (default: false)',
+                example: false
+              }
+            }
+          },
+          examples: {
+            default: {
+              value: {
+                chatId: '555197756708@c.us',
+                limit: 50,
+                includeExpired: false
+              }
+            },
+            includeExpired: {
+              value: {
+                chatId: '555197756708@c.us',
+                limit: 100,
+                includeExpired: true
+              }
+            }
+          }
+        }
+      }
+    }
+    #swagger.responses[200] = {
+      description: 'View once media retrieved successfully',
+      '@content': {
+        "application/json": {
+          schema: {
+            type: 'object',
+            properties: {
+              success: { type: 'boolean', example: true },
+              data: {
+                type: 'object',
+                properties: {
+                  chatId: { type: 'string', example: '555197756708@c.us' },
+                  totalFound: { type: 'number', example: 5 },
+                  returned: { type: 'number', example: 5 },
+                  includeExpired: { type: 'boolean', example: false },
+                  messages: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'string', example: 'true_555197756708@c.us_3EB0XXXXX' },
+                        from: { type: 'string', example: '555197756708@c.us' },
+                        timestamp: { type: 'number', example: 1698765432 },
+                        type: { type: 'string', example: 'image' },
+                        hasMedia: { type: 'boolean', example: true },
+                        isViewOnce: { type: 'boolean', example: true },
+                        viewed: { type: 'boolean', example: false },
+                        canDownload: { type: 'boolean', example: true },
+                        mimetype: { type: 'string', example: 'image/jpeg' },
+                        caption: { type: 'string', example: 'Check this out!' }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    #swagger.responses[404] = { description: 'Session not found' }
+    #swagger.responses[500] = { description: 'Internal server error' }
+  */
   try {
     const { chatId, limit = 50, includeExpired = false } = req.body
+    
+    // Verificar se sessão existe
+    if (!sessions.has(req.params.sessionId)) {
+      return sendErrorResponse(res, 404, 'Session not found')
+    }
+    
     const client = sessions.get(req.params.sessionId)
     
     if (!client) {
-      throw new Error('Session not found')
+      return sendErrorResponse(res, 404, 'Session not found')
     }
 
     // Buscar mensagens do chat
@@ -124,12 +228,114 @@ const getViewOnceMedia = async (req, res) => {
  * @returns {Promise<void>}
  */
 const downloadViewOnceMedia = async (req, res) => {
+  /*
+    #swagger.summary = 'Download view once media'
+    #swagger.description = 'Downloads media from a specific view once message. This allows saving disappearing photos/videos before they expire. Use with caution and respect privacy.'
+    #swagger.tags = ['View Once']
+    #swagger.parameters['sessionId'] = {
+      in: 'path',
+      description: 'Session ID',
+      required: true,
+      type: 'string',
+      example: 'redblack'
+    }
+    #swagger.requestBody = {
+      required: true,
+      '@content': {
+        "application/json": {
+          schema: {
+            type: 'object',
+            required: ['messageId', 'chatId'],
+            properties: {
+              messageId: {
+                type: 'string',
+                description: 'The message ID containing view once media',
+                example: '3EB0XXXXXXXXXXXXX'
+              },
+              chatId: {
+                type: 'string',
+                description: 'The Chat ID where the message is located',
+                example: '555197756708@c.us'
+              },
+              force: {
+                type: 'boolean',
+                description: 'Force download even if expired or already viewed (default: false)',
+                example: false
+              }
+            }
+          },
+          examples: {
+            default: {
+              value: {
+                messageId: '3EB0XXXXXXXXXXXXX',
+                chatId: '555197756708@c.us',
+                force: false
+              }
+            },
+            forceDownload: {
+              value: {
+                messageId: '3EB0XXXXXXXXXXXXX',
+                chatId: '555197756708@c.us',
+                force: true
+              }
+            }
+          }
+        }
+      }
+    }
+    #swagger.responses[200] = {
+      description: 'View once media downloaded successfully',
+      '@content': {
+        "application/json": {
+          schema: {
+            type: 'object',
+            properties: {
+              success: { type: 'boolean', example: true },
+              data: {
+                type: 'object',
+                properties: {
+                  media: {
+                    type: 'object',
+                    properties: {
+                      mimetype: { type: 'string', example: 'image/jpeg' },
+                      data: { type: 'string', example: 'base64encodeddata...' },
+                      filename: { type: 'string', example: 'viewonce_1698765432.jpg' }
+                    }
+                  },
+                  metadata: {
+                    type: 'object',
+                    properties: {
+                      messageId: { type: 'string', example: 'true_555197756708@c.us_3EB0XXXXX' },
+                      from: { type: 'string', example: '555197756708@c.us' },
+                      timestamp: { type: 'number', example: 1698765432 },
+                      type: { type: 'string', example: 'image' },
+                      isViewOnce: { type: 'boolean', example: true },
+                      downloadedAt: { type: 'number', example: 1698765500 },
+                      warning: { type: 'string', example: 'This is view once media that was meant to be seen only once. Handle responsibly.' }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    #swagger.responses[404] = { description: 'Session or message not found' }
+    #swagger.responses[500] = { description: 'Internal server error or media expired' }
+  */
   try {
     const { messageId, chatId, force = false } = req.body
+    
+    // Verificar se sessão existe
+    if (!sessions.has(req.params.sessionId)) {
+      return sendErrorResponse(res, 404, 'Session not found')
+    }
+    
     const client = sessions.get(req.params.sessionId)
     
     if (!client) {
-      throw new Error('Session not found')
+      return sendErrorResponse(res, 404, 'Session not found')
     }
 
     // Buscar a mensagem específica
@@ -216,12 +422,111 @@ const downloadViewOnceMedia = async (req, res) => {
  * @returns {Promise<void>}
  */
 const getViewOnceStats = async (req, res) => {
+  /*
+    #swagger.summary = 'Get view once statistics'
+    #swagger.description = 'Retrieves statistics about view once messages in a specific chat, including counts by type, status, sender, and date.'
+    #swagger.tags = ['View Once']
+    #swagger.parameters['sessionId'] = {
+      in: 'path',
+      description: 'Session ID',
+      required: true,
+      type: 'string',
+      example: 'redblack'
+    }
+    #swagger.requestBody = {
+      required: true,
+      '@content': {
+        "application/json": {
+          schema: {
+            type: 'object',
+            required: ['chatId'],
+            properties: {
+              chatId: {
+                type: 'string',
+                description: 'The Chat ID to analyze',
+                example: '555197756708@c.us'
+              },
+              days: {
+                type: 'number',
+                description: 'Number of days to look back (default: 30)',
+                example: 30
+              }
+            }
+          },
+          examples: {
+            last30days: {
+              value: {
+                chatId: '555197756708@c.us',
+                days: 30
+              }
+            },
+            last7days: {
+              value: {
+                chatId: '555197756708@c.us',
+                days: 7
+              }
+            }
+          }
+        }
+      }
+    }
+    #swagger.responses[200] = {
+      description: 'View once statistics retrieved successfully',
+      '@content': {
+        "application/json": {
+          schema: {
+            type: 'object',
+            properties: {
+              success: { type: 'boolean', example: true },
+              data: {
+                type: 'object',
+                properties: {
+                  chatId: { type: 'string', example: '555197756708@c.us' },
+                  periodDays: { type: 'number', example: 30 },
+                  cutoffDate: { type: 'string', example: '2025-10-01T00:00:00.000Z' },
+                  stats: {
+                    type: 'object',
+                    properties: {
+                      totalMessages: { type: 'number', example: 150 },
+                      viewOnceMessages: { type: 'number', example: 12 },
+                      images: { type: 'number', example: 8 },
+                      videos: { type: 'number', example: 4 },
+                      viewed: { type: 'number', example: 7 },
+                      unviewed: { type: 'number', example: 5 },
+                      fromMe: { type: 'number', example: 3 },
+                      fromOthers: { type: 'number', example: 9 },
+                      byDate: { 
+                        type: 'object',
+                        example: { '2025-10-30': 2, '2025-10-29': 3 }
+                      },
+                      bySender: {
+                        type: 'object',
+                        example: { 'me': 3, '555197756708@c.us': 9 }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    #swagger.responses[404] = { description: 'Session not found' }
+    #swagger.responses[500] = { description: 'Internal server error' }
+  */
   try {
     const { chatId, days = 30 } = req.body
+    
+    // Verificar se sessão existe
+    if (!sessions.has(req.params.sessionId)) {
+      return sendErrorResponse(res, 404, 'Session not found')
+    }
+    
     const client = sessions.get(req.params.sessionId)
     
     if (!client) {
-      throw new Error('Session not found')
+      return sendErrorResponse(res, 404, 'Session not found')
     }
 
     const chat = await client.getChatById(chatId)
@@ -304,12 +609,94 @@ const getViewOnceStats = async (req, res) => {
  * @returns {Promise<void>}
  */
 const getChatsWithViewOnce = async (req, res) => {
+  /*
+    #swagger.summary = 'List chats with view once messages'
+    #swagger.description = 'Scans chats to find which ones contain view once messages. Returns a list of chats sorted by the number of view once messages found.'
+    #swagger.tags = ['View Once']
+    #swagger.parameters['sessionId'] = {
+      in: 'path',
+      description: 'Session ID',
+      required: true,
+      type: 'string',
+      example: 'redblack'
+    }
+    #swagger.requestBody = {
+      required: false,
+      '@content': {
+        "application/json": {
+          schema: {
+            type: 'object',
+            properties: {
+              limit: {
+                type: 'number',
+                description: 'Maximum number of chats to check (default: 50)',
+                example: 50
+              }
+            }
+          },
+          examples: {
+            default: {
+              value: {
+                limit: 50
+              }
+            },
+            checkAll: {
+              value: {
+                limit: 100
+              }
+            }
+          }
+        }
+      }
+    }
+    #swagger.responses[200] = {
+      description: 'Chats with view once messages retrieved successfully',
+      '@content': {
+        "application/json": {
+          schema: {
+            type: 'object',
+            properties: {
+              success: { type: 'boolean', example: true },
+              data: {
+                type: 'object',
+                properties: {
+                  totalChatsChecked: { type: 'number', example: 50 },
+                  chatsWithViewOnce: { type: 'number', example: 5 },
+                  chats: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        chatId: { type: 'string', example: '555197756708@c.us' },
+                        name: { type: 'string', example: 'João Silva' },
+                        isGroup: { type: 'boolean', example: false },
+                        viewOnceCount: { type: 'number', example: 12 },
+                        lastActivity: { type: 'number', example: 1698765432 }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    #swagger.responses[404] = { description: 'Session not found' }
+    #swagger.responses[500] = { description: 'Internal server error' }
+  */
   try {
     const { limit = 50 } = req.body
+    
+    // Verificar se sessão existe
+    if (!sessions.has(req.params.sessionId)) {
+      return sendErrorResponse(res, 404, 'Session not found')
+    }
+    
     const client = sessions.get(req.params.sessionId)
     
     if (!client) {
-      throw new Error('Session not found')
+      return sendErrorResponse(res, 404, 'Session not found')
     }
 
     const chats = await client.getChats()

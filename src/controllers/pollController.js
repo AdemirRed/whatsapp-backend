@@ -183,7 +183,28 @@ const getChatPolls = async (req, res) => {
     
     for (const poll of polls) {
       try {
-        const pollVotes = await poll.getPollVotes()
+        // Buscar a mensagem completa pelo ID para garantir que getPollVotes está disponível
+        const fullPollMessage = await client.getMessageById(poll.id._serialized)
+        
+        if (!fullPollMessage || typeof fullPollMessage.getPollVotes !== 'function') {
+          console.warn(`Poll ${poll.id._serialized} does not have getPollVotes method`)
+          
+          // Retornar poll sem votos se o método não estiver disponível
+          pollData.push({
+            messageId: poll.id._serialized,
+            pollName: poll.pollName || poll.body,
+            options: poll.pollOptions || [],
+            allowMultipleAnswers: poll.allowMultipleAnswers || false,
+            timestamp: poll.timestamp,
+            author: poll.author,
+            votes: [],
+            totalVotes: 0,
+            error: 'Unable to retrieve votes for this poll'
+          })
+          continue
+        }
+        
+        const pollVotes = await fullPollMessage.getPollVotes()
         const formattedVotes = []
         
         for (const [optionName, votes] of pollVotes) {
@@ -198,17 +219,30 @@ const getChatPolls = async (req, res) => {
         }
         
         pollData.push({
-          messageId: poll.id._serialized,
-          pollName: poll.pollName,
-          options: poll.pollOptions,
-          allowMultipleAnswers: poll.allowMultipleAnswers,
-          timestamp: poll.timestamp,
-          author: poll.author,
+          messageId: fullPollMessage.id._serialized,
+          pollName: fullPollMessage.pollName || fullPollMessage.body,
+          options: fullPollMessage.pollOptions || [],
+          allowMultipleAnswers: fullPollMessage.allowMultipleAnswers || false,
+          timestamp: fullPollMessage.timestamp,
+          author: fullPollMessage.author,
           votes: formattedVotes,
           totalVotes: formattedVotes.reduce((total, option) => total + option.count, 0)
         })
       } catch (error) {
-        console.error('Error processing poll:', error)
+        console.error(`Error processing poll ${poll.id._serialized}:`, error.message)
+        
+        // Incluir poll com erro para que o usuário saiba que existe
+        pollData.push({
+          messageId: poll.id._serialized,
+          pollName: poll.pollName || poll.body,
+          options: poll.pollOptions || [],
+          allowMultipleAnswers: poll.allowMultipleAnswers || false,
+          timestamp: poll.timestamp,
+          author: poll.author,
+          votes: [],
+          totalVotes: 0,
+          error: error.message
+        })
       }
     }
 
@@ -353,7 +387,15 @@ const getPollVotesByContact = async (req, res) => {
         
         for (const poll of polls) {
           try {
-            const pollVotes = await poll.getPollVotes()
+            // Buscar a mensagem completa pelo ID para garantir que getPollVotes está disponível
+            const fullPollMessage = await client.getMessageById(poll.id._serialized)
+            
+            if (!fullPollMessage || typeof fullPollMessage.getPollVotes !== 'function') {
+              console.warn(`Poll ${poll.id._serialized} does not have getPollVotes method`)
+              continue
+            }
+            
+            const pollVotes = await fullPollMessage.getPollVotes()
             
             // Check if the contact voted in this poll
             for (const [optionName, votes] of pollVotes) {

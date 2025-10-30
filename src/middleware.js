@@ -34,7 +34,7 @@ const sessionNameValidation = async (req, res, next) => {
       description: 'Unique identifier for the session (alphanumeric and - allowed)',
       required: true,
       type: 'string',
-      example: 'f8377d8d-a589-4242-9ba6-9486a04ef80c'
+      example: 'redblack'
     }
   */
   if ((!/^[\w-]+$/.test(req.params.sessionId))) {

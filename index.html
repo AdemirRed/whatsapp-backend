@@ -869,6 +869,31 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- View Once Management -->
+                <div class="control-group">
+                    <h3>👁️ Gerenciar Mídia View Once</h3>
+                    <div class="input-group">
+                        <input type="text" id="viewOnceSessionId" class="form-control" placeholder="ID da sessão">
+                        <input type="text" id="viewOnceChatId" class="form-control" placeholder="Chat ID (ex: 555199999999@c.us)">
+                    </div>
+                    <div class="input-group">
+                        <button class="btn btn-info" onclick="getViewOnceMedia()">
+                            📋 Listar View Once
+                        </button>
+                        <button class="btn btn-primary" onclick="getViewOnceStats()">
+                            📊 Estatísticas
+                        </button>
+                    </div>
+                    <div class="input-group">
+                        <button class="btn btn-success" onclick="getChatsWithViewOnce()">
+                            💬 Chats com View Once
+                        </button>
+                        <button class="btn btn-warning" onclick="showDownloadViewOnceModal()">
+                            💾 Baixar Mídia
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Result Box -->
@@ -1028,6 +1053,81 @@
                     </div>
                     <div id="contactVotesResult" style="margin-top: 20px;">
                         <!-- Resultados serão exibidos aqui -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para listar mídia View Once -->
+        <div id="viewOnceMediaModal" class="modal" style="display: none;">
+            <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+                <div class="modal-header">
+                    <span class="close" onclick="document.getElementById('viewOnceMediaModal').style.display='none'">&times;</span>
+                    <h2>👁️ Mídia View Once</h2>
+                </div>
+                <div class="modal-body">
+                    <div id="viewOnceMediaResult">
+                        <!-- Resultados serão exibidos aqui -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para estatísticas View Once -->
+        <div id="viewOnceStatsModal" class="modal" style="display: none;">
+            <div class="modal-content" style="max-width: 700px;">
+                <div class="modal-header">
+                    <span class="close" onclick="document.getElementById('viewOnceStatsModal').style.display='none'">&times;</span>
+                    <h2>📊 Estatísticas View Once</h2>
+                </div>
+                <div class="modal-body">
+                    <div id="viewOnceStatsResult">
+                        <!-- Resultados serão exibidos aqui -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para chats com View Once -->
+        <div id="viewOnceChatsModal" class="modal" style="display: none;">
+            <div class="modal-content" style="max-width: 800px;">
+                <div class="modal-header">
+                    <span class="close" onclick="document.getElementById('viewOnceChatsModal').style.display='none'">&times;</span>
+                    <h2>💬 Chats com View Once</h2>
+                </div>
+                <div class="modal-body">
+                    <div id="viewOnceChatsResult">
+                        <!-- Resultados serão exibidos aqui -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para baixar mídia View Once -->
+        <div id="downloadViewOnceModal" class="modal" style="display: none;">
+            <div class="modal-content" style="max-width: 600px;">
+                <div class="modal-header">
+                    <span class="close" onclick="document.getElementById('downloadViewOnceModal').style.display='none'">&times;</span>
+                    <h2>💾 Baixar Mídia View Once</h2>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group">
+                        <input type="text" id="downloadViewOnceSessionId" class="form-control" placeholder="ID da sessão">
+                        <input type="text" id="downloadViewOnceChatId" class="form-control" placeholder="Chat ID">
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="downloadViewOnceMessageId" class="form-control" placeholder="ID da mensagem View Once">
+                        <label style="color: #94a3b8;">
+                            <input type="checkbox" id="forceDownload"> Forçar download (mesmo se expirado)
+                        </label>
+                    </div>
+                    <div class="input-group">
+                        <button class="btn btn-primary" onclick="downloadViewOnceMedia()">
+                            💾 Baixar Mídia
+                        </button>
+                    </div>
+                    <div id="downloadViewOnceResult" style="margin-top: 20px;">
+                        <!-- Resultado será exibido aqui -->
                     </div>
                 </div>
             </div>
@@ -2246,6 +2346,417 @@
             if (modal && event.target === modal) {
                 closeModal();
             }
+        }
+
+        // =====================================
+        // FUNÇÕES PARA GERENCIAR VIEW ONCE
+        // =====================================
+
+        // Obter mídia View Once de um chat
+        async function getViewOnceMedia() {
+            const sessionId = document.getElementById('viewOnceSessionId').value.trim();
+            const chatId = document.getElementById('viewOnceChatId').value.trim();
+            
+            if (!sessionId || !chatId) {
+                alert('Por favor, preencha o ID da sessão e o Chat ID');
+                return;
+            }
+
+            // Formatar chatId se necessário
+            let formattedChatId = chatId;
+            if (!chatId.includes('@')) {
+                formattedChatId = chatId + '@c.us';
+            }
+
+            try {
+                const result = await apiRequest(`/viewonce/getMedia/${sessionId}`, 'POST', {
+                    chatId: formattedChatId,
+                    limit: 50,
+                    includeExpired: false
+                });
+                
+                if (result.success) {
+                    displayViewOnceMedia(result.data);
+                    document.getElementById('viewOnceMediaModal').style.display = 'block';
+                } else {
+                    alert(`❌ Erro ao obter mídia View Once: ${result.error}`);
+                }
+            } catch (error) {
+                console.error('Erro ao obter mídia View Once:', error);
+                alert(`❌ Erro ao obter mídia View Once: ${error.message}`);
+            }
+        }
+
+        // Exibir mídia View Once no modal
+        function displayViewOnceMedia(data) {
+            const container = document.getElementById('viewOnceMediaResult');
+            
+            if (!data.messages || data.messages.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #94a3b8;">
+                        👁️ Nenhuma mídia View Once encontrada neste chat
+                        <p style="font-size: 0.9rem; margin-top: 10px;">
+                            Mídia View Once pode ter expirado ou já foi visualizada
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+
+            const messagesHtml = data.messages.map(message => `
+                <div style="margin: 20px 0; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h4 style="color: #fff; margin: 0;">
+                            ${message.type === 'image' ? '🖼️' : message.type === 'video' ? '🎥' : '📎'} 
+                            ${message.type.toUpperCase()}
+                        </h4>
+                        <span style="color: ${message.canDownload ? '#10b981' : '#ef4444'}; font-size: 0.9rem;">
+                            ${message.canDownload ? '✅ Disponível' : '❌ Expirado/Visto'}
+                        </span>
+                    </div>
+                    
+                    <div style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 15px;">
+                        📅 ${new Date(message.timestamp * 1000).toLocaleString()}<br>
+                        👤 ${message.fromMe ? 'Você' : message.from}<br>
+                        💬 ${message.caption || 'Sem legenda'}<br>
+                        📁 ${message.mimetype} (${formatFileSize(message.filesize || 0)})<br>
+                        🆔 <code style="background: rgba(255,255,255,0.1); padding: 2px 4px; border-radius: 4px;">${message.id}</code>
+                    </div>
+                    
+                    ${message.canDownload ? `
+                        <button onclick="downloadSpecificViewOnce('${message.id}', '${data.chatId}', '${document.getElementById('viewOnceSessionId').value}')" 
+                                style="background: #10b981; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer;">
+                            💾 Baixar Mídia
+                        </button>
+                    ` : `
+                        <button onclick="downloadSpecificViewOnce('${message.id}', '${data.chatId}', '${document.getElementById('viewOnceSessionId').value}', true)" 
+                                style="background: #f59e0b; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer;">
+                            💾 Tentar Baixar (Forçado)
+                        </button>
+                    `}
+                </div>
+            `).join('');
+            
+            container.innerHTML = `
+                <div style="background: #1a1a1c; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); padding: 20px;">
+                    <h3 style="color: #fff; margin-bottom: 15px;">👁️ Mídia View Once Encontrada</h3>
+                    <div style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px;">
+                        💬 Chat: <code>${data.chatId}</code><br>
+                        📊 Total encontrado: ${data.totalFound} | Exibindo: ${data.returned}
+                    </div>
+                    ${messagesHtml}
+                </div>
+            `;
+        }
+
+        // Obter estatísticas View Once
+        async function getViewOnceStats() {
+            const sessionId = document.getElementById('viewOnceSessionId').value.trim();
+            const chatId = document.getElementById('viewOnceChatId').value.trim();
+            
+            if (!sessionId || !chatId) {
+                alert('Por favor, preencha o ID da sessão e o Chat ID');
+                return;
+            }
+
+            let formattedChatId = chatId;
+            if (!chatId.includes('@')) {
+                formattedChatId = chatId + '@c.us';
+            }
+
+            try {
+                const result = await apiRequest(`/viewonce/getStats/${sessionId}`, 'POST', {
+                    chatId: formattedChatId,
+                    days: 30
+                });
+                
+                if (result.success) {
+                    displayViewOnceStats(result.data);
+                    document.getElementById('viewOnceStatsModal').style.display = 'block';
+                } else {
+                    alert(`❌ Erro ao obter estatísticas: ${result.error}`);
+                }
+            } catch (error) {
+                console.error('Erro ao obter estatísticas:', error);
+                alert(`❌ Erro ao obter estatísticas: ${error.message}`);
+            }
+        }
+
+        // Exibir estatísticas View Once
+        function displayViewOnceStats(data) {
+            const container = document.getElementById('viewOnceStatsResult');
+            const stats = data.stats;
+            
+            // Converter estatísticas por data em gráfico visual simples
+            const dateEntries = Object.entries(stats.byDate || {}).sort();
+            const maxCount = Math.max(...Object.values(stats.byDate || {}), 1);
+            
+            const dateChartHtml = dateEntries.map(([date, count]) => {
+                const percentage = (count / maxCount) * 100;
+                return `
+                    <div style="display: flex; align-items: center; margin: 5px 0;">
+                        <span style="min-width: 80px; font-size: 0.8rem; color: #94a3b8;">${date.substring(5)}</span>
+                        <div style="flex: 1; background: rgba(255,255,255,0.1); height: 15px; border-radius: 7px; margin: 0 10px; overflow: hidden;">
+                            <div style="width: ${percentage}%; height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 7px;"></div>
+                        </div>
+                        <span style="min-width: 20px; font-size: 0.8rem; color: #60a5fa;">${count}</span>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `
+                <div style="background: #1a1a1c; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); padding: 20px;">
+                    <h3 style="color: #fff; margin-bottom: 15px;">📊 Estatísticas View Once (${data.periodDays} dias)</h3>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                        <div style="text-align: center; padding: 15px; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
+                            <div style="font-size: 1.5rem; color: #3b82f6; font-weight: bold;">${stats.viewOnceMessages}</div>
+                            <div style="color: #94a3b8; font-size: 0.8rem;">View Once</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: rgba(16, 185, 129, 0.1); border-radius: 8px;">
+                            <div style="font-size: 1.5rem; color: #10b981; font-weight: bold;">${stats.images}</div>
+                            <div style="color: #94a3b8; font-size: 0.8rem;">Imagens</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: rgba(245, 158, 11, 0.1); border-radius: 8px;">
+                            <div style="font-size: 1.5rem; color: #f59e0b; font-weight: bold;">${stats.videos}</div>
+                            <div style="color: #94a3b8; font-size: 0.8rem;">Vídeos</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="color: #fff; margin-bottom: 10px;">📈 Atividade por Data</h4>
+                        <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px;">
+                            ${dateChartHtml || '<div style="color: #94a3b8; text-align: center;">Nenhuma atividade no período</div>'}
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div>
+                            <h4 style="color: #fff; margin-bottom: 10px;">🔍 Status</h4>
+                            <div style="color: #94a3b8; line-height: 1.6;">
+                                Visualizados: <span style="color: #ef4444;">${stats.viewed}</span><br>
+                                Não visualizados: <span style="color: #10b981;">${stats.unviewed}</span><br>
+                                De mim: <span style="color: #60a5fa;">${stats.fromMe}</span><br>
+                                De outros: <span style="color: #f59e0b;">${stats.fromOthers}</span>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 style="color: #fff; margin-bottom: 10px;">📊 Resumo</h4>
+                            <div style="color: #94a3b8; line-height: 1.6;">
+                                Total mensagens: ${stats.totalMessages}<br>
+                                % View Once: ${stats.totalMessages > 0 ? ((stats.viewOnceMessages / stats.totalMessages) * 100).toFixed(1) : 0}%<br>
+                                Período: ${data.periodDays} dias<br>
+                                Chat: <code style="font-size: 0.7rem;">${data.chatId}</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Obter chats com View Once
+        async function getChatsWithViewOnce() {
+            const sessionId = document.getElementById('viewOnceSessionId').value.trim();
+            
+            if (!sessionId) {
+                alert('Por favor, preencha o ID da sessão');
+                return;
+            }
+
+            try {
+                const result = await apiRequest(`/viewonce/getChats/${sessionId}`, 'POST', {
+                    limit: 50
+                });
+                
+                if (result.success) {
+                    displayChatsWithViewOnce(result.data);
+                    document.getElementById('viewOnceChatsModal').style.display = 'block';
+                } else {
+                    alert(`❌ Erro ao obter chats: ${result.error}`);
+                }
+            } catch (error) {
+                console.error('Erro ao obter chats:', error);
+                alert(`❌ Erro ao obter chats: ${error.message}`);
+            }
+        }
+
+        // Exibir chats com View Once
+        function displayChatsWithViewOnce(data) {
+            const container = document.getElementById('viewOnceChatsResult');
+            
+            if (!data.chats || data.chats.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #94a3b8;">
+                        💬 Nenhum chat com mídia View Once encontrado
+                        <p style="font-size: 0.9rem; margin-top: 10px;">
+                            Verifique ${data.totalChatsChecked} chats
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+
+            const chatsHtml = data.chats.map(chat => `
+                <div style="margin: 15px 0; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; cursor: pointer;"
+                     onclick="selectChatForViewOnce('${chat.chatId}', '${chat.name}')">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h4 style="color: #fff; margin: 0; margin-bottom: 5px;">
+                                ${chat.isGroup ? '👥' : '👤'} ${chat.name}
+                            </h4>
+                            <div style="color: #94a3b8; font-size: 0.9rem;">
+                                🆔 ${chat.chatId}<br>
+                                📅 Última atividade: ${new Date(chat.lastActivity * 1000).toLocaleDateString()}
+                            </div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 1.2rem; color: #3b82f6; font-weight: bold;">${chat.viewOnceCount}</div>
+                            <div style="color: #94a3b8; font-size: 0.8rem;">View Once</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = `
+                <div style="background: #1a1a1c; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); padding: 20px;">
+                    <h3 style="color: #fff; margin-bottom: 15px;">💬 Chats com View Once</h3>
+                    <div style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px;">
+                        📊 ${data.chatsWithViewOnce} de ${data.totalChatsChecked} chats verificados têm mídia View Once
+                    </div>
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        ${chatsHtml}
+                    </div>
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); color: #94a3b8; font-size: 0.8rem;">
+                        💡 Clique em um chat para selecioná-lo nos campos de entrada
+                    </div>
+                </div>
+            `;
+        }
+
+        // Selecionar chat para View Once
+        function selectChatForViewOnce(chatId, chatName) {
+            document.getElementById('viewOnceChatId').value = chatId;
+            document.getElementById('viewOnceChatsModal').style.display = 'none';
+            alert(`✅ Chat selecionado: ${chatName}`);
+        }
+
+        // Mostrar modal para baixar View Once
+        function showDownloadViewOnceModal() {
+            document.getElementById('downloadViewOnceModal').style.display = 'block';
+        }
+
+        // Baixar mídia View Once específica
+        async function downloadSpecificViewOnce(messageId, chatId, sessionId, force = false) {
+            try {
+                const result = await apiRequest(`/viewonce/download/${sessionId}`, 'POST', {
+                    messageId: messageId,
+                    chatId: chatId,
+                    force: force
+                });
+                
+                if (result.success) {
+                    displayDownloadedMedia(result.data);
+                } else {
+                    alert(`❌ Erro ao baixar mídia: ${result.error}`);
+                }
+            } catch (error) {
+                console.error('Erro ao baixar mídia:', error);
+                alert(`❌ Erro ao baixar mídia: ${error.message}`);
+            }
+        }
+
+        // Baixar mídia View Once do modal
+        async function downloadViewOnceMedia() {
+            const sessionId = document.getElementById('downloadViewOnceSessionId').value.trim();
+            const chatId = document.getElementById('downloadViewOnceChatId').value.trim();
+            const messageId = document.getElementById('downloadViewOnceMessageId').value.trim();
+            const force = document.getElementById('forceDownload').checked;
+            
+            if (!sessionId || !chatId || !messageId) {
+                alert('Por favor, preencha todos os campos obrigatórios');
+                return;
+            }
+
+            let formattedChatId = chatId;
+            if (!chatId.includes('@')) {
+                formattedChatId = chatId + '@c.us';
+            }
+
+            await downloadSpecificViewOnce(messageId, formattedChatId, sessionId, force);
+        }
+
+        // Exibir mídia baixada
+        function displayDownloadedMedia(data) {
+            const container = document.getElementById('downloadViewOnceResult');
+            const metadata = data.metadata;
+            const media = data.media;
+            
+            // Criar URL para visualização
+            const mediaUrl = `data:${media.mimetype};base64,${media.data}`;
+            
+            let mediaPreview = '';
+            if (metadata.type === 'image') {
+                mediaPreview = `<img src="${mediaUrl}" style="max-width: 100%; max-height: 300px; border-radius: 8px;" alt="View Once Image">`;
+            } else if (metadata.type === 'video') {
+                mediaPreview = `
+                    <video controls style="max-width: 100%; max-height: 300px; border-radius: 8px;">
+                        <source src="${mediaUrl}" type="${media.mimetype}">
+                        Seu navegador não suporta o elemento de vídeo.
+                    </video>
+                `;
+            } else {
+                mediaPreview = `
+                    <div style="padding: 40px; text-align: center; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                        📎 Arquivo: ${media.filename}<br>
+                        <small>Tipo: ${media.mimetype}</small>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = `
+                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 20px; border-radius: 8px;">
+                    <h4 style="color: #10b981; margin: 0 0 15px 0;">✅ Mídia baixada com sucesso!</h4>
+                    
+                    <div style="margin-bottom: 20px;">
+                        ${mediaPreview}
+                    </div>
+                    
+                    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                        <h5 style="color: #fff; margin: 0 0 10px 0;">📋 Informações:</h5>
+                        <div style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">
+                            📅 Data: ${new Date(metadata.timestamp * 1000).toLocaleString()}<br>
+                            👤 De: ${metadata.fromMe ? 'Você' : metadata.from}<br>
+                            🏷️ Tipo: ${metadata.type}<br>
+                            📁 Arquivo: ${media.filename}<br>
+                            🔧 MIME: ${media.mimetype}<br>
+                            📊 Tamanho: ${formatFileSize(media.filesize)}<br>
+                            ⏰ Baixado em: ${new Date(metadata.downloadedAt).toLocaleString()}
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 10px; border-radius: 6px;">
+                        <div style="color: #ef4444; font-size: 0.9rem;">
+                            ⚠️ ${metadata.warning}
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 15px;">
+                        <a href="${mediaUrl}" download="${media.filename}" 
+                           style="background: #3b82f6; color: white; padding: 10px 15px; border-radius: 6px; text-decoration: none; display: inline-block;">
+                            💾 Salvar Arquivo
+                        </a>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Função utilitária para formatar tamanho de arquivo
+        function formatFileSize(bytes) {
+            if (!bytes) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
         // Inicializar página
