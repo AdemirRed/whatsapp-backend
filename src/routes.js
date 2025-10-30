@@ -15,6 +15,7 @@ const groupChatController = require('./controllers/groupChatController')
 const messageController = require('./controllers/messageController')
 const contactController = require('./controllers/contactController')
 const pollController = require('./controllers/pollController')
+const viewOnceController = require('./controllers/viewOnceController')
 
 /**
  * ================
@@ -230,6 +231,20 @@ pollRouter.post('/getVotes/:sessionId', [middleware.sessionNameValidation, middl
 pollRouter.post('/getChatPolls/:sessionId', [middleware.sessionNameValidation, middleware.sessionValidation], pollController.getChatPolls)
 pollRouter.get('/createInfo', pollController.createPollInfo)
 pollRouter.post('/getVotesByContact/:sessionId', [middleware.sessionNameValidation, middleware.sessionValidation], pollController.getPollVotesByContact)
+
+/**
+ * ================
+ * VIEW ONCE ENDPOINTS
+ * ================
+ */
+const viewOnceRouter = express.Router()
+viewOnceRouter.use(middleware.apikey)
+routes.use('/viewonce', viewOnceRouter)
+
+viewOnceRouter.post('/getMedia/:sessionId', [middleware.sessionNameValidation, middleware.sessionValidation], viewOnceController.getViewOnceMedia)
+viewOnceRouter.post('/download/:sessionId', [middleware.sessionNameValidation, middleware.sessionValidation], viewOnceController.downloadViewOnceMedia)
+viewOnceRouter.post('/getStats/:sessionId', [middleware.sessionNameValidation, middleware.sessionValidation], viewOnceController.getViewOnceStats)
+viewOnceRouter.post('/getChats/:sessionId', [middleware.sessionNameValidation, middleware.sessionValidation], viewOnceController.getChatsWithViewOnce)
 
 /**
  * ================

@@ -1,0 +1,39 @@
+📁 ESTRUTURA DE PASTAS PARA O BOOT
+=======================================
+
+Copie os arquivos para estas pastas na sua aplicação Boot:
+
+src/
+  main/
+    java/
+      com/yourcompany/whatsapp/
+        BootApplication.java                    (seu arquivo existente)
+        controller/
+          WebController.java                    ← COPIE DESTE DIRETÓRIO
+          WhatsAppWebhookController.java        (seu arquivo existente)
+        config/
+          WebConfig.java                        ← COPIE DESTE DIRETÓRIO
+        entity/
+          VoteEntity.java                       (crie se necessário)
+        service/
+          WhatsAppService.java                  (crie se necessário)
+    resources/
+      static/
+        index.html                              ← COPIE DESTE DIRETÓRIO
+      application.properties                    ← SUBSTITUA COM O NOVO
+
+pom.xml                                         ← ADICIONE AS DEPENDÊNCIAS
+
+=======================================
+
+COMANDOS PARA COPIAR (Linux/Mac):
+cp boot-config-files/WebController.java src/main/java/com/yourcompany/whatsapp/controller/
+cp boot-config-files/WebConfig.java src/main/java/com/yourcompany/whatsapp/config/
+cp boot-config-files/index.html src/main/resources/static/
+cp boot-config-files/application.properties src/main/resources/
+
+COMANDOS PARA COPIAR (Windows):
+copy boot-config-files\WebController.java src\main\java\com\yourcompany\whatsapp\controller\
+copy boot-config-files\WebConfig.java src\main\java\com\yourcompany\whatsapp\config\
+copy boot-config-files\index.html src\main\resources\static\
+copy boot-config-files\application.properties src\main\resources\

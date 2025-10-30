@@ -242,11 +242,44 @@ const initializeEvents = (client, sessionId) => {
       client.on('message', async (message) => {
         if (client.hibernated) return
         emit('message', { message })
+        
+        // Detectar mensagens view once
+        const isViewOnce = message._data && (
+          message._data.isViewOnce || 
+          message._data.viewOnce || 
+          (message._data.ephemeral && message.hasMedia)
+        )
+        
+        if (isViewOnce) {
+          console.log(`🔍 View Once message detected: ${message.id._serialized}`)
+          emit('view_once_detected', { 
+            message,
+            metadata: {
+              from: message.from,
+              type: message.type,
+              hasMedia: message.hasMedia,
+              timestamp: message.timestamp,
+              mimetype: message._data.mimetype,
+              size: message._data.size,
+              viewed: message._data.viewed || false
+            }
+          })
+        }
+        
         if (message.hasMedia && message._data?.size < maxAttachmentSize) {
           // custom service event
           checkIfEventisEnabled('media').then(_ => {
             message.downloadMedia().then(messageMedia => {
               emit('media', { messageMedia, message })
+              
+              // Se for view once, emitir evento específico com a mídia
+              if (isViewOnce) {
+                emit('view_once_media', { 
+                  messageMedia, 
+                  message,
+                  warning: 'This is view once media - handle responsibly'
+                })
+              }
             }).catch(e => {
               console.log('Download media error:', e.message)
             })
