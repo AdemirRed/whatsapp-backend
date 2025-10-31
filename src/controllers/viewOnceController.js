@@ -135,15 +135,32 @@ const getViewOnceMedia = async (req, res) => {
     const chat = await client.getChatById(chatId)
     const messages = await chat.fetchMessages({ limit: limit * 2 }) // Buscar mais para filtrar
 
+    console.log(`🔍 Fetched ${messages.length} messages from chat ${chatId}`)
+
     // Filtrar mensagens de view once
     const viewOnceMessages = messages.filter(message => {
+      // Log para debug
+      if (message._data?.subtype?.includes('view_once') || 
+          message._data?.type === 'ciphertext' && message._data?.subtype) {
+        console.log('📸 Potential View Once:', {
+          type: message.type,
+          dataType: message._data?.type,
+          subtype: message._data?.subtype,
+          hasMedia: message.hasMedia,
+          timestamp: message.timestamp
+        })
+      }
+      
       // Verificar se a mensagem tem propriedades de view once
       const hasViewOnce = message._data && (
         message._data.isViewOnce || 
         message._data.viewOnce || 
+        message._data.subtype === 'view_once' ||
+        message._data.subtype === 'view_once_unavailable_fanout' ||
         (message._data.ephemeralOutOfSync !== undefined) ||
         (message.type === 'image' && message._data.ephemeral) ||
-        (message.type === 'video' && message._data.ephemeral)
+        (message.type === 'video' && message._data.ephemeral) ||
+        (message.type === 'ciphertext' && message._data?.subtype?.includes('view_once'))
       )
       
       if (!hasViewOnce) return false
@@ -164,6 +181,8 @@ const getViewOnceMedia = async (req, res) => {
       return true
     })
 
+    console.log(`👁️ Found ${viewOnceMessages.length} view once messages`)
+
     // Preparar resposta com metadados
     const viewOnceData = viewOnceMessages.slice(0, limit).map(message => {
       const messageData = {
@@ -173,6 +192,8 @@ const getViewOnceMedia = async (req, res) => {
         author: message.author,
         timestamp: message.timestamp,
         type: message.type,
+        dataType: message._data?.type,
+        subtype: message._data?.subtype,
         hasMedia: message.hasMedia,
         body: message.body,
         caption: message._data.caption || '',
@@ -702,6 +723,8 @@ const getChatsWithViewOnce = async (req, res) => {
     const chats = await client.getChats()
     const chatsWithViewOnce = []
 
+    console.log(`🔍 Checking ${Math.min(chats.length, limit)} chats for view once messages`)
+
     for (const chat of chats.slice(0, limit)) {
       try {
         const messages = await chat.fetchMessages({ limit: 100 })
@@ -709,11 +732,15 @@ const getChatsWithViewOnce = async (req, res) => {
           return message._data && (
             message._data.isViewOnce || 
             message._data.viewOnce || 
-            message._data.ephemeral
+            message._data.subtype === 'view_once' ||
+            message._data.subtype === 'view_once_unavailable_fanout' ||
+            message._data.ephemeral ||
+            (message.type === 'ciphertext' && message._data?.subtype?.includes('view_once'))
           )
         }).length
 
         if (viewOnceCount > 0) {
+          console.log(`👁️ Chat ${chat.name || chat.id._serialized} has ${viewOnceCount} view once messages`)
           chatsWithViewOnce.push({
             chatId: chat.id._serialized,
             name: chat.name || 'Unknown',
@@ -726,6 +753,8 @@ const getChatsWithViewOnce = async (req, res) => {
         console.log(`Erro ao verificar chat ${chat.id._serialized}:`, error.message)
       }
     }
+
+    console.log(`✅ Found ${chatsWithViewOnce.length} chats with view once messages`)
 
     // Ordenar por contagem de view once (descrescente)
     chatsWithViewOnce.sort((a, b) => b.viewOnceCount - a.viewOnceCount)
@@ -745,9 +774,73 @@ const getChatsWithViewOnce = async (req, res) => {
   }
 }
 
+/**
+ * Debug endpoint - Lista mensagens com propriedades brutas para análise
+ * @async
+ * @function debugMessages
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ * @param {string} req.params.sessionId - The session ID
+ * @param {string} req.body.chatId - The chat ID
+ * @param {number} req.body.limit - Maximum number of messages (default: 20)
+ * @returns {Promise<void>}
+ */
+const debugMessages = async (req, res) => {
+  try {
+    const { chatId, limit = 20 } = req.body
+    
+    if (!sessions.has(req.params.sessionId)) {
+      return sendErrorResponse(res, 404, 'Session not found')
+    }
+    
+    const client = sessions.get(req.params.sessionId)
+    
+    if (!client) {
+      return sendErrorResponse(res, 404, 'Session not found')
+    }
+
+    const chat = await client.getChatById(chatId)
+    const messages = await chat.fetchMessages({ limit })
+
+    const debugData = messages.map(message => ({
+      id: message.id._serialized,
+      type: message.type,
+      timestamp: message.timestamp,
+      fromMe: message.fromMe,
+      hasMedia: message.hasMedia,
+      body: message.body?.substring(0, 50) || '',
+      _data: {
+        type: message._data?.type,
+        subtype: message._data?.subtype,
+        isViewOnce: message._data?.isViewOnce,
+        viewOnce: message._data?.viewOnce,
+        ephemeral: message._data?.ephemeral,
+        ephemeralOutOfSync: message._data?.ephemeralOutOfSync,
+        viewed: message._data?.viewed,
+        mimetype: message._data?.mimetype,
+        mediaKey: message._data?.mediaKey ? 'exists' : undefined
+      }
+    }))
+
+    res.json({
+      success: true,
+      data: {
+        chatId,
+        totalMessages: messages.length,
+        messages: debugData
+      }
+    })
+
+  } catch (error) {
+    console.error('Erro ao buscar mensagens debug:', error)
+    sendErrorResponse(res, 500, error.message)
+  }
+}
+
 module.exports = {
   getViewOnceMedia,
   downloadViewOnceMedia,
   getViewOnceStats,
-  getChatsWithViewOnce
+  getChatsWithViewOnce,
+  debugMessages
 }

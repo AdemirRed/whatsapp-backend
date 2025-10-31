@@ -245,6 +245,7 @@ viewOnceRouter.post('/getMedia/:sessionId', [middleware.sessionNameValidation, m
 viewOnceRouter.post('/download/:sessionId', [middleware.sessionNameValidation, middleware.sessionValidation], viewOnceController.downloadViewOnceMedia)
 viewOnceRouter.post('/getStats/:sessionId', [middleware.sessionNameValidation, middleware.sessionValidation], viewOnceController.getViewOnceStats)
 viewOnceRouter.post('/getChats/:sessionId', [middleware.sessionNameValidation, middleware.sessionValidation], viewOnceController.getChatsWithViewOnce)
+viewOnceRouter.post('/debug/:sessionId', [middleware.sessionNameValidation, middleware.sessionValidation], viewOnceController.debugMessages)
 
 /**
  * ================
