@@ -10,6 +10,29 @@ const TRANSCRIPTION_HEADER = 'Transcrição ✏️'
 const conversationState = new Map()
 
 /**
+ * Clean transcription text by removing unwanted characters and signatures
+ * @param {string} text - Raw transcription text
+ * @returns {string} - Cleaned transcription text
+ */
+const cleanTranscriptionText = (text) => {
+  if (!text) return ''
+  
+  return text
+    // Remove asteriscos no início e fim
+    .replace(/^\*+|\*+$/g, '')
+    // Remove múltiplas quebras de linha
+    .replace(/\n{2,}/g, '\n')
+    // Remove assinatura do BipText
+    .replace(/--\s*Transcrito por.*$/i, '')
+    // Remove texto entre parênteses no final (ex: "-- Transcrito por Blip ViraTexto")
+    .replace(/\(\s*--.*\)$/i, '')
+    // Remove espaços extras no início e fim
+    .trim()
+    // Remove quebras de linha no início e fim
+    .replace(/^\n+|\n+$/g, '')
+}
+
+/**
  * Transcribe audio using BipText service.
  *
  * @function
@@ -125,12 +148,14 @@ const transcribeAudio = async (req, res) => {
       audioMedia = new MessageMedia(mimetype, base64Data, filename)
     }
 
-    // Enviar áudio para BipText e gerenciar conversação
+    // Enviar primeira mensagem para iniciar o fluxo e gerenciar conversação
     const conversationKey = `${sessionId}_${Date.now()}`
     conversationState.set(conversationKey, {
       step: 0,
       sessionId,
-      startTime: Date.now()
+      startTime: Date.now(),
+      audioMedia, // Armazenar o áudio para enviar depois
+      audioSent: false
     })
 
     // Configurar listener para mensagens do BipText
@@ -153,43 +178,105 @@ const transcribeAudio = async (req, res) => {
         const messageText = message.body || ''
         const step = activeConversation.step
 
-        console.log(`BipText response - Step ${step}: ${messageText}`)
+        console.log(`BipText response - Step ${step}: "${messageText}"`)
 
         if (step === 0) {
-          // Primeira mensagem: Boas-vindas - Responder "Concordo"
-          await message.reply('Concordo')
-          conversationState.set(activeConversation.key, {
-            ...activeConversation,
-            step: 1
-          })
+          // CENÁRIO 1: Primeira vez - Mensagem de boas-vindas
+          if (messageText.includes('Olá') || 
+              messageText.includes('Contato Inteligente') ||
+              messageText.includes('transformar áudios') ||
+              messageText.includes('Concordo')) {
+            console.log('First time user - Sending "Concordo" response')
+            await message.reply('Concordo')
+            conversationState.set(activeConversation.key, {
+              ...activeConversation,
+              step: 1
+            })
+          }
+          // CENÁRIO 2: Usuário com histórico - Direto para transcrição
+          else if (messageText.includes('Um momento, já estou transcrevendo') || 
+                   messageText.includes('transcrevendo')) {
+            console.log('Existing user - Audio being transcribed, waiting...')
+            conversationState.set(activeConversation.key, {
+              ...activeConversation,
+              step: 3
+            })
+          }
+          // CENÁRIO 3: Receber transcrição diretamente (usuário com histórico)
+          else if (messageText.includes(TRANSCRIPTION_HEADER)) {
+            console.log('Existing user - Received transcription directly')
+            const rawTranscription = messageText.replace(TRANSCRIPTION_HEADER, '').trim()
+            const cleanedTranscription = cleanTranscriptionText(rawTranscription)
+            conversationState.set(activeConversation.key, {
+              ...activeConversation,
+              step: 4,
+              transcription: cleanedTranscription,
+              completed: true
+            })
+            console.log('Transcription completed:', cleanedTranscription)
+          }
         } else if (step === 1) {
           // Segunda mensagem: Confirmação - Responder "Permito"
+          console.log('Sending "Permito" response')
           await message.reply('Permito')
           conversationState.set(activeConversation.key, {
             ...activeConversation,
             step: 2
           })
         } else if (step === 2) {
-          // Terceira mensagem: "recebido e vai transcrever" - Apenas aguardar
-          conversationState.set(activeConversation.key, {
-            ...activeConversation,
-            step: 3
-          })
+          // Terceira mensagem: "Já estou ouvindo" - ENVIAR ÁUDIO AGORA
+          if (messageText.includes('Já estou ouvindo') || 
+              messageText.includes('ouvindo') ||
+              messageText.includes('Pode me enviar')) {
+            console.log('BipText ready to receive audio, sending now...')
+            try {
+              await session.sendMessage(BIPTEXT_NUMBER, activeConversation.audioMedia)
+              conversationState.set(activeConversation.key, {
+                ...activeConversation,
+                step: 3,
+                audioSent: true
+              })
+            } catch (error) {
+              console.error('Error sending audio:', error)
+            }
+          }
+          // Aguardar status de transcrição
+          else if (messageText.includes('Um momento, já estou transcrevendo') || 
+                   messageText.includes('transcrevendo')) {
+            console.log('Audio being transcribed, waiting...')
+            conversationState.set(activeConversation.key, {
+              ...activeConversation,
+              step: 3
+            })
+          }
+          // Receber transcrição diretamente
+          else if (messageText.includes(TRANSCRIPTION_HEADER)) {
+            const rawTranscription = messageText.replace(TRANSCRIPTION_HEADER, '').trim()
+            const cleanedTranscription = cleanTranscriptionText(rawTranscription)
+            conversationState.set(activeConversation.key, {
+              ...activeConversation,
+              step: 4,
+              transcription: cleanedTranscription,
+              completed: true
+            })
+            console.log('Transcription completed:', cleanedTranscription)
+          }
         } else if (step === 3) {
           // Quarta mensagem: Transcrição com cabeçalho
           if (messageText.includes(TRANSCRIPTION_HEADER)) {
             // Extrair apenas o texto da transcrição (após o cabeçalho)
-            const transcription = messageText.replace(TRANSCRIPTION_HEADER, '').trim()
+            const rawTranscription = messageText.replace(TRANSCRIPTION_HEADER, '').trim()
+            const cleanedTranscription = cleanTranscriptionText(rawTranscription)
             
             // Armazenar resultado
             conversationState.set(activeConversation.key, {
               ...activeConversation,
               step: 4,
-              transcription,
+              transcription: cleanedTranscription,
               completed: true
             })
             
-            console.log('Transcription completed:', transcription)
+            console.log('Transcription completed:', cleanedTranscription)
           }
         }
       } catch (error) {
@@ -200,7 +287,9 @@ const transcribeAudio = async (req, res) => {
     // Registrar listener temporário
     session.on('message', messageHandler)
 
-    // Enviar áudio
+    // ENVIAR MENSAGEM INICIAL para iniciar o fluxo
+    // Se for primeira vez: vai receber boas-vindas
+    // Se for usuário existente: vai direto para transcrição
     await session.sendMessage(BIPTEXT_NUMBER, audioMedia)
 
     // Aguardar transcrição (timeout de 2 minutos)
