@@ -8195,6 +8195,127 @@
           }
         }
       }
+    },
+    "/file/convert": {
+      "post": {
+        "tags": [
+          "File"
+        ],
+        "summary": "Convert uploaded file to Base64",
+        "description": "Upload a file and receive it converted to Base64 format with metadata",
+        "responses": {
+          "200": {
+            "description": "File converted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "filename": {
+                          "type": "string",
+                          "example": "document.pdf"
+                        },
+                        "mimetype": {
+                          "type": "string",
+                          "example": "application/pdf"
+                        },
+                        "size": {
+                          "type": "number",
+                          "example": 123456
+                        },
+                        "base64": {
+                          "type": "string",
+                          "example": "data:application/pdf;base64,JVBERi0xLjQK..."
+                        },
+                        "dataUri": {
+                          "type": "string",
+                          "example": "data:application/pdf;base64,JVBERi0xLjQK..."
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "File converted to Base64 successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - No file uploaded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "File too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "File to convert to Base64"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {

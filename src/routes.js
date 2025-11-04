@@ -230,11 +230,20 @@ stickerRouter.post('/convert', stickerController.convertToSticker)
  * FILE ENDPOINTS
  * ================
  */
+const multer = require('multer')
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  }
+})
+
 const fileRouter = express.Router()
 fileRouter.use(middleware.apikey)
 routes.use('/file', fileRouter)
 
 fileRouter.get('/fileToBase64', fileController.fileToBase64Page)
+fileRouter.post('/convert', upload.single('file'), fileController.convertFileToBase64)
 
 /**
  * ================

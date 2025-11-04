@@ -411,6 +411,135 @@ const fileToBase64Page = (req, res) => {
   res.send(html);
 }
 
+/**
+ * Convert uploaded file to base64
+ * @async
+ * @function
+ * @param {Object} req - The HTTP request object.
+ * @param {Object} res - The HTTP response object.
+ * @returns {Promise<void>}
+ */
+const convertFileToBase64 = async (req, res) => {
+  // #swagger.tags = ['File']
+  // #swagger.summary = 'Convert uploaded file to Base64'
+  // #swagger.description = 'Upload a file and receive it converted to Base64 format with metadata'
+  /* #swagger.requestBody = {
+      required: true,
+      content: {
+        "multipart/form-data": {
+          schema: {
+            type: "object",
+            properties: {
+              file: {
+                type: "string",
+                format: "binary",
+                description: "File to convert to Base64"
+              }
+            },
+            required: ["file"]
+          }
+        }
+      }
+  } */
+  /* #swagger.responses[200] = {
+      description: "File converted successfully",
+      content: {
+        "application/json": {
+          schema: {
+            type: 'object',
+            properties: {
+              success: { type: 'boolean', example: true },
+              data: {
+                type: 'object',
+                properties: {
+                  filename: { type: 'string', example: 'document.pdf' },
+                  mimetype: { type: 'string', example: 'application/pdf' },
+                  size: { type: 'number', example: 123456 },
+                  base64: { type: 'string', example: 'data:application/pdf;base64,JVBERi0xLjQK...' },
+                  dataUri: { type: 'string', example: 'data:application/pdf;base64,JVBERi0xLjQK...' }
+                }
+              },
+              message: { type: 'string', example: 'File converted to Base64 successfully' }
+            }
+          }
+        }
+      }
+  } */
+  /* #swagger.responses[400] = {
+      description: "Bad Request - No file uploaded",
+      content: {
+        "application/json": {
+          schema: { "$ref": "#/definitions/ErrorResponse" }
+        }
+      }
+  } */
+  /* #swagger.responses[413] = {
+      description: "File too large",
+      content: {
+        "application/json": {
+          schema: { "$ref": "#/definitions/ErrorResponse" }
+        }
+      }
+  } */
+  try {
+    if (!req.file) {
+      return sendErrorResponse(res, 400, 'No file uploaded. Please upload a file.')
+    }
+
+    const file = req.file
+    
+    // Check file size (10MB limit)
+    const maxSize = 10 * 1024 * 1024 // 10MB
+    if (file.size > maxSize) {
+      return sendErrorResponse(res, 413, 'File too large. Maximum size is 10MB.')
+    }
+
+    // Convert to base64
+    const base64Data = file.buffer.toString('base64')
+    const dataUri = `data:${file.mimetype};base64,${base64Data}`
+
+    const result = {
+      success: true,
+      data: {
+        filename: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size,
+        base64: base64Data,
+        dataUri: dataUri,
+        sizeFormatted: formatBytes(file.size)
+      },
+      message: 'File converted to Base64 successfully'
+    }
+
+    res.json(result)
+  } catch (error) {
+    /* #swagger.responses[500] = {
+        description: "Server error",
+        content: {
+          "application/json": {
+            schema: { "$ref": "#/definitions/ErrorResponse" }
+          }
+        }
+    } */
+    console.log('convertFileToBase64 ERROR', error)
+    sendErrorResponse(res, 500, `Error converting file: ${error.message}`)
+  }
+}
+
+/**
+ * Format bytes to human readable format
+ * @param {number} bytes 
+ * @returns {string}
+ */
+function formatBytes(bytes) {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
+}
+
 module.exports = {
-  fileToBase64Page
+  fileToBase64Page,
+  convertFileToBase64
 }

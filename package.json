@@ -9,10 +9,13 @@
     "swagger": "node swagger.js"
   },
   "dependencies": {
-    "axios": "^1.7.7",
+    "axios": "^1.13.1",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "express-rate-limit": "^6.11.2",
+    "form-data": "^4.0.4",
+    "multer": "^2.0.2",
+    "node-fetch": "^3.3.2",
     "qr-image": "^3.2.0",
     "qrcode-terminal": "^0.12.0",
     "sharp": "^0.33.5",
