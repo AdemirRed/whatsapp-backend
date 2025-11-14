@@ -517,24 +517,119 @@ const requestPairingCode = async (req, res) => {
       return
     }
 
-    // Request pairing code
-    const pairingCode = await session.requestPairingCode(phoneNumber, showNotification)
+    // Request pairing code - só funciona durante o setup inicial da sessão
+    try {
+      // Verificar se a sessão está pronta para pairing code
+      const sessionValidation = await validateSession(sessionId)
+      
+      // Se a sessão já está conectada, não é possível usar pairing code
+      if (sessionValidation.success) {
+        sendErrorResponse(res, 400, 'Session is already connected. Pairing code is only available during initial setup. Please terminate the session first if you want to re-authenticate.')
+        return
+      }
 
-    /* #swagger.responses[200] = {
-      description: "Pairing code generated successfully.",
-      content: {
-        "application/json": {
-          schema: { "$ref": "#/definitions/RequestPairingCodeResponse" }
+      // Se a sessão não está em estado de autenticação, ela precisa estar aguardando autenticação
+      if (sessionValidation.message !== 'session_not_connected' && sessionValidation.message !== 'session_not_found') {
+        sendErrorResponse(res, 400, `Session not ready for pairing code: ${sessionValidation.message}. Please ensure session is in authentication state.`)
+        return
+      }
+
+      // Verificar se a sessão tem pupPage disponível
+      if (!session.pupPage) {
+        sendErrorResponse(res, 400, 'Session browser page not available. Please start the session first.')
+        return
+      }
+
+      // Verificar se o WhatsApp Web está carregado e pronto para pairing
+      const isReadyForPairing = await session.pupPage.evaluate(() => {
+        // Verificar se estamos na tela de autenticação
+        return document.querySelector('canvas') !== null || // QR code canvas
+               document.querySelector('[data-testid="qr-canvas"]') !== null ||
+               document.body.innerHTML.includes('phone-number') ||
+               window.location.href.includes('web.whatsapp.com')
+      }).catch(() => false)
+
+      if (!isReadyForPairing) {
+        sendErrorResponse(res, 400, 'WhatsApp Web is not ready for authentication. Please ensure the browser is on the login page.')
+        return
+      }
+
+      // Tentar diferentes métodos de pairing code
+      let pairingCode
+      let method = 'unknown'
+      
+      try {
+        // Método 1: Usar requestPairingCode nativo (mais confiável)
+        pairingCode = await session.requestPairingCode(phoneNumber, showNotification)
+        method = 'native'
+      } catch (primaryError) {
+        console.log('Native pairing method failed:', primaryError.message)
+        
+        try {
+          // Método 2: Tentar via pupPage.evaluate com AuthStore
+          pairingCode = await session.pupPage.evaluate(async (phone) => {
+            if (window.AuthStore && window.AuthStore.PairingCodeLinkUtils && 
+                typeof window.AuthStore.PairingCodeLinkUtils.requestPairingCode === 'function') {
+              return await window.AuthStore.PairingCodeLinkUtils.requestPairingCode(phone)
+            }
+            throw new Error('AuthStore.PairingCodeLinkUtils not available')
+          }, phoneNumber)
+          method = 'authstore'
+        } catch (secondaryError) {
+          console.log('AuthStore pairing method failed:', secondaryError.message)
+          
+          try {
+            // Método 3: Tentar com WAWebPairingCodeLinkingApi
+            pairingCode = await session.pupPage.evaluate(async (phone) => {
+              if (window.require && window.require('WAWebPairingCodeLinkingApi')) {
+                const api = window.require('WAWebPairingCodeLinkingApi')
+                if (typeof api.requestPairingCode === 'function') {
+                  return await api.requestPairingCode(phone)
+                }
+              }
+              throw new Error('WAWebPairingCodeLinkingApi not available')
+            }, phoneNumber)
+            method = 'linkingapi'
+          } catch (tertiaryError) {
+            console.log('LinkingApi pairing method failed:', tertiaryError.message)
+            
+            // Se todos os métodos falharam, fornecer instruções claras
+            sendErrorResponse(res, 500, 
+              `Pairing code is not supported in current session state. This usually means:\n` +
+              `1. Session is already connected (use terminate first)\n` +
+              `2. WhatsApp Web version doesn't support pairing code\n` +
+              `3. Account type doesn't support multi-device\n\n` +
+              `Please try:\n` +
+              `- Use QR code authentication instead\n` +
+              `- Terminate session and restart for fresh authentication\n` +
+              `- Use WhatsApp Business account which has better multi-device support\n\n` +
+              `Original error: ${primaryError.message}`
+            )
+            return
+          }
         }
       }
+
+      /* #swagger.responses[200] = {
+        description: "Pairing code generated successfully.",
+        content: {
+          "application/json": {
+            schema: { "$ref": "#/definitions/RequestPairingCodeResponse" }
+          }
+        }
+      }
+      */
+      res.json({ 
+        success: true, 
+        pairingCode,
+        phoneNumber,
+        method,
+        message: `Pairing code generated successfully using ${method} method. Enter this code on your phone within 60 seconds.`,
+        instructions: 'Open WhatsApp on your phone > Settings > Linked Devices > Link a Device > Enter the code above'
+      })
+    } catch (pairingError) {
+      throw pairingError
     }
-    */
-    res.json({ 
-      success: true, 
-      pairingCode,
-      phoneNumber,
-      message: 'Pairing code generated. Enter this code on your phone.' 
-    })
   } catch (error) {
     /* #swagger.responses[500] = {
       description: "Server Failure.",
@@ -550,6 +645,92 @@ const requestPairingCode = async (req, res) => {
   }
 }
 
+// Função para diagnosticar o estado da sessão para pairing code
+const diagnosePairingCode = async (req, res) => {
+  /* #swagger.tags = ['Sessions']
+    #swagger.summary = 'Diagnosticar estado da sessão para pairing code'
+    #swagger.description = 'Verifica se a sessão está pronta para usar pairing code e fornece informações de debug'
+  */
+
+  try {
+    const sessionId = req.params.sessionId
+
+    // Check if session exists
+    const session = sessions.get(sessionId)
+    if (!session) {
+      sendErrorResponse(res, 404, 'Session not found')
+      return
+    }
+
+    const sessionValidation = await validateSession(sessionId)
+    
+    // Verificar estado detalhado da sessão
+    const diagnosis = {
+      sessionExists: !!session,
+      sessionState: sessionValidation,
+      hasPupPage: !!session.pupPage,
+      timestamp: new Date().toISOString()
+    }
+
+    try {
+      // Verificar estado do WhatsApp Web
+      const webState = await session.pupPage.evaluate(() => {
+        const result = {
+          url: window.location.href,
+          hasQrCanvas: !!document.querySelector('canvas'),
+          hasQrTestId: !!document.querySelector('[data-testid="qr-canvas"]'),
+          hasPhoneNumberInput: document.body.innerHTML.includes('phone-number'),
+          windowStore: !!window.Store,
+          windowAuthStore: !!window.AuthStore,
+          pairingUtils: !!(window.AuthStore && window.AuthStore.PairingCodeLinkUtils),
+          waWebPairingApi: !!(window.require && window.require('WAWebPairingCodeLinkingApi')),
+          bodyText: document.body.innerText.substring(0, 200)
+        }
+        
+        // Verificar métodos de pairing disponíveis
+        if (window.AuthStore && window.AuthStore.PairingCodeLinkUtils) {
+          result.pairingMethods = Object.getOwnPropertyNames(window.AuthStore.PairingCodeLinkUtils)
+        }
+        
+        return result
+      })
+      
+      diagnosis.webState = webState
+    } catch (webStateError) {
+      diagnosis.webStateError = webStateError.message
+    }
+
+    // Determinar se pairing code é possível
+    diagnosis.pairingCodeSupported = 
+      diagnosis.hasPupPage && 
+      (diagnosis.sessionState.message === 'session_not_connected' || 
+       diagnosis.sessionState.message === 'session_not_found') &&
+      (diagnosis.webState?.hasQrCanvas || diagnosis.webState?.hasQrTestId)
+
+    diagnosis.recommendations = []
+    
+    if (diagnosis.sessionState.success) {
+      diagnosis.recommendations.push('Session is already connected. Terminate session first for pairing code.')
+    } else if (!diagnosis.hasPupPage) {
+      diagnosis.recommendations.push('Browser page not available. Start session first.')
+    } else if (!diagnosis.webState?.hasQrCanvas && !diagnosis.webState?.hasQrTestId) {
+      diagnosis.recommendations.push('WhatsApp Web not on authentication screen. Session may need restart.')
+    } else if (!diagnosis.webState?.pairingUtils && !diagnosis.webState?.waWebPairingApi) {
+      diagnosis.recommendations.push('Pairing code APIs not available. Try QR code authentication instead.')
+    } else {
+      diagnosis.recommendations.push('Session appears ready for pairing code attempt.')
+    }
+
+    res.json({
+      success: true,
+      diagnosis
+    })
+  } catch (error) {
+    console.log('diagnosePairingCode ERROR', error)
+    sendErrorResponse(res, 500, error.message)
+  }
+}
+
 module.exports = {
   startSession,
   statusSession,
@@ -560,5 +741,6 @@ module.exports = {
   terminateInactiveSessions,
   terminateAllSessions,
   listSessions,
-  requestPairingCode
+  requestPairingCode,
+  diagnosePairingCode
 }

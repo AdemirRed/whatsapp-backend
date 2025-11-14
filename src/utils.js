@@ -1,10 +1,24 @@
 const axios = require('axios')
 const { globalApiKey, disabledCallbacks } = require('./config')
 
-// Trigger webhook endpoint
+// Trigger webhook endpoint com tratamento melhorado de erros
 const triggerWebhook = (webhookURL, sessionId, dataType, data) => {
-  axios.post(webhookURL, { dataType, data, sessionId }, { headers: { 'x-api-key': globalApiKey } })
-    .catch(error => console.error('Failed to send new message webhook:', sessionId, dataType, error.message, data || ''))
+  console.log(`📤 [Webhook] Enviando ${dataType} para ${webhookURL}`)
+  
+  return axios.post(webhookURL, { dataType, data, sessionId }, { 
+    headers: { 'x-api-key': globalApiKey },
+    timeout: 5000 // Timeout de 5 segundos para evitar travamentos
+  })
+    .then(response => {
+      console.log(`✅ [Webhook] ${dataType} enviado com sucesso!`)
+    })
+    .catch(error => {
+      console.error(`❌ [Webhook Error] ${sessionId} - ${dataType}:`, error.message)
+      if (error.response) {
+        console.error(`   Status: ${error.response.status}`)
+      }
+      // Não propagar o erro para não afetar o fluxo principal
+    })
 }
 
 // Function to send a response with error status and message

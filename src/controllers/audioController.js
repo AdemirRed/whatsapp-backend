@@ -9,6 +9,125 @@ const TRANSCRIPTION_HEADER = 'Transcrição ✏️'
 // Store para controlar o estado das conversas com BipText
 const conversationState = new Map()
 
+// Store para rastrear usuários que já passaram pelo fluxo inicial
+const userHistory = new Map()
+
+// Helpers de detecção de padrões do BipText (evitar falsos positivos)
+const isTranscribingIndicator = (text) => {
+  const t = (text || '').toLowerCase()
+  return (
+    t.includes('já estou transcrevendo') ||
+    t.includes('um momento, já estou transcrevendo') ||
+    t.includes('transcrevendo') ||
+    t.includes('já estou ouvindo') ||
+    t.includes('ouvindo')
+  )
+}
+
+const shouldReplyConcordo = (text) => {
+  const t = (text || '').toLowerCase()
+  // Nunca responder concordo se já estiver transcrevendo/ouvindo
+  if (isTranscribingIndicator(t)) return false
+  if (t.includes('transcrição')) return false
+  
+  // Padrões específicos para a mensagem de termo de uso
+  const hasTermoDeUso = (
+    t.includes('termo de uso') ||
+    t.includes('aceite nosso termo') ||
+    t.includes('você concorda com nosso termo') ||
+    t.includes('concorda com nosso termo de uso')
+  )
+  
+  // Outros padrões típicos de consentimento inicial
+  const hasConsentHints = (
+    t.includes('termos') ||
+    t.includes('condições') ||
+    t.includes('política') ||
+    t.includes('lgpd') ||
+    t.includes('aceita') ||
+    t.includes('aceitar') ||
+    t.includes('transformar áudios') ||
+    t.includes('responda com') ||
+    t.includes('clique em') ||
+    t.includes('digite "concordo"') ||
+    t.includes('digite concordo')
+  )
+  
+  return hasTermoDeUso || hasConsentHints
+}
+
+const shouldReplyPermito = (text) => {
+  const t = (text || '').toLowerCase()
+  // Nunca responder permito se já estiver transcrevendo/ouvindo ou se já veio transcrição
+  if (isTranscribingIndicator(t)) return false
+  if (t.includes('transcrição')) return false
+  
+  // Padrões específicos para a pergunta sobre uso de dados
+  const hasUseOfData = (
+    t.includes('você permite o uso dos dados') ||
+    t.includes('permite o uso dos dados') ||
+    t.includes('uso dos dados para melhorar') ||
+    t.includes('melhorar a eficiência') ||
+    t.includes('blip viratexto') ||
+    t.includes('produtos oferecidos pela blip') ||
+    t.includes('última pergunta')
+  )
+  
+  // Outros padrões típicos de permissão
+  const hasPermitHints = (
+    t.includes('autoriza') ||
+    t.includes('permite') ||
+    t.includes('acesso') ||
+    t.includes('permito?') ||
+    t.includes('pode prosseguir') ||
+    t.includes('responda com') ||
+    t.includes('digite "permito"') ||
+    t.includes('digite permito')
+  )
+  
+  return hasUseOfData || hasPermitHints
+}
+
+/**
+ * Verifica se é a primeira vez que o usuário usa a transcrição
+ */
+const isFirstTimeUser = (sessionId) => {
+  return !userHistory.has(sessionId)
+}
+
+/**
+ * Marca usuário como já tendo passado pelo fluxo inicial
+ */
+const markUserAsExperienced = (sessionId) => {
+  userHistory.set(sessionId, {
+    firstUsed: Date.now(),
+    lastUsed: Date.now()
+  })
+}
+
+/**
+ * Atualiza último uso do usuário
+ */
+const updateUserLastUsed = (sessionId) => {
+  if (userHistory.has(sessionId)) {
+    const userData = userHistory.get(sessionId)
+    userData.lastUsed = Date.now()
+    userHistory.set(sessionId, userData)
+  }
+}
+
+/**
+ * Limpa o histórico de um usuário para forçar fluxo inicial
+ */
+const resetUserHistory = (sessionId) => {
+  if (userHistory.has(sessionId)) {
+    userHistory.delete(sessionId)
+    console.log(`🔄 Histórico do usuário ${sessionId} foi resetado`)
+    return true
+  }
+  return false
+}
+
 /**
  * Clean transcription text by removing unwanted characters and signatures
  * @param {string} text - Raw transcription text
@@ -148,118 +267,185 @@ const transcribeAudio = async (req, res) => {
       audioMedia = new MessageMedia(mimetype, base64Data, filename)
     }
 
-    // Enviar primeira mensagem para iniciar o fluxo e gerenciar conversação
-    const conversationKey = `${sessionId}_${Date.now()}`
-    conversationState.set(conversationKey, {
-      step: 0,
-      sessionId,
-      startTime: Date.now(),
-      audioMedia, // Armazenar o áudio para enviar depois
-      audioSent: false
-    })
+    // VERIFICAR HISTÓRICO DO CHAT PRIMEIRO
+    console.log(`🔍 Verificando histórico do chat com BipText...`)
+    
+    // Criar ID único para esta transcrição específica
+    const transcriptionId = `${sessionId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    
+    try {
+      const chat = await session.getChatById(BIPTEXT_NUMBER)
+      const messages = await chat.fetchMessages({ limit: 10 })
+      const hasHistory = messages && messages.length > 0
+      
+      console.log(`📜 Chat history: ${hasHistory ? `${messages.length} mensagens encontradas` : 'Nenhuma mensagem anterior'}`)
+      
+      conversationState.set(transcriptionId, {
+        step: 0,
+        sessionId,
+        startTime: Date.now(),
+        audioMedia, // Armazenar o áudio para enviar depois
+        audioSent: false,
+        isFirstTime: !hasHistory,
+        hasHistory: hasHistory
+      })
+
+      console.log(`🎙️ Iniciando transcrição [${transcriptionId}] - Primeira vez: ${!hasHistory}`)
+    } catch (error) {
+      console.log(`⚠️ Erro ao verificar histórico do chat, assumindo primeira vez:`, error.message)
+      conversationState.set(transcriptionId, {
+        step: 0,
+        sessionId,
+        startTime: Date.now(),
+        audioMedia,
+        audioSent: false,
+        isFirstTime: true,
+        hasHistory: false
+      })
+    }
 
     // Configurar listener para mensagens do BipText
-    const messageHandler = async (message) => {
+  const messageHandler = async (message) => {
       try {
         // Verificar se a mensagem é do BipText
         if (message.from !== BIPTEXT_NUMBER) return
         
-        // Buscar conversação ativa para esta sessão
+        // Buscar conversação ativa para esta sessão (mais recente)
         let activeConversation = null
+        let newestTime = 0
+        
         for (const [key, conv] of conversationState.entries()) {
-          if (conv.sessionId === sessionId && Date.now() - conv.startTime < 300000) { // 5 minutos timeout
+          if (conv.sessionId === sessionId && 
+              Date.now() - conv.startTime < 300000 && // 5 minutos timeout
+              conv.startTime > newestTime) {
             activeConversation = { key, ...conv }
-            break
+            newestTime = conv.startTime
           }
         }
         
         if (!activeConversation) return
 
-        const messageText = message.body || ''
-        const step = activeConversation.step
+  const messageText = message.body || ''
+  const step = activeConversation.step
+  const isFirstTime = activeConversation.isFirstTime
 
-        console.log(`BipText response - Step ${step}: "${messageText}"`)
+        console.log(`📨 BipText resposta [${activeConversation.key.split('_')[2]}] - Step ${step}: "${messageText.substring(0, 50)}${messageText.length > 50 ? '...' : ''}"`)
+
+        // ⚠️ REGRA ESPECIAL: Se receber transcrição, parar fluxo imediatamente
+        if (messageText.includes(TRANSCRIPTION_HEADER)) {
+          console.log(`🛑 TRANSCRIÇÃO RECEBIDA - Parando fluxo de concordo/permito`)
+          const rawTranscription = messageText.replace(TRANSCRIPTION_HEADER, '').trim()
+          const cleanedTranscription = cleanTranscriptionText(rawTranscription)
+          conversationState.set(activeConversation.key, {
+            ...activeConversation,
+            step: 4,
+            transcription: cleanedTranscription,
+            completed: true
+          })
+          
+          if (isFirstTime) {
+            markUserAsExperienced(sessionId)
+          } else {
+            updateUserLastUsed(sessionId)
+          }
+          
+          console.log(`✨ Transcrição concluída: "${cleanedTranscription.substring(0, 100)}${cleanedTranscription.length > 100 ? '...' : ''}"`)
+          // Remover listener imediatamente para evitar respostas tardias (como "Permito")
+          session.removeListener('message', messageHandler)
+          return
+        }
 
         if (step === 0) {
-          // CENÁRIO 1: Primeira vez - Mensagem de boas-vindas
-          if (messageText.includes('Olá') || 
-              messageText.includes('Contato Inteligente') ||
-              messageText.includes('transformar áudios') ||
-              messageText.includes('Concordo')) {
-            console.log('First time user - Sending "Concordo" response')
+          // Se o BipText indicar que já está transcrevendo/ouvindo, não enviar concordo/permito
+          if (isTranscribingIndicator(messageText)) {
+            console.log(`⏳ Indicador de transcrição/escuta detectado - aguardando resultado`)
+            conversationState.set(activeConversation.key, {
+              ...activeConversation,
+              step: 3
+            })
+            return
+          }
+          
+          // PRIMEIRA VERIFICAÇÃO: Se tem mensagem de "apenas ouvir áudios"
+          if (messageText.includes('Ops! No momento consigo apenas ouvir seus áudios') ||
+              messageText.includes('Por favor, me envie ou encaminhe seu áudio')) {
+            console.log(`🔄 BipText pronto para receber áudio - Enviando diretamente`)
+            await session.sendMessage(BIPTEXT_NUMBER, activeConversation.audioMedia)
+            conversationState.set(activeConversation.key, {
+              ...activeConversation,
+              step: 3,
+              audioSent: true
+            })
+            return
+          }
+          
+          // IGNORAR: Mensagem de apresentação inicial
+          if (messageText.includes('Olá! Sou o Contato Inteligente da Blip') ||
+              messageText.includes('Conte comigo para transformar áudios em textos')) {
+            console.log(`👋 Mensagem de apresentação - Aguardando próxima`)
+            return
+          }
+          
+          // SEGUNDA VERIFICAÇÃO: Se é primeira vez (sem histórico) e realmente pediu "Concordo"
+          if (isFirstTime && shouldReplyConcordo(messageText)) {
+            console.log(`✅ Primeira vez - BipText pedindo concordância (Termo de Uso)`)
             await message.reply('Concordo')
             conversationState.set(activeConversation.key, {
               ...activeConversation,
               step: 1
             })
           }
-          // CENÁRIO 2: Usuário com histórico - Direto para transcrição
-          else if (messageText.includes('Um momento, já estou transcrevendo') || 
-                   messageText.includes('transcrevendo')) {
-            console.log('Existing user - Audio being transcribed, waiting...')
-            conversationState.set(activeConversation.key, {
-              ...activeConversation,
-              step: 3
-            })
-          }
-          // CENÁRIO 3: Receber transcrição diretamente (usuário com histórico)
-          else if (messageText.includes(TRANSCRIPTION_HEADER)) {
-            console.log('Existing user - Received transcription directly')
-            const rawTranscription = messageText.replace(TRANSCRIPTION_HEADER, '').trim()
-            const cleanedTranscription = cleanTranscriptionText(rawTranscription)
-            conversationState.set(activeConversation.key, {
-              ...activeConversation,
-              step: 4,
-              transcription: cleanedTranscription,
-              completed: true
-            })
-            console.log('Transcription completed:', cleanedTranscription)
-          }
-        } else if (step === 1) {
-          // Segunda mensagem: Confirmação - Responder "Permito"
-          console.log('Sending "Permito" response')
-          await message.reply('Permito')
-          conversationState.set(activeConversation.key, {
-            ...activeConversation,
-            step: 2
-          })
-        } else if (step === 2) {
-          // Terceira mensagem: "Já estou ouvindo" - ENVIAR ÁUDIO AGORA
-          if (messageText.includes('Já estou ouvindo') || 
-              messageText.includes('ouvindo') ||
-              messageText.includes('Pode me enviar')) {
-            console.log('BipText ready to receive audio, sending now...')
-            try {
-              await session.sendMessage(BIPTEXT_NUMBER, activeConversation.audioMedia)
+          // TERCEIRA VERIFICAÇÃO: Se não é primeira vez
+          else if (!isFirstTime) {
+            if (messageText.includes('Um momento, já estou transcrevendo') || 
+                messageText.includes('transcrevendo')) {
+              console.log(`⏳ Usuário com histórico - Áudio sendo transcrito`)
               conversationState.set(activeConversation.key, {
                 ...activeConversation,
-                step: 3,
-                audioSent: true
+                step: 3
               })
-            } catch (error) {
-              console.error('Error sending audio:', error)
+            } else {
+              console.log(`❓ Usuário com histórico - Aguardando transcrição ou próxima mensagem`)
             }
+          } else {
+            console.log(`❓ Mensagem não reconhecida - Aguardando próxima: "${messageText.substring(0, 50)}..."`)
+          }
+        } else if (step === 1 && isFirstTime) {
+          // Segunda mensagem: Verificar se realmente está pedindo "Permito" (uso de dados)
+          if (shouldReplyPermito(messageText)) {
+            console.log(`✅ BipText pedindo permissão - Enviando "Permito" (Uso de dados)`)
+            await message.reply('Permito')
+            conversationState.set(activeConversation.key, {
+              ...activeConversation,
+              step: 2
+            })
+          } else {
+            console.log(`❓ Step 1 - Mensagem não reconhecida como pedido de permissão: "${messageText.substring(0, 50)}..."`)
+          }
+        } else if (step === 2 && isFirstTime) {
+          // Terceira mensagem: "Já estou ouvindo" ou "Ops! No momento..." - ÁUDIO JÁ FOI ENVIADO NO INÍCIO
+          if (messageText.includes('Já estou ouvindo') || 
+              messageText.includes('ouvindo') ||
+              messageText.includes('Pode me enviar') ||
+              messageText.includes('Ops! No momento consigo apenas ouvir seus áudios')) {
+            console.log(`🎵 BipText pronto - Áudio já foi enviado no início, aguardando transcrição`)
+            conversationState.set(activeConversation.key, {
+              ...activeConversation,
+              step: 3,
+              audioSent: true
+            })
+            // Marcar usuário como experiente após primeiro uso
+            markUserAsExperienced(sessionId)
           }
           // Aguardar status de transcrição
           else if (messageText.includes('Um momento, já estou transcrevendo') || 
                    messageText.includes('transcrevendo')) {
-            console.log('Audio being transcribed, waiting...')
+            console.log(`⏳ Áudio sendo transcrito`)
             conversationState.set(activeConversation.key, {
               ...activeConversation,
               step: 3
             })
-          }
-          // Receber transcrição diretamente
-          else if (messageText.includes(TRANSCRIPTION_HEADER)) {
-            const rawTranscription = messageText.replace(TRANSCRIPTION_HEADER, '').trim()
-            const cleanedTranscription = cleanTranscriptionText(rawTranscription)
-            conversationState.set(activeConversation.key, {
-              ...activeConversation,
-              step: 4,
-              transcription: cleanedTranscription,
-              completed: true
-            })
-            console.log('Transcription completed:', cleanedTranscription)
+            markUserAsExperienced(sessionId)
           }
         } else if (step === 3) {
           // Quarta mensagem: Transcrição com cabeçalho
@@ -276,21 +462,83 @@ const transcribeAudio = async (req, res) => {
               completed: true
             })
             
-            console.log('Transcription completed:', cleanedTranscription)
+            if (isFirstTime) {
+              markUserAsExperienced(sessionId)
+            } else {
+              updateUserLastUsed(sessionId)
+            }
+            
+            console.log(`✨ Transcrição concluída: "${cleanedTranscription.substring(0, 100)}${cleanedTranscription.length > 100 ? '...' : ''}"`)
           }
         }
       } catch (error) {
-        console.error('Error in BipText message handler:', error)
+        console.error('❌ Erro no handler de mensagem BipText:', error)
       }
     }
 
     // Registrar listener temporário
     session.on('message', messageHandler)
 
-    // ENVIAR MENSAGEM INICIAL para iniciar o fluxo
-    // Se for primeira vez: vai receber boas-vindas
-    // Se for usuário existente: vai direto para transcrição
-    await session.sendMessage(BIPTEXT_NUMBER, audioMedia)
+    // ENVIAR ÁUDIO INICIAL
+    const conversationData = conversationState.get(transcriptionId)
+    
+    try {
+      console.log(`🎵 Tentando enviar áudio para BipText...`)
+      console.log(`📊 Dados do áudio: mimetype=${audioMedia.mimetype}, size=${audioMedia.data ? audioMedia.data.length : 'undefined'} bytes`)
+      
+      // Verificar se o contato BipText é válido
+      try {
+        const bipTextContact = await session.getContactById(BIPTEXT_NUMBER)
+        console.log(`📱 BipText Contact: ${bipTextContact.name || bipTextContact.pushname || BIPTEXT_NUMBER}`)
+      } catch (contactError) {
+        console.log(`⚠️ Aviso: Não foi possível obter dados do contato BipText:`, contactError.message)
+      }
+      
+      if (conversationData && !conversationData.hasHistory) {
+        console.log(`🆕 Primeira vez (sem histórico) - Enviando áudio diretamente`)
+      } else {
+        console.log(`👤 Usuário com histórico - Enviando áudio diretamente`)
+      }
+      
+      const sentMessage = await session.sendMessage(BIPTEXT_NUMBER, audioMedia)
+      console.log(`✅ Áudio enviado com sucesso! Message ID: ${sentMessage.id._serialized}`)
+      
+      // Atualizar estado para indicar que áudio foi enviado
+      conversationState.set(transcriptionId, {
+        ...conversationData,
+        audioSent: true,
+        sentMessageId: sentMessage.id._serialized
+      })
+      
+    } catch (error) {
+      console.error(`❌ ERRO ao enviar áudio para BipText:`, error)
+      console.error(`❌ Tipo de erro:`, error.constructor.name)
+      console.error(`❌ Mensagem:`, error.message)
+      
+      if (error.message.includes('Rate limit')) {
+        console.error(`❌ Rate limit detectado - tentando novamente em 5 segundos`)
+        await new Promise(resolve => setTimeout(resolve, 5000))
+        try {
+          const retryMessage = await session.sendMessage(BIPTEXT_NUMBER, audioMedia)
+          console.log(`✅ Áudio enviado na segunda tentativa! Message ID: ${retryMessage.id._serialized}`)
+        } catch (retryError) {
+          console.error(`❌ Falha na segunda tentativa:`, retryError.message)
+          throw retryError
+        }
+      } else {
+        console.error(`❌ Detalhes completos do erro:`, {
+          message: error.message,
+          stack: error.stack,
+          audioMediaType: typeof audioMedia,
+          audioMediaMimetype: audioMedia?.mimetype,
+          audioMediaSize: audioMedia?.data?.length,
+          bipTextNumber: BIPTEXT_NUMBER,
+          sessionId: sessionId,
+          sessionState: await session.getState().catch(() => 'unable_to_get_state')
+        })
+        throw error
+      }
+    }
 
     // Aguardar transcrição (timeout de 2 minutos)
     const maxWaitTime = 120000 // 2 minutos
@@ -316,13 +564,13 @@ const transcribeAudio = async (req, res) => {
         if (elapsedTime >= maxWaitTime) {
           clearInterval(intervalId)
           session.removeListener('message', messageHandler)
-          // Limpar conversação
+          // Limpar conversações desta sessão
           for (const [key, conv] of conversationState.entries()) {
             if (conv.sessionId === sessionId) {
               conversationState.delete(key)
             }
           }
-          reject(new Error('Transcription timeout - BipText did not respond in time'))
+          reject(new Error('⏱️ Timeout na transcrição - BipText não respondeu a tempo (2 min)'))
         }
       }, checkInterval)
     })
@@ -683,5 +931,6 @@ const fileToBase64Page = (req, res) => {
 
 module.exports = {
   transcribeAudio,
-  fileToBase64Page
+  fileToBase64Page,
+  resetUserHistory
 }

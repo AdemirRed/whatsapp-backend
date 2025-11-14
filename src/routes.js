@@ -62,6 +62,7 @@ sessionRouter.get('/terminateInactive', sessionController.terminateInactiveSessi
 sessionRouter.get('/terminateAll', sessionController.terminateAllSessions)
 sessionRouter.get('/list', sessionController.listSessions)
 sessionRouter.post('/requestPairingCode/:sessionId', middleware.sessionNameValidation, sessionController.requestPairingCode)
+sessionRouter.get('/diagnosePairingCode/:sessionId', middleware.sessionNameValidation, sessionController.diagnosePairingCode)
 
 /**
  * ================

@@ -85,19 +85,29 @@ const restoreSessions = () => {
     // Read the contents of the folder
     fs.readdir(sessionFolderPath, (_, files) => {
       // Iterate through the files in the parent folder
-      for (const file of files) {
+      const sessionFiles = files.filter(file => file.match(/^session-(.+)$/))
+      
+      if (sessionFiles.length > 0) {
+        console.log(`\n📱 Restaurando ${sessionFiles.length} sessão(ões) existente(s)...`)
+      }
+      
+      for (const file of sessionFiles) {
         // Use regular expression to extract the string from the folder name
         const match = file.match(/^session-(.+)$/)
         if (match) {
           const sessionId = match[1]
-          console.log('existing session detected', sessionId)
+          console.log(`   ↳ 🔄 Restaurando sessão: ${sessionId}`)
           setupSession(sessionId)
         }
+      }
+      
+      if (sessionFiles.length > 0) {
+        console.log(`✅ Todas as sessões foram iniciadas!\n`)
       }
     })
   } catch (error) {
     console.log(error)
-    console.error('Failed to restore sessions:', error)
+    console.error('❌ Falha ao restaurar sessões:', error)
   }
 }
 
@@ -117,10 +127,24 @@ const setupSession = (sessionId) => {
       puppeteer: {
         executablePath: process.env.CHROME_BIN || null,
         headless: headlessBrowser,
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--disable-dev-shm-usage']
+        args: [
+          '--no-sandbox', 
+          '--disable-setuid-sandbox', 
+          '--disable-gpu', 
+          '--disable-dev-shm-usage',
+          '--disable-web-security',
+          '--disable-features=VizDisplayCompositor',
+          '--disable-blink-features=AutomationControlled',
+          '--no-first-run',
+          '--disable-default-apps'
+        ]
       },
-      userAgent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
-      authStrategy: localAuth
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      authStrategy: localAuth,
+      // Configurações para melhor compatibilidade com pairing code
+      takeoverOnConflict: true,
+      takeoverTimeoutMs: 10000,
+      authTimeoutMs: 60000
     }
 
     if (webVersion) {
@@ -255,6 +279,11 @@ const initializeEvents = (client, sessionId) => {
   checkIfEventisEnabled('message')
     .then(_ => {
       client.on('message', async (message) => {
+        // Filtrar mensagens de status para não fazer spam nos logs
+        if (message.from === 'status@broadcast' || message.isStatus) {
+          return // Ignorar mensagens de status do WhatsApp
+        }
+        
         triggerWebhook(sessionWebhook, sessionId, 'message', { message })
         if (message.hasMedia && message._data?.size < maxAttachmentSize) {
           // custom service event
@@ -287,6 +316,11 @@ const initializeEvents = (client, sessionId) => {
   checkIfEventisEnabled('message_create')
     .then(_ => {
       client.on('message_create', async (message) => {
+        // Filtrar mensagens de status para não fazer spam nos logs
+        if (message.from === 'status@broadcast' || message.isStatus) {
+          return // Ignorar mensagens de status do WhatsApp
+        }
+        
         triggerWebhook(sessionWebhook, sessionId, 'message_create', { message })
         if (setMessagesAsSeen) {
           const chat = await message.getChat()
@@ -320,6 +354,11 @@ const initializeEvents = (client, sessionId) => {
     .then(_ => {
       // eslint-disable-next-line camelcase
       client.on('message_revoke_everyone', async (message) => {
+        // Filtrar mensagens de status para não fazer spam nos logs
+        if (message.from === 'status@broadcast' || message.isStatus) {
+          return // Ignorar mensagens de status do WhatsApp
+        }
+        
         // eslint-disable-next-line camelcase
         triggerWebhook(sessionWebhook, sessionId, 'message_revoke_everyone', { message })
       })
@@ -328,6 +367,11 @@ const initializeEvents = (client, sessionId) => {
   checkIfEventisEnabled('message_revoke_me')
     .then(_ => {
       client.on('message_revoke_me', async (message) => {
+        // Filtrar mensagens de status para não fazer spam nos logs
+        if (message.from === 'status@broadcast' || message.isStatus) {
+          return // Ignorar mensagens de status do WhatsApp
+        }
+        
         triggerWebhook(sessionWebhook, sessionId, 'message_revoke_me', { message })
       })
     })
