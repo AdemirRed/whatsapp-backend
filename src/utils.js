@@ -1,21 +1,25 @@
 const axios = require('axios')
-const { globalApiKey, disabledCallbacks } = require('./config')
+const { globalApiKey, disabledCallbacks, verboseLogs } = require('./config')
 
 // Trigger webhook endpoint com tratamento melhorado de erros
 const triggerWebhook = (webhookURL, sessionId, dataType, data) => {
-  console.log(`📤 [Webhook] Enviando ${dataType} para ${webhookURL}`)
+  if (verboseLogs) {
+    console.log(`📤 [Webhook] ${dataType} → ${webhookURL.split('/').pop()}`)
+  }
   
   return axios.post(webhookURL, { dataType, data, sessionId }, { 
     headers: { 'x-api-key': globalApiKey },
     timeout: 5000 // Timeout de 5 segundos para evitar travamentos
   })
     .then(response => {
-      console.log(`✅ [Webhook] ${dataType} enviado com sucesso!`)
+      if (verboseLogs) {
+        console.log(`✅ [Webhook] ${dataType} enviado`)
+      }
     })
     .catch(error => {
-      console.error(`❌ [Webhook Error] ${sessionId} - ${dataType}:`, error.message)
-      if (error.response) {
-        console.error(`   Status: ${error.response.status}`)
+      // Apenas logar erros relevantes (não 404 ou timeouts menores)
+      if (error.response?.status !== 404 && !error.message.includes('timeout')) {
+        console.error(`❌ [Webhook Error] ${sessionId} - ${dataType}:`, error.message)
       }
       // Não propagar o erro para não afetar o fluxo principal
     })
