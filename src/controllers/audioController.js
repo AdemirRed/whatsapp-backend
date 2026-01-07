@@ -486,14 +486,6 @@ const transcribeAudio = async (req, res) => {
       console.log(`🎵 Tentando enviar áudio para BipText...`)
       console.log(`📊 Dados do áudio: mimetype=${audioMedia.mimetype}, size=${audioMedia.data ? audioMedia.data.length : 'undefined'} bytes`)
       
-      // Verificar se o contato BipText é válido
-      try {
-        const bipTextContact = await session.getContactById(BIPTEXT_NUMBER)
-        console.log(`📱 BipText Contact: ${bipTextContact.name || bipTextContact.pushname || BIPTEXT_NUMBER}`)
-      } catch (contactError) {
-        console.log(`⚠️ Aviso: Não foi possível obter dados do contato BipText:`, contactError.message)
-      }
-      
       if (conversationData && !conversationData.hasHistory) {
         console.log(`🆕 Primeira vez (sem histórico) - Enviando áudio diretamente`)
       } else {
