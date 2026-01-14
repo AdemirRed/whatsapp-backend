@@ -12,6 +12,18 @@ const MAX_RETRY_ATTEMPTS = 3
 const RETRY_COOLDOWN_MS = 30000 // 30 segundos
 const QR_MAX_RETRY_COOLDOWN_MS = 60000 // 60 segundos após max qr retries
 
+/**
+ * Sistema de Reconexão Automática
+ * 
+ * Características:
+ * 1. Detecta erros de rede (ERR_NAME_NOT_RESOLVED, ERR_INTERNET_DISCONNECTED, etc)
+ * 2. Não conta erros de rede no limite de tentativas
+ * 3. Tenta reconectar automaticamente após 30 segundos quando sem internet
+ * 4. Previne múltiplas tentativas simultâneas usando lock de sessão
+ * 5. Destrói navegador adequadamente antes de reconectar
+ * 6. Handlers unificados para evitar conflitos entre page_closed e browser_disconnected
+ */
+
 // Function to validate if the session is ready
 const validateSession = async (sessionId) => {
   try {
@@ -209,12 +221,73 @@ const setupSession = (sessionId) => {
     }
 
     // Inicialização com tratamento robusto de erros
-    client.initialize().catch(err => {
+    client.initialize().catch(async err => {
       console.log(`❌ Erro na inicialização da sessão ${sessionId}:`, err.message)
+      
+      // Verificar se já existe um processo de reconexão em andamento
+      if (sessionRestartLock.get(sessionId)) {
+        console.log(`⏭️ Já existe uma tentativa de reconexão em andamento para ${sessionId}`)
+        return
+      }
       
       const currentRetries = sessionRetryCount.get(sessionId) || 0
       
-      // Verificar se atingiu o limite de tentativas
+      // Detectar se o navegador já está rodando
+      const isBrowserAlreadyRunning = err.message.includes('browser is already running')
+      
+      if (isBrowserAlreadyRunning) {
+        console.log(`⚠️ Navegador já está rodando para ${sessionId}. Aguardando cleanup...`)
+        sessionRestartLock.set(sessionId, true)
+        
+        // Destruir o navegador forçadamente
+        try {
+          await client.destroy().catch(() => {})
+          await new Promise(resolve => setTimeout(resolve, 3000))
+        } catch (e) {}
+        
+        sessions.delete(sessionId)
+        sessionRestartLock.delete(sessionId)
+        
+        setTimeout(() => {
+          console.log(`🔄 Tentando reiniciar ${sessionId} após cleanup do navegador...`)
+          setupSession(sessionId)
+        }, 5000)
+        return
+      }
+      
+      // Detectar erros de rede (sem internet)
+      const isNetworkError = err.message.includes('ERR_NAME_NOT_RESOLVED') ||
+                            err.message.includes('ERR_INTERNET_DISCONNECTED') ||
+                            err.message.includes('ERR_CONNECTION_REFUSED') ||
+                            err.message.includes('ERR_CONNECTION_TIMED_OUT') ||
+                            err.message.includes('ERR_NETWORK_CHANGED') ||
+                            err.message.includes('net::ERR')
+      
+      // Erros de rede não contam para o limite de tentativas
+      if (isNetworkError) {
+        console.log(`🌐 Erro de rede detectado para sessão ${sessionId}`)
+        console.log(`⏳ Aguardando 30s antes de tentar reconectar...`)
+        
+        sessionRestartLock.set(sessionId, true)
+        
+        // Destruir navegador antes de reconectar
+        try {
+          await client.destroy().catch(() => {})
+        } catch (e) {}
+        
+        sessions.delete(sessionId)
+        
+        // Aguardar e tentar reconectar UMA VEZ
+        setTimeout(() => {
+          sessionRestartLock.delete(sessionId)
+          console.log(`🔄 Tentando reconectar sessão ${sessionId}...`)
+          setupSession(sessionId)
+        }, 30000)
+        
+        return
+      }
+      
+      // Verificar se atingiu o limite de tentativas (apenas para erros não relacionados a rede)
       if (currentRetries >= MAX_RETRY_ATTEMPTS) {
         console.log(`⚠️ Sessão ${sessionId} atingiu o limite máximo de ${MAX_RETRY_ATTEMPTS} tentativas de reinício`)
         console.log(`⏸️ Sessão ${sessionId} será pausada. Reinicie manualmente quando necessário.`)
@@ -316,7 +389,7 @@ const initializeEvents = (client, sessionId) => {
         // Verificar se já existe um restart em andamento ou se foi LOGOUT
         if (sessionRestartLock.get(sessionId)) {
           if (verboseLogs) {
-            console.log(`⏭️ Reinício da sessão ${sessionId} bloqueado (lock ativo ou LOGOUT detectado)`)
+            console.log(`⏭️ Reinício da sessão ${sessionId} bloqueado (lock ativo)`)
           }
           return
         }
@@ -340,43 +413,79 @@ const initializeEvents = (client, sessionId) => {
           return
         }
         
-        console.log(`🔄 Reiniciando sessão ${sessionId}... (Motivo: ${reason}, Tentativa: ${currentRetries + 1}/${MAX_RETRY_ATTEMPTS})`)
+        if (verboseLogs) {
+          console.log(`🔄 Preparando reinício de ${sessionId} (Motivo: ${reason}, Tentativa: ${currentRetries + 1}/${MAX_RETRY_ATTEMPTS})`)
+        }
         
         sessions.delete(sessionId)
         
         // Destruir cliente com tratamento de erros
-        await safeEvaluate(async () => await client.destroy())
+        try {
+          await client.destroy().catch(() => {})
+          await new Promise(resolve => setTimeout(resolve, 2000)) // Aguardar cleanup
+        } catch (e) {}
         
         sessionRetryCount.set(sessionId, currentRetries + 1)
         
         // Aguardar antes de reiniciar
-        console.log(`⏳ Aguardando ${cooldownMs / 1000}s antes de reiniciar...`)
+        console.log(`⏳ Aguardando ${cooldownMs / 1000}s antes de reiniciar ${sessionId}...`)
         setTimeout(() => {
           sessionRestartLock.delete(sessionId)
           setupSession(sessionId)
         }, cooldownMs)
       }
       
+      // Handler unificado para fechamento/erro da página
+      let pageErrorHandled = false
+      
       client.pupPage.once('close', function () {
-        // emitted when the page closes
-        console.log(`❌ Página do navegador fechada para ${sessionId}. Restaurando...`)
-        restartSession(sessionId, 'page_closed', RETRY_COOLDOWN_MS)
+        if (pageErrorHandled) return
+        pageErrorHandled = true
+        
+        if (verboseLogs) {
+          console.log(`⚠️ Página do navegador fechada para ${sessionId}`)
+        }
+        
+        // Não fazer nada aqui - deixar o browser.disconnected tratar
       })
       
       client.pupPage.once('error', function (error) {
-        // emitted when the page crashes
+        if (pageErrorHandled) return
+        pageErrorHandled = true
+        
         console.log(`❌ Erro na página do navegador para ${sessionId}:`, error.message)
-        restartSession(sessionId, 'page_error', RETRY_COOLDOWN_MS)
+        
+        // Detectar se é erro de rede
+        const isNetworkError = error.message.includes('ERR_NAME_NOT_RESOLVED') ||
+                              error.message.includes('ERR_INTERNET_DISCONNECTED') ||
+                              error.message.includes('ERR_CONNECTION_REFUSED') ||
+                              error.message.includes('ERR_CONNECTION_TIMED_OUT') ||
+                              error.message.includes('ERR_NETWORK_CHANGED') ||
+                              error.message.includes('net::ERR')
+        
+        if (isNetworkError) {
+          console.log(`🌐 Erro de rede na página. Aguardando browser.disconnected...`)
+          return
+        }
+        
+        if (!sessionRestartLock.get(sessionId)) {
+          restartSession(sessionId, 'page_error', RETRY_COOLDOWN_MS)
+        }
       })
       
-      // Adicionar handler para erros de protocolo
-      client.pupBrowser.on('disconnected', () => {
-        console.log(`❌ Navegador desconectado para ${sessionId}. Restaurando...`)
+      // Handler principal para desconexão
+      client.pupBrowser.once('disconnected', () => {
+        if (verboseLogs) {
+          console.log(`⚠️ Navegador desconectado para ${sessionId}`)
+        }
+        
         // Apenas restaurar se não houver lock ativo
         if (!sessionRestartLock.get(sessionId)) {
+          console.log(`🔄 Preparando para reiniciar ${sessionId}...`)
           restartSession(sessionId, 'browser_disconnected', RETRY_COOLDOWN_MS)
         }
       })
+      
     }).catch(e => { 
       console.log(`⚠️ Erro ao configurar handlers de recuperação para ${sessionId}:`, e.message)
     })
