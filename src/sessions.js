@@ -5,7 +5,7 @@ const sessions = new Map()
 const sessionRetryCount = new Map() // Rastreamento de tentativas de reinício
 const sessionRestartLock = new Map() // Lock para evitar múltiplas restaurações simultâneas
 const { baseWebhookURL, sessionFolderPath, maxAttachmentSize, setMessagesAsSeen, webVersion, webVersionCacheType, recoverSessions, headlessBrowser, verboseLogs } = require('./config')
-const { triggerWebhook, waitForNestedObject, checkIfEventisEnabled } = require('./utils')
+const { triggerWebhook, waitForNestedObject, checkIfEventisEnabled, applyMarkedUnreadPatch } = require('./utils')
 
 // Constantes para controle de retry
 const MAX_RETRY_ATTEMPTS = 3
@@ -339,7 +339,7 @@ const initializeEvents = (client, sessionId) => {
   // Event handler para quando o cliente estiver pronto
   checkIfEventisEnabled('ready')
     .then(_ => {
-      client.on('ready', () => {
+      client.on('ready', async () => {
         // Evitar disparar o evento múltiplas vezes
         if (readyFired) {
           if (verboseLogs) {
@@ -350,6 +350,10 @@ const initializeEvents = (client, sessionId) => {
         readyFired = true
         
         console.log(`✅ Sessão ${sessionId} pronta e conectada!`)
+        
+        // Aplicar patch para corrigir erro markedUnread
+        await applyMarkedUnreadPatch(client, sessionId)
+        
         // Resetar contador de retries ao conectar com sucesso
         sessionRetryCount.set(sessionId, 0)
         sessionRestartLock.delete(sessionId)
@@ -631,8 +635,18 @@ const initializeEvents = (client, sessionId) => {
           })
         }
         if (setMessagesAsSeen) {
-          const chat = await message.getChat()
-          chat.sendSeen()
+          try {
+            const chat = await message.getChat()
+            // Verificar se o chat e o m\u00e9todo sendSeen est\u00e3o dispon\u00edveis antes de chamar
+            if (chat && typeof chat.sendSeen === 'function') {
+              await chat.sendSeen()
+            }
+          } catch (error) {
+            // Ignorar erros do sendSeen para n\u00e3o interromper o fluxo
+            if (verboseLogs) {
+              console.log(`\u26a0\ufe0f Erro ao marcar mensagem como lida (${sessionId}):`, error.message)
+            }
+          }
         }
       })
     })
@@ -642,8 +656,16 @@ const initializeEvents = (client, sessionId) => {
       client.on('message_ack', async (message, ack) => {
         triggerWebhook(sessionWebhook, sessionId, 'message_ack', { message, ack })
         if (setMessagesAsSeen) {
-          const chat = await message.getChat()
-          chat.sendSeen()
+          try {
+            const chat = await message.getChat()
+            if (chat && typeof chat.sendSeen === 'function') {
+              await chat.sendSeen()
+            }
+          } catch (error) {
+            if (verboseLogs) {
+              console.log(`⚠️ Erro ao marcar mensagem como lida (${sessionId}):`, error.message)
+            }
+          }
         }
       })
     })
@@ -658,8 +680,16 @@ const initializeEvents = (client, sessionId) => {
         
         triggerWebhook(sessionWebhook, sessionId, 'message_create', { message })
         if (setMessagesAsSeen) {
-          const chat = await message.getChat()
-          chat.sendSeen()
+          try {
+            const chat = await message.getChat()
+            if (chat && typeof chat.sendSeen === 'function') {
+              await chat.sendSeen()
+            }
+          } catch (error) {
+            if (verboseLogs) {
+              console.log(`⚠️ Erro ao marcar mensagem como lida (${sessionId}):`, error.message)
+            }
+          }
         }
       })
     })

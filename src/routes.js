@@ -37,9 +37,14 @@ routes.get('/', (req, res) => {
 // API endpoint to check if server is alive
 routes.get('/ping', healthController.ping)
 routes.get('/health', healthController.ping)
+
 // API basic callback
 if (enableLocalCallbackExample) {
   routes.post('/localCallbackExample', [middleware.apikey, middleware.rateLimiter], healthController.localCallbackExample)
+  
+  // Webhook local para debug (aceita todos os eventos)
+  routes.post('/webhook/local', [middleware.rateLimiter], healthController.localWebhookHandler)
+  routes.post('/api/webhook/local', [middleware.rateLimiter], healthController.localWebhookHandler)
 }
 
 /**
@@ -63,6 +68,8 @@ sessionRouter.get('/terminateAll', sessionController.terminateAllSessions)
 sessionRouter.get('/list', sessionController.listSessions)
 sessionRouter.post('/requestPairingCode/:sessionId', middleware.sessionNameValidation, sessionController.requestPairingCode)
 sessionRouter.get('/diagnosePairingCode/:sessionId', middleware.sessionNameValidation, sessionController.diagnosePairingCode)
+sessionRouter.get('/applyPatch/:sessionId', middleware.sessionNameValidation, sessionController.applyPatch)
+sessionRouter.get('/applyPatchAll', sessionController.applyPatchAll)
 
 /**
  * ================

@@ -1,5 +1,5 @@
 const app = require('./src/app')
-const { baseWebhookURL, enableSwaggerEndpoint, globalApiKey } = require('./src/config')
+const { baseWebhookURL, enableSwaggerEndpoint, globalApiKey, localWebhookEnabled, localWebhookURL } = require('./src/config')
 require('dotenv').config()
 
 // Handlers globais de erros não capturados para evitar crashes
@@ -23,10 +23,16 @@ process.on('uncaughtException', (error) => {
 // Start the server
 const port = process.env.PORT || 3000
 
-// Check if BASE_WEBHOOK_URL environment variable is available
-if (!baseWebhookURL) {
-  console.error('BASE_WEBHOOK_URL environment variable is not available. Exiting...')
+// Validar webhook: precisa ter BASE_WEBHOOK_URL OU webhook local ativo
+if (!baseWebhookURL && !(localWebhookEnabled && localWebhookURL)) {
+  console.error('⚠️ Nenhum webhook configurado!')
+  console.error('Configure BASE_WEBHOOK_URL ou ative LOCAL_WEBHOOK_ENABLED com LOCAL_WEBHOOK_URL')
   process.exit(1) // Terminate the application with an error code
+}
+
+// Avisar se estiver usando apenas webhook local
+if (!baseWebhookURL && localWebhookEnabled) {
+  console.log('⚠️ Rodando apenas com webhook local (modo debug)')
 }
 
 app.listen(port, () => {
@@ -35,7 +41,10 @@ app.listen(port, () => {
   console.log('='.repeat(60))
   console.log(`📍 Porta: ${port}`)
   console.log(`🌐 URL Base: http://localhost:${port}`)
-  console.log(`🔗 Webhook URL: ${baseWebhookURL}`)
+  console.log(`🔗 Webhook URL: ${baseWebhookURL || '(desabilitado)'}`)
+  if (localWebhookEnabled && localWebhookURL) {
+    console.log(`🔗 Webhook Local: ${localWebhookURL} ✓`)
+  }
   console.log(`🔑 API Key configurada: ${globalApiKey ? '✓ Sim' : '✗ Não'}`)
   
   if (enableSwaggerEndpoint) {

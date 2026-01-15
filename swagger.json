@@ -115,6 +115,34 @@
         ]
       }
     },
+    "/webhook/local": {
+      "post": {
+        "tags": [
+          "Various"
+        ],
+        "summary": "Local webhook handler for debugging",
+        "description": "Endpoint que recebe e registra todos os eventos de webhook para debug local",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/webhook/local": {
+      "post": {
+        "tags": [
+          "Various"
+        ],
+        "summary": "Local webhook handler for debugging",
+        "description": "Endpoint que recebe e registra todos os eventos de webhook para debug local",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/session/start/{sessionId}": {
       "get": {
         "tags": [
@@ -828,6 +856,86 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/session/applyPatch/{sessionId}": {
+      "get": {
+        "tags": [
+          "Session"
+        ],
+        "summary": "Apply markedUnread patch to session",
+        "description": "Applies a patch to fix markedUnread errors in WhatsApp Web",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unique identifier for the session (alphanumeric and - allowed)",
+            "example": "redblack"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/session/applyPatchAll": {
+      "get": {
+        "tags": [
+          "Session"
+        ],
+        "summary": "Apply markedUnread patch to all sessions",
+        "description": "Applies the markedUnread patch to all active sessions",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
                 }
               }
             }

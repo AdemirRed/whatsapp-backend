@@ -1,6 +1,6 @@
 const qr = require('qr-image')
 const { setupSession, deleteSession, reloadSession, validateSession, flushSessions, sessions } = require('../sessions')
-const { sendErrorResponse, waitForNestedObject } = require('../utils')
+const { sendErrorResponse, waitForNestedObject, applyMarkedUnreadPatch } = require('../utils')
 
 /**
  * Starts a session for the given session ID.
@@ -731,6 +731,79 @@ const diagnosePairingCode = async (req, res) => {
   }
 }
 
+/**
+ * Aplica patch markedUnread em uma sessão específica
+ * @async
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {string} req.params.sessionId - ID da sessão
+ * @returns {Object} - Status do patch
+ */
+const applyPatch = async (req, res) => {
+  // #swagger.summary = 'Apply markedUnread patch to session'
+  // #swagger.description = 'Applies a patch to fix markedUnread errors in WhatsApp Web'
+  try {
+    const sessionId = req.params.sessionId
+    const client = sessions.get(sessionId)
+
+    if (!client) {
+      return sendErrorResponse(res, 404, `Session ${sessionId} not found`)
+    }
+
+    const patchApplied = await applyMarkedUnreadPatch(client, sessionId)
+
+    if (patchApplied) {
+      res.json({
+        success: true,
+        message: `Patch markedUnread aplicado com sucesso em ${sessionId}`
+      })
+    } else {
+      res.json({
+        success: false,
+        message: `Não foi possível aplicar patch em ${sessionId}. Verifique se a sessão está conectada.`
+      })
+    }
+  } catch (error) {
+    console.log('applyPatch ERROR', error)
+    sendErrorResponse(res, 500, error.message)
+  }
+}
+
+/**
+ * Aplica patch markedUnread em todas as sessões ativas
+ * @async
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} - Status do patch em todas as sessões
+ */
+const applyPatchAll = async (req, res) => {
+  // #swagger.summary = 'Apply markedUnread patch to all sessions'
+  // #swagger.description = 'Applies the markedUnread patch to all active sessions'
+  try {
+    const results = []
+    
+    for (const [sessionId, client] of sessions.entries()) {
+      const patchApplied = await applyMarkedUnreadPatch(client, sessionId)
+      results.push({
+        sessionId,
+        success: patchApplied
+      })
+    }
+
+    const successCount = results.filter(r => r.success).length
+    const totalCount = results.length
+
+    res.json({
+      success: true,
+      message: `Patch aplicado em ${successCount}/${totalCount} sessão(ões)`,
+      results
+    })
+  } catch (error) {
+    console.log('applyPatchAll ERROR', error)
+    sendErrorResponse(res, 500, error.message)
+  }
+}
+
 module.exports = {
   startSession,
   statusSession,
@@ -742,5 +815,7 @@ module.exports = {
   terminateAllSessions,
   listSessions,
   requestPairingCode,
-  diagnosePairingCode
+  diagnosePairingCode,
+  applyPatch,
+  applyPatchAll
 }
