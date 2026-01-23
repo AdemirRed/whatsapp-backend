@@ -9,7 +9,7 @@ echo.
 
 :loop
 REM Aguarda 3m segundos antes de iniciar (tempo inicial)
-timeout /t 10 /nobreak
+timeout /t 30 /nobreak
 
 color D
 REM Inicia o app

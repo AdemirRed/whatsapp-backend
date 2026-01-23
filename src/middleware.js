@@ -1,6 +1,6 @@
 const { globalApiKey, rateLimitMax, rateLimitWindowMs } = require('./config')
 const { sendErrorResponse } = require('./utils')
-const { validateSession } = require('./sessions')
+const { validateSession, sessionRestartLock } = require('./sessions')
 const rateLimiting = require('express-rate-limit')
 
 const apikey = async (req, res, next) => {
@@ -53,6 +53,20 @@ const sessionNameValidation = async (req, res, next) => {
 }
 
 const sessionValidation = async (req, res, next) => {
+  // Sessão em reinício ou travada após LOGOUT: evitar chamadas no limbo (erro getChat undefined no whatsapp-web.js)
+  if (sessionRestartLock.get(req.params.sessionId)) {
+    /* #swagger.responses[503] = {
+        description: "Service Unavailable.",
+        content: {
+          "application/json": {
+            schema: { "$ref": "#/definitions/ErrorResponse" }
+          }
+        }
+      }
+    */
+    return sendErrorResponse(res, 503, 'Sessão em reinício ou aguardando reconexão manual após LOGOUT. Tente novamente mais tarde ou reinicie a sessão.')
+  }
+
   const validation = await validateSession(req.params.sessionId)
   if (validation.success !== true) {
     /* #swagger.responses[404] = {

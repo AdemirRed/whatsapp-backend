@@ -893,6 +893,8 @@ const flushSessions = async (deleteOnlyInactive) => {
 
 module.exports = {
   sessions,
+  // Usado pelo middleware para bloquear ações enquanto a sessão está em reinício/LOGOUT
+  sessionRestartLock,
   setupSession,
   restoreSessions,
   validateSession,
