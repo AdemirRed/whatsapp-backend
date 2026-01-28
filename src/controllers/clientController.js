@@ -73,11 +73,13 @@ const sendMessage = async (req, res) => {
     const { chatId, content, contentType, options } = req.body
     const client = sessions.get(req.params.sessionId)
 
-    // Criar opções seguras removendo propriedades problemáticas
-    const safeOptions = options ? { ...options } : {}
-    // Remover propriedades que podem causar erro no whatsapp-web.js
-    delete safeOptions.markedUnread
-    delete safeOptions.sendSeen
+    // Criar opções seguras removendo propriedades problemáticas e definindo sendSeen como false por padrão
+    let safeOptions = { sendSeen: false }
+    if (options && Object.keys(options).length > 0) {
+      safeOptions = { ...options, sendSeen: false }
+      // Remover propriedades que podem causar erro no whatsapp-web.js
+      delete safeOptions.markedUnread
+    }
     
     let messageOut
     switch (contentType) {
@@ -91,11 +93,12 @@ const sendMessage = async (req, res) => {
         try {
           messageOut = await client.sendMessage(chatId, content, safeOptions)
         } catch (sendError) {
-          // Se falhar por erro de markedUnread ou sendSeen, tentar novamente sem opções extras
+          // Se falhar por erro de markedUnread ou sendSeen, tentar novamente com opções mínimas
           if (sendError.message && (sendError.message.includes('markedUnread') || sendError.message.includes('sendSeen'))) {
-            console.log(`⚠️ Erro markedUnread detectado, retentando sem opções extras...`)
-            const basicOptions = safeOptions.media ? { media: safeOptions.media } : {}
-            messageOut = await client.sendMessage(chatId, content, basicOptions)
+            console.log(`⚠️ Erro ${sendError.message.includes('markedUnread') ? 'markedUnread' : 'sendSeen'} detectado, retentando sem opções extras...`)
+            // Na retentativa, usar apenas sendSeen: false (ou com media se existir)
+            const minOptions = safeOptions?.media ? { media: safeOptions.media, sendSeen: false } : { sendSeen: false }
+            messageOut = await client.sendMessage(chatId, content, minOptions)
           } else {
             throw sendError
           }
@@ -107,8 +110,8 @@ const sendMessage = async (req, res) => {
           messageOut = await client.sendMessage(chatId, messageMediaFromURL, safeOptions)
         } catch (sendError) {
           if (sendError.message && (sendError.message.includes('markedUnread') || sendError.message.includes('sendSeen'))) {
-            console.log(`⚠️ Erro markedUnread detectado, retentando sem opções extras...`)
-            messageOut = await client.sendMessage(chatId, messageMediaFromURL)
+            console.log(`⚠️ Erro ${sendError.message.includes('markedUnread') ? 'markedUnread' : 'sendSeen'} detectado, retentando sem opções extras...`)
+            messageOut = await client.sendMessage(chatId, messageMediaFromURL, { sendSeen: false })
           } else {
             throw sendError
           }
@@ -121,8 +124,8 @@ const sendMessage = async (req, res) => {
           messageOut = await client.sendMessage(chatId, messageMedia, safeOptions)
         } catch (sendError) {
           if (sendError.message && (sendError.message.includes('markedUnread') || sendError.message.includes('sendSeen'))) {
-            console.log(`⚠️ Erro markedUnread detectado, retentando sem opções extras...`)
-            messageOut = await client.sendMessage(chatId, messageMedia)
+            console.log(`⚠️ Erro ${sendError.message.includes('markedUnread') ? 'markedUnread' : 'sendSeen'} detectado, retentando sem opções extras...`)
+            messageOut = await client.sendMessage(chatId, messageMedia, { sendSeen: false })
           } else {
             throw sendError
           }
@@ -135,8 +138,8 @@ const sendMessage = async (req, res) => {
           messageOut = await client.sendMessage(chatId, location, safeOptions)
         } catch (sendError) {
           if (sendError.message && (sendError.message.includes('markedUnread') || sendError.message.includes('sendSeen'))) {
-            console.log(`⚠️ Erro markedUnread detectado, retentando sem opções extras...`)
-            messageOut = await client.sendMessage(chatId, location)
+            console.log(`⚠️ Erro ${sendError.message.includes('markedUnread') ? 'markedUnread' : 'sendSeen'} detectado, retentando sem opções extras...`)
+            messageOut = await client.sendMessage(chatId, location, { sendSeen: false })
           } else {
             throw sendError
           }
@@ -149,8 +152,8 @@ const sendMessage = async (req, res) => {
           messageOut = await client.sendMessage(chatId, buttons, safeOptions)
         } catch (sendError) {
           if (sendError.message && (sendError.message.includes('markedUnread') || sendError.message.includes('sendSeen'))) {
-            console.log(`⚠️ Erro markedUnread detectado, retentando sem opções extras...`)
-            messageOut = await client.sendMessage(chatId, buttons)
+            console.log(`⚠️ Erro ${sendError.message.includes('markedUnread') ? 'markedUnread' : 'sendSeen'} detectado, retentando sem opções extras...`)
+            messageOut = await client.sendMessage(chatId, buttons, { sendSeen: false })
           } else {
             throw sendError
           }
@@ -163,8 +166,8 @@ const sendMessage = async (req, res) => {
           messageOut = await client.sendMessage(chatId, list, safeOptions)
         } catch (sendError) {
           if (sendError.message && (sendError.message.includes('markedUnread') || sendError.message.includes('sendSeen'))) {
-            console.log(`⚠️ Erro markedUnread detectado, retentando sem opções extras...`)
-            messageOut = await client.sendMessage(chatId, list)
+            console.log(`⚠️ Erro ${sendError.message.includes('markedUnread') ? 'markedUnread' : 'sendSeen'} detectado, retentando sem opções extras...`)
+            messageOut = await client.sendMessage(chatId, list, { sendSeen: false })
           } else {
             throw sendError
           }
@@ -178,8 +181,8 @@ const sendMessage = async (req, res) => {
           messageOut = await client.sendMessage(chatId, contact, safeOptions)
         } catch (sendError) {
           if (sendError.message && (sendError.message.includes('markedUnread') || sendError.message.includes('sendSeen'))) {
-            console.log(`⚠️ Erro markedUnread detectado, retentando sem opções extras...`)
-            messageOut = await client.sendMessage(chatId, contact)
+            console.log(`⚠️ Erro ${sendError.message.includes('markedUnread') ? 'markedUnread' : 'sendSeen'} detectado, retentando sem opções extras...`)
+            messageOut = await client.sendMessage(chatId, contact, { sendSeen: false })
           } else {
             throw sendError
           }
@@ -192,8 +195,8 @@ const sendMessage = async (req, res) => {
           messageOut = await client.sendMessage(chatId, poll, safeOptions)
         } catch (sendError) {
           if (sendError.message && (sendError.message.includes('markedUnread') || sendError.message.includes('sendSeen'))) {
-            console.log(`⚠️ Erro markedUnread detectado, retentando sem opções extras...`)
-            messageOut = await client.sendMessage(chatId, poll)
+            console.log(`⚠️ Erro ${sendError.message.includes('markedUnread') ? 'markedUnread' : 'sendSeen'} detectado, retentando sem opções extras...`)
+            messageOut = await client.sendMessage(chatId, poll, { sendSeen: false })
           } else {
             throw sendError
           }
@@ -202,12 +205,13 @@ const sendMessage = async (req, res) => {
       }
       case 'Sticker': {
         const stickerMedia = new MessageMedia(content.mimetype, content.data, content.filename, content.filesize)
+        const stickerOptions = { ...safeOptions, sendMediaAsSticker: true }
         try {
-          messageOut = await client.sendMessage(chatId, stickerMedia, { ...safeOptions, sendMediaAsSticker: true })
+          messageOut = await client.sendMessage(chatId, stickerMedia, stickerOptions)
         } catch (sendError) {
           if (sendError.message && (sendError.message.includes('markedUnread') || sendError.message.includes('sendSeen'))) {
-            console.log(`⚠️ Erro markedUnread detectado, retentando sem opções extras...`)
-            messageOut = await client.sendMessage(chatId, stickerMedia, { sendMediaAsSticker: true })
+            console.log(`⚠️ Erro ${sendError.message.includes('markedUnread') ? 'markedUnread' : 'sendSeen'} detectado, retentando sem opções extras...`)
+            messageOut = await client.sendMessage(chatId, stickerMedia, { sendMediaAsSticker: true, sendSeen: false })
           } else {
             throw sendError
           }
