@@ -73,8 +73,11 @@ const sendMessage = async (req, res) => {
     const { chatId, content, contentType, options } = req.body
     const client = sessions.get(req.params.sessionId)
 
-    // Criar opções seguras para evitar erro de markedUnread
-    const safeOptions = { ...options }
+    // Criar opções seguras removendo propriedades problemáticas
+    const safeOptions = options ? { ...options } : {}
+    // Remover propriedades que podem causar erro no whatsapp-web.js
+    delete safeOptions.markedUnread
+    delete safeOptions.sendSeen
     
     let messageOut
     switch (contentType) {
