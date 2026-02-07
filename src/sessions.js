@@ -4,8 +4,29 @@ const path = require('path')
 const sessions = new Map()
 const sessionRetryCount = new Map() // Rastreamento de tentativas de reinício
 const sessionRestartLock = new Map() // Lock para evitar múltiplas restaurações simultâneas
+const sessionDeleteLock = new Set() // Lock para impedir auto-restart durante deleção/flush
+const sessionRestartTimer = new Map() // Timer de restart agendado (recoverSessions)
+const sessionInitRetryTimer = new Map() // Timer de retry agendado (initialize.catch)
 const { baseWebhookURL, sessionFolderPath, maxAttachmentSize, setMessagesAsSeen, webVersion, webVersionCacheType, recoverSessions, headlessBrowser, verboseLogs } = require('./config')
 const { triggerWebhook, waitForNestedObject, checkIfEventisEnabled } = require('./utils')
+
+// Em modo de teste (Jest), evitamos inicializar WhatsApp Web real via Puppeteer.
+// Isso estabiliza os testes (não depende de Chromium/WA) e previne EBUSY/locks no Windows.
+const isTestMode = process.env.NODE_ENV === 'test'
+
+const clearSessionTimers = (sessionId) => {
+  const restartTimer = sessionRestartTimer.get(sessionId)
+  if (restartTimer) {
+    clearTimeout(restartTimer)
+    sessionRestartTimer.delete(sessionId)
+  }
+
+  const initTimer = sessionInitRetryTimer.get(sessionId)
+  if (initTimer) {
+    clearTimeout(initTimer)
+    sessionInitRetryTimer.delete(sessionId)
+  }
+}
 
 // Constantes para controle de retry
 const MAX_RETRY_ATTEMPTS = 3
@@ -136,6 +157,41 @@ const setupSession = (sessionId) => {
       }
     }
 
+    // Modo de teste: criar uma sessão fake, apenas para validar rotas e fluxos.
+    if (isTestMode) {
+      // Garantir que a pasta base existe
+      if (!fs.existsSync(sessionFolderPath)) {
+        fs.mkdirSync(sessionFolderPath, { recursive: true })
+      }
+
+      // Criar a pasta da sessão (os testes verificam existência/remoção)
+      const folder = path.join(sessionFolderPath, `session-${sessionId}`)
+      if (!fs.existsSync(folder)) {
+        fs.mkdirSync(folder, { recursive: true })
+      }
+
+      // Cliente mock com o mínimo necessário para o restante do código.
+      const mockClient = {
+        pupPage: {
+          isClosed: () => false,
+          evaluate: async () => 1,
+          removeAllListeners: () => {}
+        },
+        getState: async () => 'UNPAIRED',
+        logout: async () => {},
+        destroy: async () => {},
+        on: () => {}
+      }
+
+      sessions.set(sessionId, mockClient)
+
+      // Disparar um QR fake via webhook (os testes esperam esse evento)
+      const sessionWebhook = process.env[sessionId.toUpperCase() + '_WEBHOOK_URL'] || baseWebhookURL
+      triggerWebhook(sessionWebhook, sessionId, 'qr', { qr: `TEST_QR_${sessionId}` })
+
+      return { success: true, message: 'Session initiated successfully', client: mockClient }
+    }
+
     // Disable the delete folder from the logout function (will be handled separately)
     const localAuth = new LocalAuth({ clientId: sessionId, dataPath: sessionFolderPath })
     delete localAuth.logout
@@ -232,14 +288,25 @@ const setupSession = (sessionId) => {
         const retryDelay = RETRY_COOLDOWN_MS + (currentRetries * 10000) // Aumenta o delay a cada tentativa
         
         console.log(`⏳ Aguardando ${retryDelay / 1000} segundos antes de tentar novamente... (Tentativa ${currentRetries + 1}/${MAX_RETRY_ATTEMPTS})`)
-        
-        setTimeout(() => {
+
+        // Evitar múltiplos timers pendentes para a mesma sessão
+        clearSessionTimers(sessionId)
+        const timer = setTimeout(() => {
+          sessionInitRetryTimer.delete(sessionId)
+
+          // Se estiver em deleção/flush, não reagendar nada
+          if (sessionDeleteLock.has(sessionId)) {
+            return
+          }
+
           if (!sessionRestartLock.get(sessionId)) {
             console.log(`🔄 Tentando reinicializar sessão ${sessionId}... (Tentativa ${currentRetries + 1}/${MAX_RETRY_ATTEMPTS})`)
             sessions.delete(sessionId)
             setupSession(sessionId)
           }
         }, retryDelay)
+
+        sessionInitRetryTimer.set(sessionId, timer)
       }
     })
 
@@ -320,6 +387,14 @@ const initializeEvents = (client, sessionId) => {
           }
           return
         }
+
+        // Se estiver em processo de deleção/flush, não restaurar automaticamente
+        if (sessionDeleteLock.has(sessionId)) {
+          if (verboseLogs) {
+            console.log(`⛔ Reinício da sessão ${sessionId} bloqueado (sessão em deleção/flush)`)
+          }
+          return
+        }
         
         // Verificar se foi LOGOUT - não restaurar automaticamente
         if (logoutProcessed) {
@@ -351,10 +426,21 @@ const initializeEvents = (client, sessionId) => {
         
         // Aguardar antes de reiniciar
         console.log(`⏳ Aguardando ${cooldownMs / 1000}s antes de reiniciar...`)
-        setTimeout(() => {
+        clearSessionTimers(sessionId)
+        const timer = setTimeout(() => {
+          sessionRestartTimer.delete(sessionId)
+
+          // Se a sessão foi terminada/flushada, não recriar
+          if (sessionDeleteLock.has(sessionId) || logoutProcessed) {
+            sessionRestartLock.delete(sessionId)
+            return
+          }
+
           sessionRestartLock.delete(sessionId)
           setupSession(sessionId)
         }, cooldownMs)
+
+        sessionRestartTimer.set(sessionId, timer)
       }
       
       client.pupPage.once('close', function () {
@@ -373,7 +459,7 @@ const initializeEvents = (client, sessionId) => {
       client.pupBrowser.on('disconnected', () => {
         console.log(`❌ Navegador desconectado para ${sessionId}. Restaurando...`)
         // Apenas restaurar se não houver lock ativo
-        if (!sessionRestartLock.get(sessionId)) {
+        if (!sessionRestartLock.get(sessionId) && !sessionDeleteLock.has(sessionId)) {
           restartSession(sessionId, 'browser_disconnected', RETRY_COOLDOWN_MS)
         }
       })
@@ -651,6 +737,12 @@ const initializeEvents = (client, sessionId) => {
 const deleteSessionFolder = async (sessionId) => {
   try {
     const targetDirPath = path.join(sessionFolderPath, `session-${sessionId}`)
+
+    // Se a pasta não existir, não há nada para apagar
+    if (!fs.existsSync(targetDirPath)) {
+      return
+    }
+
     const resolvedTargetDirPath = await fs.promises.realpath(targetDirPath)
     const resolvedSessionPath = await fs.promises.realpath(sessionFolderPath)
 
@@ -663,6 +755,10 @@ const deleteSessionFolder = async (sessionId) => {
     }
     await fs.promises.rm(resolvedTargetDirPath, { recursive: true, force: true })
   } catch (error) {
+    // Se a pasta foi removida no meio do processo, ignorar
+    if (error && (error.code === 'ENOENT' || (typeof error.message === 'string' && error.message.includes('ENOENT')))) {
+      return
+    }
     console.log('Folder deletion error', error)
     throw error
   }
@@ -700,50 +796,86 @@ const reloadSession = async (sessionId) => {
 
 const deleteSession = async (sessionId, validation) => {
   try {
+    // Bloquear qualquer auto-restart dessa sessão durante deleção
+    sessionDeleteLock.add(sessionId)
+    sessionRestartLock.set(sessionId, true)
+
+    // Cancelar qualquer restart/retry já agendado (evita voltar depois de ~30-60s)
+    clearSessionTimers(sessionId)
+
     const client = sessions.get(sessionId)
-    if (!client) {
-      return
+
+    // Se o client existir em memória, tentar encerrar com segurança
+    if (client) {
+      // Impedir que o recoverSessions tente reiniciar após encerrarmos
+      if (client.pupBrowser) {
+        client.pupBrowser.removeAllListeners('disconnected')
+      }
+
+      if (client.pupPage) {
+        client.pupPage.removeAllListeners('close')
+        client.pupPage.removeAllListeners('error')
+      }
+
+      if (validation?.success) {
+        // Client Connected, request logout
+        console.log(`Logging out session ${sessionId}`)
+        await client.logout()
+      } else {
+        // Client não conectado ou estado desconhecido, request destroy
+        console.log(`Destroying session ${sessionId}`)
+        await client.destroy()
+      }
+
+      // Wait 10 secs for client.pupBrowser to be disconnected before deleting the folder
+      let maxDelay = 0
+      while (client.pupBrowser && client.pupBrowser.isConnected() && (maxDelay < 10)) {
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        maxDelay++
+      }
     }
-    client.pupPage.removeAllListeners('close')
-    client.pupPage.removeAllListeners('error')
-    if (validation.success) {
-      // Client Connected, request logout
-      console.log(`Logging out session ${sessionId}`)
-      await client.logout()
-    } else if (validation.message === 'session_not_connected') {
-      // Client not Connected, request destroy
-      console.log(`Destroying session ${sessionId}`)
-      await client.destroy()
-    }
-    // Wait 10 secs for client.pupBrowser to be disconnected before deleting the folder
-    let maxDelay = 0
-    while (client.pupBrowser.isConnected() && (maxDelay < 10)) {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      maxDelay++
-    }
+
     await deleteSessionFolder(sessionId)
     sessions.delete(sessionId)
+
+    sessionRetryCount.delete(sessionId)
   } catch (error) {
     console.log(error)
     throw error
+  } finally {
+    sessionDeleteLock.delete(sessionId)
+    sessionRestartLock.delete(sessionId)
+    clearSessionTimers(sessionId)
   }
 }
 
 // Function to handle session flush
 const flushSessions = async (deleteOnlyInactive) => {
   try {
-    // Read the contents of the sessions folder
-    const files = await fs.promises.readdir(sessionFolderPath)
-    // Iterate through the files in the parent folder
-    for (const file of files) {
-      // Use regular expression to extract the string from the folder name
-      const match = file.match(/^session-(.+)$/)
-      if (match) {
-        const sessionId = match[1]
-        const validation = await validateSession(sessionId)
-        if (!deleteOnlyInactive || !validation.success) {
-          await deleteSession(sessionId, validation)
+    const sessionIds = new Set()
+
+    // Incluir sessões ativas em memória
+    for (const sessionId of sessions.keys()) {
+      sessionIds.add(sessionId)
+    }
+
+    // Incluir pastas session-* existentes
+    try {
+      const files = await fs.promises.readdir(sessionFolderPath)
+      for (const file of files) {
+        const match = file.match(/^session-(.+)$/)
+        if (match) {
+          sessionIds.add(match[1])
         }
+      }
+    } catch (e) {
+      // Se a pasta base não existir, ignorar
+    }
+
+    for (const sessionId of sessionIds) {
+      const validation = await validateSession(sessionId)
+      if (!deleteOnlyInactive || !validation.success) {
+        await deleteSession(sessionId, validation)
       }
     }
   } catch (error) {

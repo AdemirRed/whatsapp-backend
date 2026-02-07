@@ -519,6 +519,93 @@ const requestPairingCode = async (req, res) => {
 
     // Request pairing code - só funciona durante o setup inicial da sessão
     try {
+      const extractPairingCodeFromText = (text) => {
+        if (!text) return null
+        const match = text.match(/\b[A-Z0-9]{4}[- ]?[A-Z0-9]{4}\b/)
+        return match ? match[0] : null
+      }
+
+      // Fallback: tenta gerar o código exatamente como o usuário faz no site (clicando e lendo da tela).
+      // Isso ajuda quando as APIs internas do whatsapp-web.js/WAWeb mudam.
+      const tryRequestPairingCodeViaUi = async () => {
+        // Ir para o fluxo "Conectar com número de telefone" / "Link with phone number"
+        await session.pupPage.evaluate(() => {
+          const candidates = Array.from(document.querySelectorAll('button, a, div[role="button"]'))
+          const el = candidates.find(e => {
+            const text = (e.innerText || '').trim()
+            return /conectar\s+com\s+n[uú]mero\s+de\s+telefone/i.test(text) ||
+              /link\s+with\s+phone\s+number/i.test(text) ||
+              /use\s+phone\s+number/i.test(text)
+          })
+          if (el) el.click()
+        }).catch(() => {})
+
+        await new Promise(resolve => setTimeout(resolve, 1200))
+
+        // Preencher número (melhor esforço). Para BR (55...), separa DDI e número se houver 2 campos.
+        await session.pupPage.evaluate((rawPhone) => {
+          const digits = String(rawPhone || '').replace(/\D/g, '')
+
+          const setValue = (el, value) => {
+            if (!el) return
+            el.focus()
+            el.value = value
+            el.dispatchEvent(new Event('input', { bubbles: true }))
+            el.dispatchEvent(new Event('change', { bubbles: true }))
+          }
+
+          const inputs = Array.from(document.querySelectorAll('input'))
+          const numericInputs = inputs.filter(i => {
+            const type = (i.getAttribute('type') || '').toLowerCase()
+            const inputMode = (i.getAttribute('inputmode') || '').toLowerCase()
+            return type === 'tel' || inputMode === 'numeric' || inputMode === 'tel'
+          })
+
+          if (numericInputs.length >= 2) {
+            // Heurística para Brasil
+            if (digits.startsWith('55') && digits.length > 11) {
+              setValue(numericInputs[0], '55')
+              setValue(numericInputs[1], digits.slice(2))
+            } else {
+              setValue(numericInputs[1], digits)
+            }
+            return
+          }
+
+          if (numericInputs.length === 1) {
+            setValue(numericInputs[0], digits)
+          }
+        }, phoneNumber).catch(() => {})
+
+        await new Promise(resolve => setTimeout(resolve, 400))
+
+        // Avançar/continuar
+        await session.pupPage.evaluate(() => {
+          const candidates = Array.from(document.querySelectorAll('button, div[role="button"], a'))
+          const el = candidates.find(e => {
+            const text = (e.innerText || '').trim()
+            return /avan[cç]ar/i.test(text) || /continuar/i.test(text) || /pr[oó]ximo/i.test(text) || /next/i.test(text) || /continue/i.test(text)
+          })
+          if (el) el.click()
+        }).catch(() => {})
+
+        // Esperar o código aparecer na tela
+        const codeFromWait = await session.pupPage.waitForFunction(() => {
+          const text = (document.body && document.body.innerText) ? document.body.innerText : ''
+          const match = text.match(/\b[A-Z0-9]{4}[- ]?[A-Z0-9]{4}\b/)
+          return match ? match[0] : false
+        }, { timeout: 30000 }).then(h => h.jsonValue()).catch(() => null)
+
+        const codeFromText = extractPairingCodeFromText(typeof codeFromWait === 'string' ? codeFromWait : '')
+        if (codeFromText) {
+          return codeFromText
+        }
+
+        // Fallback extra: varrer o texto inteiro
+        const pageText = await session.pupPage.evaluate(() => (document.body && document.body.innerText) ? document.body.innerText : '').catch(() => '')
+        return extractPairingCodeFromText(pageText)
+      }
+
       // Verificar se a sessão está pronta para pairing code
       const sessionValidation = await validateSession(sessionId)
       
@@ -552,6 +639,42 @@ const requestPairingCode = async (req, res) => {
       if (!isReadyForPairing) {
         sendErrorResponse(res, 400, 'WhatsApp Web is not ready for authentication. Please ensure the browser is on the login page.')
         return
+      }
+
+      // Algumas versões mostram primeiro a tela de "Baixar WhatsApp".
+      // Tentamos clicar automaticamente em "Usar WhatsApp Web" para avançar.
+      try {
+        const clicked = await session.pupPage.evaluate(() => {
+          const elements = Array.from(document.querySelectorAll('a,button'))
+          const el = elements.find(e => {
+            const text = (e.innerText || '').trim()
+            return /usar\s+whatsapp\s+web/i.test(text) || /use\s+whatsapp\s+web/i.test(text)
+          })
+          if (el) {
+            el.click()
+            return true
+          }
+          return false
+        }).catch(() => false)
+
+        if (clicked) {
+          await new Promise(resolve => setTimeout(resolve, 1500))
+        }
+      } catch (e) {
+        // Ignorar e seguir
+      }
+
+      // Aguardar o WhatsApp Web inicializar scripts necessários para pairing.
+      // Isso reduz erros intermitentes como: window.onCodeReceivedEvent is not a function
+      try {
+        await session.pupPage.waitForFunction(() => {
+          return (
+            typeof window.onCodeReceivedEvent === 'function' ||
+            (window.AuthStore && window.AuthStore.PairingCodeLinkUtils)
+          )
+        }, { timeout: 15000 })
+      } catch (e) {
+        // Não bloquear: seguimos com as tentativas e retornamos erro amigável se não suportar
       }
 
       // Tentar diferentes métodos de pairing code
@@ -592,17 +715,35 @@ const requestPairingCode = async (req, res) => {
             method = 'linkingapi'
           } catch (tertiaryError) {
             console.log('LinkingApi pairing method failed:', tertiaryError.message)
-            
-            // Se todos os métodos falharam, fornecer instruções claras
-            sendErrorResponse(res, 500, 
+
+            // Fallback via UI (mesmo fluxo do site)
+            const uiCode = await tryRequestPairingCodeViaUi().catch(e => {
+              console.log('UI pairing fallback failed:', e.message)
+              return null
+            })
+
+            if (uiCode) {
+              res.json({
+                success: true,
+                pairingCode: uiCode.replace(/[^A-Z0-9]/g, ''),
+                pairingCodeFormatted: uiCode,
+                phoneNumber,
+                method: 'ui',
+                message: 'Pairing code gerado via UI do WhatsApp Web. Digite este código no celular em até 60 segundos.',
+                instructions: 'Abra o WhatsApp no celular > Aparelhos conectados > Conectar um aparelho > Digitar código'
+              })
+              return
+            }
+
+            // Se todos falharam, fornecer instruções claras
+            sendErrorResponse(res, 400,
               `Pairing code is not supported in current session state. This usually means:\n` +
               `1. Session is already connected (use terminate first)\n` +
               `2. WhatsApp Web version doesn't support pairing code\n` +
               `3. Account type doesn't support multi-device\n\n` +
               `Please try:\n` +
               `- Use QR code authentication instead\n` +
-              `- Terminate session and restart for fresh authentication\n` +
-              `- Use WhatsApp Business account which has better multi-device support\n\n` +
+              `- Terminate session and restart for fresh authentication\n\n` +
               `Original error: ${primaryError.message}`
             )
             return
@@ -682,7 +823,9 @@ const diagnosePairingCode = async (req, res) => {
           hasPhoneNumberInput: document.body.innerHTML.includes('phone-number'),
           windowStore: !!window.Store,
           windowAuthStore: !!window.AuthStore,
+          hasOnCodeReceivedEvent: typeof window.onCodeReceivedEvent === 'function',
           pairingUtils: !!(window.AuthStore && window.AuthStore.PairingCodeLinkUtils),
+          pairingUtilsHasRequestPairingCode: !!(window.AuthStore && window.AuthStore.PairingCodeLinkUtils && typeof window.AuthStore.PairingCodeLinkUtils.requestPairingCode === 'function'),
           waWebPairingApi: !!(window.require && window.require('WAWebPairingCodeLinkingApi')),
           bodyText: document.body.innerText.substring(0, 200)
         }
@@ -705,7 +848,8 @@ const diagnosePairingCode = async (req, res) => {
       diagnosis.hasPupPage && 
       (diagnosis.sessionState.message === 'session_not_connected' || 
        diagnosis.sessionState.message === 'session_not_found') &&
-      (diagnosis.webState?.hasQrCanvas || diagnosis.webState?.hasQrTestId)
+      (diagnosis.webState?.hasQrCanvas || diagnosis.webState?.hasQrTestId) &&
+      (diagnosis.webState?.hasOnCodeReceivedEvent || diagnosis.webState?.pairingUtilsHasRequestPairingCode || diagnosis.webState?.waWebPairingApi)
 
     diagnosis.recommendations = []
     
@@ -715,7 +859,7 @@ const diagnosePairingCode = async (req, res) => {
       diagnosis.recommendations.push('Browser page not available. Start session first.')
     } else if (!diagnosis.webState?.hasQrCanvas && !diagnosis.webState?.hasQrTestId) {
       diagnosis.recommendations.push('WhatsApp Web not on authentication screen. Session may need restart.')
-    } else if (!diagnosis.webState?.pairingUtils && !diagnosis.webState?.waWebPairingApi) {
+    } else if (!diagnosis.webState?.hasOnCodeReceivedEvent && !diagnosis.webState?.pairingUtilsHasRequestPairingCode && !diagnosis.webState?.waWebPairingApi) {
       diagnosis.recommendations.push('Pairing code APIs not available. Try QR code authentication instead.')
     } else {
       diagnosis.recommendations.push('Session appears ready for pairing code attempt.')

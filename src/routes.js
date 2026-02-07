@@ -76,6 +76,8 @@ sessionRouter.use(middleware.clientSwagger)
 routes.use('/client', clientRouter)
 
 clientRouter.get('/getClassInfo/:sessionId', [middleware.sessionNameValidation, middleware.sessionValidation], clientController.getClassInfo)
+// Compatibilidade com versões antigas do painel (ordem de parâmetros invertida)
+clientRouter.get('/:sessionId/getClassInfo', [middleware.sessionNameValidation, middleware.sessionValidation], clientController.getClassInfo)
 clientRouter.post('/acceptInvite/:sessionId', [middleware.sessionNameValidation, middleware.sessionValidation], clientController.acceptInvite)
 clientRouter.post('/archiveChat/:sessionId', [middleware.sessionNameValidation, middleware.sessionValidation], clientController.archiveChat)
 clientRouter.post('/createGroup/:sessionId', [middleware.sessionNameValidation, middleware.sessionValidation], clientController.createGroup)

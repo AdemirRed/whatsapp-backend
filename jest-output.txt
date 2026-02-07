@@ -1,0 +1,276 @@
+﻿  console.log
+    
+    ­ƒô▒ Restaurando 3 sess├úo(├Áes) existente(s)...
+
+      at log (src/sessions.js:115:17)
+
+  console.log
+       Ôå│ ­ƒöä Restaurando sess├úo: 2
+
+      at log (src/sessions.js:125:21)
+
+  console.log
+       Ôå│ ­ƒöä Restaurando sess├úo: 3
+
+      at log (src/sessions.js:125:21)
+
+  console.log
+       Ôå│ ­ƒöä Restaurando sess├úo: 4
+
+      at log (src/sessions.js:125:21)
+
+  console.log
+    Ô£à Todas as sess├Áes foram iniciadas!
+
+      at log (src/sessions.js:134:17)
+
+  console.log
+    Destroying session 1
+
+      at log (src/sessions.js:787:17)
+
+  console.log
+    ÔØî Erro na inicializa├º├úo da sess├úo 1: Protocol error (Runtime.evaluate): Target closed
+
+      at log (src/sessions.js:230:15)
+
+  console.log
+    ÔÅ│ Aguardando 30 segundos antes de tentar novamente... (Tentativa 1/3)
+
+      at log (src/sessions.js:251:17)
+
+  console.log
+    ÔÜá´©Å Sess├úo 2 j├í existe e est├í ativa. Ignorando nova cria├º├úo.
+
+      at log (src/sessions.js:151:17)
+
+  console.log
+    ÔÜá´©Å Sess├úo 4 j├í existe e est├í ativa. Ignorando nova cria├º├úo.
+
+      at log (src/sessions.js:151:17)
+
+node.exe : FAIL tests/api.test.js (5.279 s)
+No linha:1 caractere:1
++ & "C:\Program Files\nodejs/node.exe" 
+"C:\Users\RedBlack-PC\AppData\Ro ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (FAIL tests/ 
+   api.test.js (5.279 s):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  ÔùÅ API Authentication Tests ÔÇ║ should setup and 
+flush multiple client sessions
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 422
+
+    [0m [90m 75 |[39m   it([32m'should setup and 
+flush multiple client sessions'[39m[33m,[39m 
+[36masync[39m () [33m=>[39m {
+     [90m 76 |[39m     [36mconst[39m response 
+[33m=[39m [36mawait[39m request(app)[33m.[39m[36mg
+et[39m([32m'/session/start/2'[39m)[33m.[39m[36mset
+[39m([32m'x-api-key'[39m[33m,[39m 
+[32m'test_api_key'[39m)
+    [31m[1m>[22m[39m[90m 77 |[39m     expect(respon
+se[33m.[39mstatus)[33m.[39mtoBe([35m200[39m)
+     [90m    |[39m                             
+[31m[1m^[22m[39m
+     [90m 78 |[39m     
+expect(response[33m.[39mbody)[33m.[39mtoEqual({ 
+success[33m:[39m [36mtrue[39m[33m,[39m 
+message[33m:[39m [32m'Session initiated 
+successfully'[39m })
+     [90m 79 |[39m     expect(fs[33m.[39mexistsSync(
+[32m'./sessions_test/session-2'[39m))[33m.[39mtoBe([3
+6mtrue[39m)
+     [90m 80 |[39m[0m
+
+      at Object.toBe (tests/api.test.js:77:29)
+
+  ÔùÅ API Action Tests ÔÇ║ should setup, create at least 
+a QR, and terminate a client session
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 422
+
+    [0m [90m  96 |[39m   it([32m'should setup, 
+create at least a QR, and terminate a client 
+session'[39m[33m,[39m [36masync[39m () [33m=>[39m 
+{
+     [90m  97 |[39m     [36mconst[39m response 
+[33m=[39m [36mawait[39m request(app)[33m.[39m[36mg
+et[39m([32m'/session/start/4'[39m)[33m.[39m[36mset
+[39m([32m'x-api-key'[39m[33m,[39m 
+[32m'test_api_key'[39m)
+    [31m[1m>[22m[39m[90m  98 |[39m     expect(respo
+nse[33m.[39mstatus)[33m.[39mtoBe([35m200[39m)
+     [90m     |[39m                             
+[31m[1m^[22m[39m
+     [90m  99 |[39m     
+expect(response[33m.[39mbody)[33m.[39mtoEqual({ 
+success[33m:[39m [36mtrue[39m[33m,[39m 
+message[33m:[39m [32m'Session initiated 
+successfully'[39m })
+     [90m 100 |[39m     expect(fs[33m.[39mexistsSync(
+[32m'./sessions_test/session-4'[39m))[33m.[39mtoBe([
+36mtrue[39m)
+     [90m 101 |[39m[0m
+
+      at Object.toBe (tests/api.test.js:98:29)
+
+
+  ÔùÅ Test suite failed to run
+
+    EBUSY: resource busy or locked, unlink 'C:\Users\RedB
+lack-PC\Desktop\whatsapp-api\sessions_test\session-2\Defa
+ult\Account Web Data'
+
+    [0m [90m 24 |[39m afterAll(() [33m=>[39m {
+     [90m 25 |[39m   server[33m.[39mclose()
+    [31m[1m>[22m[39m[90m 26 |[39m   fs[33m.[39mrm
+Sync([32m'./sessions_test'[39m[33m,[39m { 
+recursive[33m:[39m [36mtrue[39m[33m,[39m 
+force[33m:[39m [36mtrue[39m })
+     [90m    |[39m      [31m[1m^[22m[39m
+     [90m 27 |[39m })
+     [90m 28 |[39m
+     [90m 29 |[39m [90m// Define test cases[39m[0m
+
+          at Array.forEach (<anonymous>)
+          at Array.forEach (<anonymous>)
+          at Array.forEach (<anonymous>)
+      at Object.rmSync (tests/api.test.js:26:6)
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 5 passed, 7 total
+Snapshots:   0 total
+Time:        5.395 s, estimated 8 s
+Ran all test suites matching /tests\\api.test.js/i.
+
+ReferenceError: You are trying to `import` a file after 
+the Jest environment has been torn down. From 
+tests/api.test.js.
+
+    [0m [90m  8 |[39m   }
+     [90m  9 |[39m   
+    [31m[1m>[22m[39m[90m 10 |[39m   
+[36mreturn[39m 
+axios[33m.[39mpost(webhookURL[33m,[39m { 
+dataType[33m,[39m data[33m,[39m sessionId 
+}[33m,[39m { 
+     [90m    |[39m                [31m[1m^[22m[39m
+     [90m 11 |[39m     headers[33m:[39m { 
+[32m'x-api-key'[39m[33m:[39m globalApiKey 
+}[33m,[39m
+     [90m 12 |[39m     timeout[33m:[39m 
+[35m5000[39m [90m// Timeout de 5 segundos para evitar 
+travamentos[39m
+     [90m 13 |[39m   })[0m
+
+      at Object.<anonymous>.module.exports 
+(node_modules/follow-redirects/debug.js:7:15)
+      at Object.request 
+(node_modules/follow-redirects/index.js:531:7)
+      at dispatchHttpRequest 
+(node_modules/axios/lib/adapters/http.js:661:21)
+      at node_modules/axios/lib/adapters/http.js:249:5
+      at wrapAsync 
+(node_modules/axios/lib/adapters/http.js:229:10)
+      at http 
+(node_modules/axios/lib/adapters/http.js:314:10)
+      at Axios.dispatchRequest 
+(node_modules/axios/lib/core/dispatchRequest.js:51:10)
+      at Axios._request 
+(node_modules/axios/lib/core/Axios.js:185:33)
+      at Axios.request 
+(node_modules/axios/lib/core/Axios.js:40:25)
+      at Axios.httpMethod [as post] 
+(node_modules/axios/lib/core/Axios.js:224:19)
+      at Function.wrap 
+(node_modules/axios/lib/helpers/bind.js:12:15)
+      at post (src/utils.js:10:16)
+      at triggerWebhook (src/sessions.js:657:9)
+  console.error
+    ÔØî [Webhook Error] 2 - qr: Error
+
+    [0m [90m 20 |[39m       [90m// Apenas logar erros relevantes (n├úo 404 ou timeouts menores)[39m
+     [90m 21 |[39m       [36mif[39m (error[33m.[39mresponse[33m?[39m[33m.[39mstatus [33m!==[39m [35m404[39m [33m&&[39m [33m![39merror[33m.[39mmessage[33m.[39mincludes([32m'timeout'[39m)) {
+    [31m[1m>[22m[39m[90m 22 |[39m         console[33m.[39merror([32m`ÔØî [Webhook Error] ${sessionId} - ${dataType}:`[39m[33m,[39m error[33m.[39mmessage)
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 23 |[39m       }
+     [90m 24 |[39m       [90m// N├úo propagar o erro para n├úo afetar o fluxo principal[39m
+     [90m 25 |[39m     })[0m
+
+      at error (src/utils.js:22:17)
+
+  console.error
+    ÔØî [Webhook Error] 4 - qr: Error
+
+    [0m [90m 20 |[39m       [90m// Apenas logar erros relevantes (n├úo 404 ou timeouts menores)[39m
+     [90m 21 |[39m       [36mif[39m (error[33m.[39mresponse[33m?[39m[33m.[39mstatus [33m!==[39m [35m404[39m [33m&&[39m [33m![39merror[33m.[39mmessage[33m.[39mincludes([32m'timeout'[39m)) {
+    [31m[1m>[22m[39m[90m 22 |[39m         console[33m.[39merror([32m`ÔØî [Webhook Error] ${sessionId} - ${dataType}:`[39m[33m,[39m error[33m.[39mmessage)
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 23 |[39m       }
+     [90m 24 |[39m       [90m// N├úo propagar o erro para n├úo afetar o fluxo principal[39m
+     [90m 25 |[39m     })[0m
+
+      at error (src/utils.js:22:17)
+
+  console.error
+    ÔØî [Webhook Error] 3 - qr: Error
+
+    [0m [90m 20 |[39m       [90m// Apenas logar erros relevantes (n├úo 404 ou timeouts menores)[39m
+     [90m 21 |[39m       [36mif[39m (error[33m.[39mresponse[33m?[39m[33m.[39mstatus [33m!==[39m [35m404[39m [33m&&[39m [33m![39merror[33m.[39mmessage[33m.[39mincludes([32m'timeout'[39m)) {
+    [31m[1m>[22m[39m[90m 22 |[39m         console[33m.[39merror([32m`ÔØî [Webhook Error] ${sessionId} - ${dataType}:`[39m[33m,[39m error[33m.[39mmessage)
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 23 |[39m       }
+     [90m 24 |[39m       [90m// N├úo propagar o erro para n├úo afetar o fluxo principal[39m
+     [90m 25 |[39m     })[0m
+
+      at error (src/utils.js:22:17)
+
+  console.error
+    ÔØî [Webhook Error] 2 - qr: Error
+
+    [0m [90m 20 |[39m       [90m// Apenas logar erros relevantes (n├úo 404 ou timeouts menores)[39m
+     [90m 21 |[39m       [36mif[39m (error[33m.[39mresponse[33m?[39m[33m.[39mstatus [33m!==[39m [35m404[39m [33m&&[39m [33m![39merror[33m.[39mmessage[33m.[39mincludes([32m'timeout'[39m)) {
+    [31m[1m>[22m[39m[90m 22 |[39m         console[33m.[39merror([32m`ÔØî [Webhook Error] ${sessionId} - ${dataType}:`[39m[33m,[39m error[33m.[39mmessage)
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 23 |[39m       }
+     [90m 24 |[39m       [90m// N├úo propagar o erro para n├úo afetar o fluxo principal[39m
+     [90m 25 |[39m     })[0m
+
+      at error (src/utils.js:22:17)
+
+  console.error
+    ÔØî [Webhook Error] 4 - qr: Error
+
+    [0m [90m 20 |[39m       [90m// Apenas logar erros relevantes (n├úo 404 ou timeouts menores)[39m
+     [90m 21 |[39m       [36mif[39m (error[33m.[39mresponse[33m?[39m[33m.[39mstatus [33m!==[39m [35m404[39m [33m&&[39m [33m![39merror[33m.[39mmessage[33m.[39mincludes([32m'timeout'[39m)) {
+    [31m[1m>[22m[39m[90m 22 |[39m         console[33m.[39merror([32m`ÔØî [Webhook Error] ${sessionId} - ${dataType}:`[39m[33m,[39m error[33m.[39mmessage)
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 23 |[39m       }
+     [90m 24 |[39m       [90m// N├úo propagar o erro para n├úo afetar o fluxo principal[39m
+     [90m 25 |[39m     })[0m
+
+      at error (src/utils.js:22:17)
+
+  console.error
+    ÔØî [Webhook Error] 3 - qr: Error
+
+    [0m [90m 20 |[39m       [90m// Apenas logar erros relevantes (n├úo 404 ou timeouts menores)[39m
+     [90m 21 |[39m       [36mif[39m (error[33m.[39mresponse[33m?[39m[33m.[39mstatus [33m!==[39m [35m404[39m [33m&&[39m [33m![39merror[33m.[39mmessage[33m.[39mincludes([32m'timeout'[39m)) {
+    [31m[1m>[22m[39m[90m 22 |[39m         console[33m.[39merror([32m`ÔØî [Webhook Error] ${sessionId} - ${dataType}:`[39m[33m,[39m error[33m.[39mmessage)
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 23 |[39m       }
+     [90m 24 |[39m       [90m// N├úo propagar o erro para n├úo afetar o fluxo principal[39m
+     [90m 25 |[39m     })[0m
+
+      at error (src/utils.js:22:17)
+

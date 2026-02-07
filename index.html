@@ -829,27 +829,23 @@
                     </div>
                 </div>
 
-                <!-- Poll Management -->
+                <!-- Phone Connection -->
                 <div class="control-group">
-                    <h3>📊 Gerenciar Enquetes (Polls)</h3>
+                    <h3>📞 Conectar por Telefone</h3>
                     <div class="input-group">
-                        <input type="text" id="pollSessionId" class="form-control" placeholder="ID da sessão">
-                        <input type="text" id="pollChatId" class="form-control" placeholder="Chat ID (ex: 555199999999@c.us)">
+                        <input type="text" id="phoneSessionId" class="form-control" placeholder="ID da sessão">
+                        <input type="text" id="phoneNumber" class="form-control" placeholder="Número (ex: 555197756708)">
                     </div>
                     <div class="input-group">
-                        <button class="btn btn-info" onclick="getChatPolls()">
-                            📋 Listar Enquetes do Chat
+                        <label style="color: #94a3b8; display: inline-flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" id="phoneShowNotification" checked>
+                            Mostrar notificação no celular
+                        </label>
+                        <button class="btn btn-success" onclick="requestPairingCode()">
+                            🔑 Gerar Código
                         </button>
-                        <button class="btn btn-primary" onclick="showPollVotesModal()">
-                            🗳️ Ver Votos por ID
-                        </button>
-                    </div>
-                    <div class="input-group">
-                        <button class="btn btn-success" onclick="showCreatePollModal()">
-                            ➕ Criar Enquete
-                        </button>
-                        <button class="btn btn-warning" onclick="showContactVotesModal()">
-                            👤 Votos por Contato
+                        <button class="btn btn-secondary" onclick="diagnosePairingCode()">
+                            🧪 Diagnosticar
                         </button>
                     </div>
                 </div>
@@ -947,117 +943,6 @@
             </div>
         </div>
 
-        <!-- Modal para Enquetes -->
-        <div id="pollModal" class="modal" style="display: none;">
-            <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
-                <div class="modal-header">
-                    <span class="close" onclick="document.getElementById('pollModal').style.display='none'">&times;</span>
-                    <h2 id="pollModalTitle">📊 Enquetes do Chat</h2>
-                </div>
-                
-                <!-- Loading -->
-                <div id="pollModalLoading" style="text-align: center; padding: 20px;">
-                    <div class="loading-spinner"></div>
-                    <p class="loading-text">Carregando enquetes...</p>
-                </div>
-                
-                <!-- Conteúdo das enquetes -->
-                <div id="pollModalContent" style="display: none;">
-                    <div id="pollsList">
-                        <!-- Enquetes serão preenchidas via JavaScript -->
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal para buscar votos por ID -->
-        <div id="pollVotesModal" class="modal" style="display: none;">
-            <div class="modal-content" style="max-width: 600px;">
-                <div class="modal-header">
-                    <span class="close" onclick="document.getElementById('pollVotesModal').style.display='none'">&times;</span>
-                    <h2>🗳️ Buscar Votos da Enquete</h2>
-                </div>
-                <div class="modal-body">
-                    <div class="input-group">
-                        <input type="text" id="pollVoteSessionId" class="form-control" placeholder="ID da sessão">
-                        <input type="text" id="pollVoteMessageId" class="form-control" placeholder="ID da mensagem da enquete">
-                    </div>
-                    <div class="input-group">
-                        <button class="btn btn-primary" onclick="getPollVotes()">
-                            🔍 Buscar Votos
-                        </button>
-                    </div>
-                    <div id="pollVotesResult" style="margin-top: 20px;">
-                        <!-- Resultados serão exibidos aqui -->
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal para criar enquete -->
-        <div id="createPollModal" class="modal" style="display: none;">
-            <div class="modal-content" style="max-width: 600px;">
-                <div class="modal-header">
-                    <span class="close" onclick="document.getElementById('createPollModal').style.display='none'">&times;</span>
-                    <h2>➕ Criar Nova Enquete</h2>
-                </div>
-                <div class="modal-body">
-                    <div class="input-group">
-                        <input type="text" id="createPollSessionId" class="form-control" placeholder="ID da sessão">
-                        <input type="text" id="createPollChatId" class="form-control" placeholder="Chat ID (ex: 555199999999@c.us)">
-                    </div>
-                    <div class="input-group">
-                        <input type="text" id="createPollName" class="form-control" placeholder="Pergunta da enquete">
-                    </div>
-                    <div id="pollOptionsContainer">
-                        <div class="input-group">
-                            <input type="text" class="form-control poll-option" placeholder="Opção 1">
-                            <input type="text" class="form-control poll-option" placeholder="Opção 2">
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <button type="button" class="btn btn-secondary" onclick="addPollOption()">+ Adicionar Opção</button>
-                        <label style="color: #94a3b8;">
-                            <input type="checkbox" id="allowMultipleAnswers"> Permitir múltiplas respostas
-                        </label>
-                    </div>
-                    <div class="input-group">
-                        <button class="btn btn-success" onclick="createPoll()">
-                            📊 Criar Enquete
-                        </button>
-                    </div>
-                    <div id="createPollResult" style="margin-top: 20px;">
-                        <!-- Resultado será exibido aqui -->
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal para buscar votos por contato -->
-        <div id="contactVotesModal" class="modal" style="display: none;">
-            <div class="modal-content" style="max-width: 700px;">
-                <div class="modal-header">
-                    <span class="close" onclick="document.getElementById('contactVotesModal').style.display='none'">&times;</span>
-                    <h2>👤 Votos por Contato</h2>
-                </div>
-                <div class="modal-body">
-                    <div class="input-group">
-                        <input type="text" id="contactVotesSessionId" class="form-control" placeholder="ID da sessão">
-                        <input type="text" id="contactVotesPhone" class="form-control" placeholder="Número do telefone (ex: 555199999999)">
-                    </div>
-                    <div class="input-group">
-                        <input type="text" id="contactVotesChatId" class="form-control" placeholder="Chat ID (opcional - busca em todos se vazio)">
-                        <button class="btn btn-primary" onclick="getContactVotes()">
-                            🔍 Buscar Votos
-                        </button>
-                    </div>
-                    <div id="contactVotesResult" style="margin-top: 20px;">
-                        <!-- Resultados serão exibidos aqui -->
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Modal para listar mídia View Once -->
         <div id="viewOnceMediaModal" class="modal" style="display: none;">
             <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
@@ -1134,280 +1019,102 @@
         </div>
     </div>
 
-    <!-- Modal para exibir votos detalhados de uma enquete -->
-    <div id="pollVotesDetailModal" class="modal" style="display: none;">
-        <div class="modal-content" style="max-width: 800px;">
-            <div class="modal-header">
-                <h2>🗳️ Votos Detalhados da Enquete</h2>
-                <span class="close" onclick="document.getElementById('pollVotesDetailModal').style.display='none'">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div id="pollVotesDetailContainer">
-                    <!-- Votos detalhados serão exibidos aqui -->
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script>
-        const API_BASE = 'http://localhost:200';
+        // Usar a mesma origem da página para evitar CORS (ex: http://192.168.0.200:200)
+        // Fallback para localhost quando a página for aberta via file:// (origin = 'null')
+        const API_BASE = (window.location && window.location.origin && window.location.origin !== 'null')
+            ? window.location.origin
+            : 'http://localhost:200';
         const API_KEY = 'redblack';
         let currentSessionForQR = null;
 
         // =====================================
-        // FUNÇÕES PARA GERENCIAR ENQUETES
+        // FUNÇÃO PARA CONECTAR POR TELEFONE
         // =====================================
 
-        // Mostrar modal para criar enquete
-        function showCreatePollModal() {
-            document.getElementById('createPollModal').style.display = 'block';
-        }
+        // Solicitar pairing code (conectar por telefone)
+        async function requestPairingCode() {
+            const sessionId = document.getElementById('phoneSessionId').value.trim();
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
+            const showNotification = !!document.getElementById('phoneShowNotification')?.checked;
 
-        // Mostrar modal para buscar votos por ID
-        function showPollVotesModal() {
-            document.getElementById('pollVotesModal').style.display = 'block';
-        }
+            const resultDiv = document.getElementById('globalResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result-box result-success';
+            resultDiv.textContent = '🔄 Gerando código de pareamento...';
 
-        // Mostrar modal para buscar votos por contato
-        function showContactVotesModal() {
-            document.getElementById('contactVotesModal').style.display = 'block';
-        }
-
-        // Adicionar nova opção na criação de enquete
-        function addPollOption() {
-            const container = document.getElementById('pollOptionsContainer');
-            const currentOptions = container.querySelectorAll('.poll-option').length;
-            
-            if (currentOptions >= 12) {
-                alert('Máximo de 12 opções permitidas');
-                return;
-            }
-            
-            const newGroup = document.createElement('div');
-            newGroup.className = 'input-group';
-            newGroup.innerHTML = `
-                <input type="text" class="form-control poll-option" placeholder="Opção ${currentOptions + 1}">
-                <button type="button" class="btn btn-danger" onclick="this.parentElement.remove()">×</button>
-            `;
-            container.appendChild(newGroup);
-        }
-
-        // Criar enquete usando endpoint sendMessage
-        async function createPoll() {
-            const sessionId = document.getElementById('createPollSessionId').value.trim();
-            const chatId = document.getElementById('createPollChatId').value.trim();
-            const pollName = document.getElementById('createPollName').value.trim();
-            const allowMultipleAnswers = document.getElementById('allowMultipleAnswers').checked;
-            
-            if (!sessionId || !chatId || !pollName) {
-                alert('Por favor, preencha Session ID, Chat ID e a pergunta da enquete');
-                return;
-            }
-
-            // Formatar chatId se necessário
-            let formattedChatId = chatId;
-            if (!chatId.includes('@')) {
-                formattedChatId = chatId + '@c.us';
-            }
-
-            // Coletar opções
-            const pollOptions = [];
-            const optionInputs = document.querySelectorAll('.poll-option');
-            
-            optionInputs.forEach(input => {
-                const value = input.value.trim();
-                if (value) {
-                    pollOptions.push(value);
-                }
-            });
-
-            if (pollOptions.length < 2) {
-                alert('A enquete deve ter pelo menos 2 opções');
-                return;
-            }
-
-            try {
-                // Usar endpoint sendMessage com contentType Poll
-                const result = await apiRequest(`/client/sendMessage/${sessionId}`, 'POST', {
-                    chatId: formattedChatId,
-                    contentType: 'Poll',
-                    content: {
-                        pollName: pollName,
-                        pollOptions: pollOptions,
-                        options: {
-                            allowMultipleAnswers: allowMultipleAnswers
-                        }
-                    }
-                });
-                
-                const resultDiv = document.getElementById('createPollResult');
-                
-                if (result.success) {
-                    resultDiv.innerHTML = `
-                        <div style="color: #10b981; padding: 15px; background: rgba(16, 185, 129, 0.1); border-radius: 8px;">
-                            ✅ Enquete criada com sucesso!<br>
-                            <small>ID da mensagem: ${result.data && result.data.id ? result.data.id._serialized || result.data.id : 'N/A'}</small>
-                        </div>
-                    `;
-                    
-                    // Limpar formulário
-                    document.getElementById('createPollSessionId').value = '';
-                    document.getElementById('createPollChatId').value = '';
-                    document.getElementById('createPollName').value = '';
-                    document.getElementById('allowMultipleAnswers').checked = false;
-                    
-                    // Resetar opções para apenas 2
-                    const container = document.getElementById('pollOptionsContainer');
-                    container.innerHTML = `
-                        <div class="input-group">
-                            <input type="text" class="form-control poll-option" placeholder="Opção 1">
-                            <input type="text" class="form-control poll-option" placeholder="Opção 2">
-                        </div>
-                    `;
-                } else {
-                    resultDiv.innerHTML = `
-                        <div style="color: #ef4444; padding: 15px; background: rgba(239, 68, 68, 0.1); border-radius: 8px;">
-                            ❌ Erro ao criar enquete: ${result.error}
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                console.error('Erro ao criar enquete:', error);
-                document.getElementById('createPollResult').innerHTML = `
-                    <div style="color: #ef4444; padding: 15px; background: rgba(239, 68, 68, 0.1); border-radius: 8px;">
-                        ❌ Erro ao criar enquete: ${error.message}
-                    </div>
-                `;
-            }
-        }
-
-        // Obter enquetes de um chat
-        async function getChatPolls() {
-            const sessionId = document.getElementById('pollSessionId').value.trim();
-            const chatId = document.getElementById('pollChatId').value.trim();
-            
-            if (!sessionId || !chatId) {
-                alert('Por favor, preencha o ID da sessão e o Chat ID');
-                return;
-            }
-
-            // Formatar chatId se necessário
-            let formattedChatId = chatId;
-            if (!chatId.includes('@')) {
-                formattedChatId = chatId + '@c.us';
-            }
-
-            try {
-                // Mostrar modal e loading
-                const modal = document.getElementById('pollModal');
-                const modalLoading = document.getElementById('pollModalLoading');
-                const modalContent = document.getElementById('pollModalContent');
-                
-                modal.style.display = 'block';
-                modalLoading.style.display = 'block';
-                modalContent.style.display = 'none';
-                
-                // Fazer requisição
-                const result = await apiRequest(`/poll/getChatPolls/${sessionId}`, 'POST', {
-                    chatId: formattedChatId,
-                    limit: 50
-                });
-                
-                if (result.success) {
-                    displayChatPolls(result.data.polls, formattedChatId);
-                    modalLoading.style.display = 'none';
-                    modalContent.style.display = 'block';
-                } else {
-                    alert(`❌ Erro ao obter enquetes: ${result.error}`);
-                    modal.style.display = 'none';
-                }
-            } catch (error) {
-                console.error('Erro ao obter enquetes:', error);
-                alert(`❌ Erro ao obter enquetes: ${error.message}`);
-                document.getElementById('pollModal').style.display = 'none';
-            }
-        }
-
-        // Obter votos de contato
-        async function getContactVotes() {
-            const sessionId = document.getElementById('contactVotesSessionId').value.trim();
-            const phoneNumber = document.getElementById('contactVotesPhone').value.trim();
-            const chatId = document.getElementById('contactVotesChatId').value.trim();
-            
             if (!sessionId || !phoneNumber) {
-                alert('Por favor, preencha o ID da sessão e o número do telefone');
+                resultDiv.className = 'result-box result-error';
+                resultDiv.textContent = '❌ Por favor, preencha o ID da sessão e o número do telefone.';
+                return;
+            }
+
+            if (!/^\d{10,15}$/.test(phoneNumber)) {
+                resultDiv.className = 'result-box result-error';
+                resultDiv.textContent = '❌ O número deve estar no formato internacional, apenas dígitos (ex: 555197756708).';
                 return;
             }
 
             try {
-                const requestBody = {
-                    phoneNumber: phoneNumber,
-                    limit: 100
-                };
-                
-                if (chatId) {
-                    // Formatar chatId se necessário
-                    requestBody.chatId = chatId.includes('@') ? chatId : chatId + '@c.us';
+                const result = await apiRequest(`/session/requestPairingCode/${sessionId}`, 'POST', {
+                    phoneNumber,
+                    showNotification
+                });
+
+                if (!result.success) {
+                    resultDiv.className = 'result-box result-error';
+                    resultDiv.textContent = `❌ Erro ao gerar código: ${result.error}`;
+                    return;
                 }
 
-                const result = await apiRequest(`/poll/getVotesByContact/${sessionId}`, 'POST', requestBody);
-                
-                const resultDiv = document.getElementById('contactVotesResult');
-                
-                if (result.success) {
-                    const responseData = result.data;
-                    const votes = responseData.votes || [];
-                    
-                    if (votes.length === 0) {
-                        resultDiv.innerHTML = `
-                            <div style="text-align: center; padding: 20px; color: #94a3b8;">
-                                📭 Nenhum voto encontrado para este contato
-                            </div>
-                        `;
-                        return;
-                    }
+                const data = result.data || {};
+                const pairingCode = data.pairingCode || data.pairing_code || 'N/A';
 
-                    const votesHtml = votes.map(vote => `
-                        <div style="margin: 15px 0; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px;">
-                            <div style="font-weight: bold; color: #60a5fa; margin-bottom: 8px;">
-                                🗳️ ${vote.pollName}
-                            </div>
-                            <div style="color: #10b981; margin-bottom: 5px;">
-                                ✅ Votou em: <strong>${vote.selectedOption}</strong>
-                            </div>
-                            <div style="color: #94a3b8; font-size: 0.9rem;">
-                                📅 ${new Date(vote.timestamp * 1000).toLocaleString()}<br>
-                                💬 Chat: ${vote.chatName}<br>
-                                🆔 Mensagem: <code style="background: rgba(255,255,255,0.1); padding: 2px 4px; border-radius: 4px;">${vote.messageId}</code>
-                            </div>
-                        </div>
-                    `).join('');
-                    
-                    resultDiv.innerHTML = `
-                        <div style="background: #1a1a1c; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); padding: 20px;">
-                            <h4 style="color: #fff; margin-bottom: 15px;">
-                                👤 Votos de ${responseData.contact || phoneNumber} (Total: ${responseData.totalVotes || votes.length})
-                            </h4>
-                            <div style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 15px;">
-                                Pesquisado em ${responseData.searchedChats || 'N/A'} chat(s)
-                            </div>
-                            ${votesHtml}
-                        </div>
-                    `;
-                } else {
-                    resultDiv.innerHTML = `
-                        <div style="color: #ef4444; padding: 15px; background: rgba(239, 68, 68, 0.1); border-radius: 8px;">
-                            ❌ Erro: ${result.error}
-                        </div>
-                    `;
-                }
+                resultDiv.className = 'result-box result-success';
+                resultDiv.textContent = `✅ Código gerado com sucesso!\n\n` +
+                    `Código: ${pairingCode}\n\n` +
+                    `${data.instructions ? `Instruções: ${data.instructions}\n\n` : ''}` +
+                    `${data.message ? `Detalhes: ${data.message}\n\n` : ''}` +
+                    `Resposta completa:\n${JSON.stringify(data, null, 2)}`;
+
+                setTimeout(() => loadSessions(), 2000);
             } catch (error) {
-                console.error('Erro ao obter votos do contato:', error);
-                document.getElementById('contactVotesResult').innerHTML = `
-                    <div style="color: #ef4444; padding: 15px; background: rgba(239, 68, 68, 0.1); border-radius: 8px;">
-                        ❌ Erro: ${error.message}
-                    </div>
-                `;
+                console.error('Erro ao solicitar pairing code:', error);
+                resultDiv.className = 'result-box result-error';
+                resultDiv.textContent = `❌ Erro ao gerar código: ${error.message}`;
+            }
+        }
+
+        // Diagnóstico de pairing code
+        async function diagnosePairingCode() {
+            const sessionId = document.getElementById('phoneSessionId').value.trim();
+            const resultDiv = document.getElementById('globalResult');
+
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result-box result-success';
+            resultDiv.textContent = '🔄 Diagnosticando sessão para pairing code...';
+
+            if (!sessionId) {
+                resultDiv.className = 'result-box result-error';
+                resultDiv.textContent = '❌ Por favor, preencha o ID da sessão.';
+                return;
+            }
+
+            try {
+                const result = await apiRequest(`/session/diagnosePairingCode/${sessionId}`, 'GET');
+
+                if (!result.success) {
+                    resultDiv.className = 'result-box result-error';
+                    resultDiv.textContent = `❌ Erro no diagnóstico: ${result.error}`;
+                    return;
+                }
+
+                resultDiv.className = 'result-box result-success';
+                resultDiv.textContent = `✅ Diagnóstico concluído:\n\n${JSON.stringify(result.data, null, 2)}`;
+            } catch (error) {
+                console.error('Erro ao diagnosticar pairing code:', error);
+                resultDiv.className = 'result-box result-error';
+                resultDiv.textContent = `❌ Erro no diagnóstico: ${error.message}`;
             }
         }
 
@@ -1430,10 +1137,14 @@
                 const response = await fetch(`${API_BASE}${endpoint}`, options);
                 const data = await response.json();
 
+                const apiError = !response.ok
+                    ? (data && (data.error || data.message) ? (data.error || data.message) : `HTTP ${response.status}`)
+                    : null;
+
                 return {
                     success: response.ok,
                     data: data,
-                    error: response.ok ? null : (data.message || `HTTP ${response.status}`)
+                    error: apiError
                 };
             } catch (error) {
                 return {
@@ -1442,143 +1153,6 @@
                     error: error.message
                 };
             }
-        }
-
-        // Exibir enquetes do chat no modal
-        function displayChatPolls(polls, chatId) {
-            const container = document.getElementById('pollsContainer');
-            
-            if (!polls || polls.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 20px; color: #94a3b8;">
-                        📭 Nenhuma enquete encontrada neste chat
-                    </div>
-                `;
-                return;
-            }
-
-            const pollsHtml = polls.map(poll => {
-                const totalVotes = poll.votes.reduce((sum, option) => sum + option.count, 0);
-                
-                const optionsHtml = poll.votes.map(option => {
-                    const percentage = totalVotes > 0 ? Math.round((option.count / totalVotes) * 100) : 0;
-                    return `
-                        <div style="margin: 8px 0; padding: 8px; background: rgba(255,255,255,0.03); border-radius: 6px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                <span style="color: #e2e8f0;">${option.name}</span>
-                                <span style="color: #60a5fa; font-weight: bold;">${option.count} voto(s)</span>
-                            </div>
-                            <div style="width: 100%; background: rgba(255,255,255,0.1); border-radius: 10px; height: 6px;">
-                                <div style="width: ${percentage}%; background: linear-gradient(90deg, #3b82f6, #60a5fa); height: 100%; border-radius: 10px; transition: width 0.3s ease;"></div>
-                            </div>
-                            <div style="color: #94a3b8; font-size: 0.8rem; margin-top: 2px;">${percentage}%</div>
-                        </div>
-                    `;
-                }).join('');
-
-                return `
-                    <div style="margin: 20px 0; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <h4 style="color: #fff; margin: 0; flex: 1;">🗳️ ${poll.name}</h4>
-                            <button onclick="getPollVotes('${poll.id}')" style="background: #3b82f6; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">
-                                Ver Votos
-                            </button>
-                        </div>
-                        <div style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 15px;">
-                            📊 Total de votos: <strong style="color: #60a5fa;">${totalVotes}</strong> | 
-                            📅 ${new Date(poll.timestamp * 1000).toLocaleString()} | 
-                            🆔 <code style="background: rgba(255,255,255,0.1); padding: 2px 4px; border-radius: 4px;">${poll.id}</code>
-                        </div>
-                        <div style="margin-top: 15px;">
-                            ${optionsHtml}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            container.innerHTML = `
-                <div style="background: #1a1a1c; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); padding: 20px;">
-                    <h3 style="color: #fff; margin-bottom: 15px;">📊 Enquetes do Chat</h3>
-                    <div style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px;">
-                        💬 Chat: <code style="background: rgba(255,255,255,0.1); padding: 2px 4px; border-radius: 4px;">${chatId}</code><br>
-                        📈 Total de enquetes: ${polls.length}
-                    </div>
-                    ${pollsHtml}
-                </div>
-            `;
-        }
-
-        // Obter votos detalhados de uma enquete
-        async function getPollVotes(pollId) {
-            const sessionId = document.getElementById('pollSessionId').value.trim();
-            
-            if (!sessionId) {
-                alert('Session ID não informado');
-                return;
-            }
-
-            try {
-                const result = await apiRequest(`/poll/getVotes/${sessionId}`, 'POST', {
-                    pollId: pollId
-                });
-                
-                if (result.success) {
-                    displayPollVotes(result.data.votes, result.data.pollName, pollId);
-                } else {
-                    alert(`❌ Erro ao obter votos: ${result.error}`);
-                }
-            } catch (error) {
-                console.error('Erro ao obter votos da enquete:', error);
-                alert(`❌ Erro ao obter votos: ${error.message}`);
-            }
-        }
-
-        // Exibir votos detalhados no modal
-        function displayPollVotes(votes, pollName, pollId) {
-            const modal = document.getElementById('pollVotesDetailModal');
-            const container = document.getElementById('pollVotesDetailContainer');
-            
-            if (!votes || votes.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 20px; color: #94a3b8;">
-                        📭 Nenhum voto encontrado para esta enquete
-                    </div>
-                `;
-                modal.style.display = 'block';
-                return;
-            }
-
-            const votesHtml = votes.map(vote => `
-                <div style="margin: 15px 0; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <div style="font-weight: bold; color: #60a5fa;">
-                            👤 ${vote.voterName}
-                        </div>
-                        <div style="color: #94a3b8; font-size: 0.9rem;">
-                            📱 ${vote.voterPhone}
-                        </div>
-                    </div>
-                    <div style="color: #10b981; margin-bottom: 5px;">
-                        ✅ Escolha: <strong>${vote.selectedOption}</strong>
-                    </div>
-                    <div style="color: #94a3b8; font-size: 0.85rem;">
-                        📅 ${new Date(vote.timestamp * 1000).toLocaleString()}
-                    </div>
-                </div>
-            `).join('');
-            
-            container.innerHTML = `
-                <div style="background: #1a1a1c; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); padding: 20px;">
-                    <h3 style="color: #fff; margin-bottom: 15px;">🗳️ ${pollName}</h3>
-                    <div style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px;">
-                        🆔 Poll ID: <code style="background: rgba(255,255,255,0.1); padding: 2px 4px; border-radius: 4px;">${pollId}</code><br>
-                        👥 Total de votos: ${votes.length}
-                    </div>
-                    ${votesHtml}
-                </div>
-            `;
-            
-            modal.style.display = 'block';
         }
 
         // Verificar status da API
@@ -1928,80 +1502,22 @@
 
         // Hibernar sessão
         async function hibernateSession(sessionId) {
-            try {
-                const result = await apiRequest(`/session/hibernate/${sessionId}`, 'GET');
-                
-                if (result.success) {
-                    alert(`✅ Sessão "${sessionId}" hibernada com sucesso!\n\nA sessão foi pausada mas mantém a conexão com o WhatsApp.`);
-                    loadSessions();
-                } else {
-                    alert('❌ Erro ao hibernar sessão: ' + (result.error || (result.data && result.data.message) || 'Erro desconhecido'));
-                }
-            } catch (error) {
-                console.error('Erro ao hibernar sessão:', error);
-                alert('❌ Erro ao hibernar sessão: ' + error.message);
-            }
+            alert('⚠️ Ação indisponível: a API atual não possui /session/hibernate.\n\nUse Terminar (logout) ou Reiniciar a sessão.');
         }
 
         // Reativar sessão
         async function reactivateSession(sessionId) {
-            try {
-                const result = await apiRequest(`/session/reactivate/${sessionId}`, 'GET');
-                
-                if (result.success) {
-                    alert(`✅ Sessão "${sessionId}" reativada com sucesso!\n\nA sessão voltou ao estado ativo.`);
-                    loadSessions();
-                } else {
-                    alert('❌ Erro ao reativar sessão: ' + (result.error || (result.data && result.data.message) || 'Erro desconhecido'));
-                }
-            } catch (error) {
-                console.error('Erro ao reativar sessão:', error);
-                alert('❌ Erro ao reativar sessão: ' + error.message);
-            }
+            alert('⚠️ Ação indisponível: a API atual não possui /session/reactivate.\n\nUse Iniciar/Reiniciar a sessão.');
         }
 
         // Hibernar todas as sessões
         async function hibernateAllSessions() {
-            if (!confirm('⚠️ Tem certeza que deseja hibernar TODAS as sessões ativas?\n\nEsta ação é ideal para manutenção do sistema.')) {
-                return;
-            }
-
-            const result = await apiRequest('/session/hibernateAll', 'GET');
-            const resultDiv = document.getElementById('globalResult');
-            
-            resultDiv.style.display = 'block';
-            
-            if (result.success) {
-                resultDiv.className = 'result-box result-success';
-                resultDiv.textContent = `✅ ${result.data.hibernatedCount} sessões hibernadas com sucesso!\n\n` + JSON.stringify(result.data, null, 2);
-            } else {
-                resultDiv.className = 'result-box result-error';
-                resultDiv.textContent = `❌ Erro: ${result.error || 'Falha na requisição'}`;
-            }
-            
-            loadSessions();
+            alert('⚠️ Ação indisponível: a API atual não possui /session/hibernateAll.');
         }
 
         // Reativar todas as sessões hibernadas
         async function reactivateAllSessions() {
-            if (!confirm('⚠️ Tem certeza que deseja reativar TODAS as sessões hibernadas?')) {
-                return;
-            }
-
-            const result = await apiRequest('/session/reactivateAll', 'GET');
-            const resultDiv = document.getElementById('globalResult');
-            
-            resultDiv.style.display = 'block';
-            
-            if (result.success) {
-                resultDiv.className = 'result-box result-success';
-                resultDiv.textContent = `✅ ${result.data.reactivatedCount} sessões reativadas com sucesso!\n\n` + JSON.stringify(result.data, null, 2);
-            } else {
-                resultDiv.className = 'result-box result-error';
-                resultDiv.textContent = `❌ Erro: ${result.error || 'Falha na requisição'}`;
-            }
-            
-            loadSessions();
+            alert('⚠️ Ação indisponível: a API atual não possui /session/reactivateAll.');
         }
 
         // Terminar sessões inativas
@@ -2048,7 +1564,7 @@
                 modalLoading.style.display = 'block';
                 
                 // Buscar informações detalhadas da sessão usando o endpoint correto
-                const response = await fetch(`${API_BASE}/client/${sessionId}/getClassInfo`, {
+                const response = await fetch(`${API_BASE}/client/getClassInfo/${sessionId}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2160,186 +1676,6 @@
             }
         }
 
-        // =====================================
-        // FUNÇÕES PARA GERENCIAR ENQUETES
-        // =====================================
-
-        // Obter enquetes de um chat
-        async function getChatPolls() {
-            const sessionId = document.getElementById('pollSessionId').value.trim();
-            const chatId = document.getElementById('pollChatId').value.trim();
-            
-            if (!sessionId || !chatId) {
-                alert('Por favor, preencha o ID da sessão e o Chat ID');
-                return;
-            }
-
-            // Formatar chatId se necessário
-            let formattedChatId = chatId;
-            if (!chatId.includes('@')) {
-                formattedChatId = chatId + '@c.us';
-            }
-
-            try {
-                // Mostrar modal e loading
-                const modal = document.getElementById('pollModal');
-                const modalLoading = document.getElementById('pollModalLoading');
-                const modalContent = document.getElementById('pollModalContent');
-                
-                modal.style.display = 'block';
-                modalLoading.style.display = 'block';
-                modalContent.style.display = 'none';
-                
-                // Fazer requisição
-                const result = await apiRequest(`/poll/getChatPolls/${sessionId}`, 'POST', {
-                    chatId: formattedChatId,
-                    limit: 50
-                });
-                
-                if (result.success) {
-                    displayChatPolls(result.polls, formattedChatId);
-                    modalLoading.style.display = 'none';
-                    modalContent.style.display = 'block';
-                } else {
-                    alert(`❌ Erro ao obter enquetes: ${result.error}`);
-                    modal.style.display = 'none';
-                }
-            } catch (error) {
-                console.error('Erro ao obter enquetes:', error);
-                alert(`❌ Erro ao obter enquetes: ${error.message}`);
-                document.getElementById('pollModal').style.display = 'none';
-            }
-        }
-
-        // Exibir enquetes do chat
-        function displayChatPolls(polls, chatId) {
-            const pollsList = document.getElementById('pollsList');
-            const modalTitle = document.getElementById('pollModalTitle');
-            
-            modalTitle.textContent = `📊 Enquetes do Chat (${chatId}) - Total: ${polls.length}`;
-            
-            if (polls.length === 0) {
-                pollsList.innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: #94a3b8;">
-                        📭 Nenhuma enquete encontrada neste chat
-                    </div>
-                `;
-                return;
-            }
-            
-            pollsList.innerHTML = polls.map(poll => {
-                const optionsHtml = poll.votes.map(vote => `
-                    <div style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
-                        <div style="font-weight: bold; color: #60a5fa;">📊 ${vote.option}</div>
-                        <div style="color: #94a3b8; font-size: 0.9rem;">
-                            ${vote.count} votos
-                            ${vote.voters.length > 0 ? `
-                                <div style="margin-top: 5px;">
-                                    <strong>Votantes:</strong>
-                                    ${vote.voters.map(voter => `
-                                        <div style="font-size: 0.8rem; color: #cbd5e1; margin-left: 10px;">
-                                            • ${voter.contactId} (${new Date(voter.timestamp * 1000).toLocaleString()})
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            ` : ''}
-                        </div>
-                    </div>
-                `).join('');
-                
-                return `
-                    <div style="margin: 20px 0; padding: 20px; background: #1a1a1c; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                        <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 15px;">
-                            <h4 style="color: #fff; margin: 0;">🗳️ ${poll.pollName}</h4>
-                            <span style="color: #94a3b8; font-size: 0.9rem;">
-                                ${new Date(poll.timestamp * 1000).toLocaleString()}
-                            </span>
-                        </div>
-                        
-                        <div style="margin-bottom: 10px;">
-                            <span style="color: #94a3b8; font-size: 0.9rem;">
-                                Total de votos: ${poll.totalVotes} | 
-                                Múltiplas respostas: ${poll.allowMultipleAnswers ? 'Sim' : 'Não'} |
-                                ID: <code style="background: rgba(255,255,255,0.1); padding: 2px 4px; border-radius: 4px;">${poll.messageId}</code>
-                            </span>
-                        </div>
-                        
-                        <div>
-                            ${optionsHtml}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // Mostrar modal para buscar votos por ID
-        function showPollVotesModal() {
-            document.getElementById('pollVotesModal').style.display = 'block';
-        }
-
-        // Obter votos de uma enquete específica por ID
-        async function getPollVotes() {
-            const sessionId = document.getElementById('pollVoteSessionId').value.trim();
-            const messageId = document.getElementById('pollVoteMessageId').value.trim();
-            
-            if (!sessionId || !messageId) {
-                alert('Por favor, preencha o ID da sessão e o ID da mensagem');
-                return;
-            }
-
-            try {
-                const result = await apiRequest(`/poll/getVotes/${sessionId}`, 'POST', {
-                    messageId: messageId
-                });
-                
-                const resultDiv = document.getElementById('pollVotesResult');
-                
-                if (result.success) {
-                    const poll = result.poll;
-                    const optionsHtml = poll.votes.map(vote => `
-                        <div style="margin: 15px 0; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px;">
-                            <div style="font-weight: bold; color: #60a5fa; margin-bottom: 10px;">
-                                📊 ${vote.option} (${vote.votes.length} votos)
-                            </div>
-                            ${vote.votes.map(v => `
-                                <div style="margin: 5px 0; padding: 8px; background: rgba(255,255,255,0.03); border-radius: 6px; font-size: 0.9rem;">
-                                    <strong style="color: #cbd5e1;">${v.contactId}</strong>
-                                    <div style="color: #94a3b8; font-size: 0.8rem;">
-                                        ${new Date(v.timestamp * 1000).toLocaleString()}
-                                        ${v.selectedOptions ? ` - Opções: ${v.selectedOptions.join(', ')}` : ''}
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    `).join('');
-                    
-                    resultDiv.innerHTML = `
-                        <div style="background: #1a1a1c; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); padding: 20px;">
-                            <h4 style="color: #fff; margin-bottom: 15px;">🗳️ ${poll.pollName}</h4>
-                            <div style="margin-bottom: 15px; color: #94a3b8; font-size: 0.9rem;">
-                                Total de votos: ${poll.totalVotes} | 
-                                Múltiplas respostas: ${poll.allowMultipleAnswers ? 'Sim' : 'Não'}
-                            </div>
-                            ${optionsHtml}
-                        </div>
-                    `;
-                } else {
-                    resultDiv.innerHTML = `
-                        <div style="color: #ef4444; padding: 15px; background: rgba(239, 68, 68, 0.1); border-radius: 8px;">
-                            ❌ Erro: ${result.error}
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                console.error('Erro ao obter votos:', error);
-                document.getElementById('pollVotesResult').innerHTML = `
-                    <div style="color: #ef4444; padding: 15px; background: rgba(239, 68, 68, 0.1); border-radius: 8px;">
-                        ❌ Erro: ${error.message}
-                    </div>
-                `;
-            }
-        }
-
         // Fechar modal ao clicar fora dele
         window.onclick = function(event) {
             const modal = document.getElementById('sessionInfoModal');
@@ -2354,37 +1690,7 @@
 
         // Obter mídia View Once de um chat
         async function getViewOnceMedia() {
-            const sessionId = document.getElementById('viewOnceSessionId').value.trim();
-            const chatId = document.getElementById('viewOnceChatId').value.trim();
-            
-            if (!sessionId || !chatId) {
-                alert('Por favor, preencha o ID da sessão e o Chat ID');
-                return;
-            }
-
-            // Formatar chatId se necessário
-            let formattedChatId = chatId;
-            if (!chatId.includes('@')) {
-                formattedChatId = chatId + '@c.us';
-            }
-
-            try {
-                const result = await apiRequest(`/viewonce/getMedia/${sessionId}`, 'POST', {
-                    chatId: formattedChatId,
-                    limit: 50,
-                    includeExpired: false
-                });
-                
-                if (result.success) {
-                    displayViewOnceMedia(result.data);
-                    document.getElementById('viewOnceMediaModal').style.display = 'block';
-                } else {
-                    alert(`❌ Erro ao obter mídia View Once: ${result.error}`);
-                }
-            } catch (error) {
-                console.error('Erro ao obter mídia View Once:', error);
-                alert(`❌ Erro ao obter mídia View Once: ${error.message}`);
-            }
+            alert('⚠️ Feature View Once indisponível: a API atual não possui endpoints /viewonce.');
         }
 
         // Exibir mídia View Once no modal
@@ -2451,35 +1757,7 @@
 
         // Obter estatísticas View Once
         async function getViewOnceStats() {
-            const sessionId = document.getElementById('viewOnceSessionId').value.trim();
-            const chatId = document.getElementById('viewOnceChatId').value.trim();
-            
-            if (!sessionId || !chatId) {
-                alert('Por favor, preencha o ID da sessão e o Chat ID');
-                return;
-            }
-
-            let formattedChatId = chatId;
-            if (!chatId.includes('@')) {
-                formattedChatId = chatId + '@c.us';
-            }
-
-            try {
-                const result = await apiRequest(`/viewonce/getStats/${sessionId}`, 'POST', {
-                    chatId: formattedChatId,
-                    days: 30
-                });
-                
-                if (result.success) {
-                    displayViewOnceStats(result.data);
-                    document.getElementById('viewOnceStatsModal').style.display = 'block';
-                } else {
-                    alert(`❌ Erro ao obter estatísticas: ${result.error}`);
-                }
-            } catch (error) {
-                console.error('Erro ao obter estatísticas:', error);
-                alert(`❌ Erro ao obter estatísticas: ${error.message}`);
-            }
+            alert('⚠️ Feature View Once indisponível: a API atual não possui endpoints /viewonce.');
         }
 
         // Exibir estatísticas View Once
@@ -2556,28 +1834,7 @@
 
         // Obter chats com View Once
         async function getChatsWithViewOnce() {
-            const sessionId = document.getElementById('viewOnceSessionId').value.trim();
-            
-            if (!sessionId) {
-                alert('Por favor, preencha o ID da sessão');
-                return;
-            }
-
-            try {
-                const result = await apiRequest(`/viewonce/getChats/${sessionId}`, 'POST', {
-                    limit: 50
-                });
-                
-                if (result.success) {
-                    displayChatsWithViewOnce(result.data);
-                    document.getElementById('viewOnceChatsModal').style.display = 'block';
-                } else {
-                    alert(`❌ Erro ao obter chats: ${result.error}`);
-                }
-            } catch (error) {
-                console.error('Erro ao obter chats:', error);
-                alert(`❌ Erro ao obter chats: ${error.message}`);
-            }
+            alert('⚠️ Feature View Once indisponível: a API atual não possui endpoints /viewonce.');
         }
 
         // Exibir chats com View Once
@@ -2647,22 +1904,7 @@
 
         // Baixar mídia View Once específica
         async function downloadSpecificViewOnce(messageId, chatId, sessionId, force = false) {
-            try {
-                const result = await apiRequest(`/viewonce/download/${sessionId}`, 'POST', {
-                    messageId: messageId,
-                    chatId: chatId,
-                    force: force
-                });
-                
-                if (result.success) {
-                    displayDownloadedMedia(result.data);
-                } else {
-                    alert(`❌ Erro ao baixar mídia: ${result.error}`);
-                }
-            } catch (error) {
-                console.error('Erro ao baixar mídia:', error);
-                alert(`❌ Erro ao baixar mídia: ${error.message}`);
-            }
+            alert('⚠️ Feature View Once indisponível: a API atual não possui endpoints /viewonce.');
         }
 
         // Baixar mídia View Once do modal
