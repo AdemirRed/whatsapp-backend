@@ -41,14 +41,14 @@ PORT=200
 
 Após iniciar, acesse:
 
-- **Swagger (Documentação)**: http://localhost:200/api-docs
-- **API Base**: http://localhost:200/
-- **QR Code para conectar**: GET http://localhost:200/session/qr/SUA_SESSAO
+- **Swagger (Documentação)**: whatsapp-backend-production-9cdd.up.railway.app/api-docs
+- **API Base**: whatsapp-backend-production-9cdd.up.railway.app/
+- **QR Code para conectar**: GET whatsapp-backend-production-9cdd.up.railway.app/session/qr/SUA_SESSAO
 
 ## 📱 Como Conectar WhatsApp
 
 1. Inicie a API com `start.bat`
-2. Acesse: http://localhost:200/session/qr/minha-sessao  
+2. Acesse: whatsapp-backend-production-9cdd.up.railway.app/session/qr/minha-sessao  
 3. Escaneie o QR Code com seu WhatsApp
 4. Pronto! API conectada
 
@@ -61,7 +61,7 @@ x-api-key: sua-chave-secreta-aqui
 
 **Exemplo - Enviar mensagem:**
 ```bash
-POST http://localhost:200/client/sendMessage/minha-sessao
+POST whatsapp-backend-production-9cdd.up.railway.app/client/sendMessage/minha-sessao
 Headers: x-api-key: sua-chave-secreta-aqui
 Body: {
   "chatId": "5511999999999@c.us",
@@ -104,5 +104,5 @@ Body: {
 
 ## 📞 Suporte
 
-- Documentação completa: http://localhost:200/api-docs (após iniciar)
+- Documentação completa: whatsapp-backend-production-9cdd.up.railway.app/api-docs (após iniciar)
 - Verifique o arquivo `.env` se houver problemas de conexão

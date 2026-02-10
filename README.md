@@ -46,11 +46,11 @@ cd whatsapp-backend
 docker-compose pull && docker-compose up
 ```
 
-3. Acesse a interface: http://localhost:200
+3. Acesse a interface: whatsapp-backend-production-9cdd.up.railway.app
 
 4. Escaneie o QR Code ou use autenticação por código
 
-5. Comece a usar: http://localhost:200/client/getContacts/SUA_SESSAO
+5. Comece a usar: whatsapp-backend-production-9cdd.up.railway.app/client/getContacts/SUA_SESSAO
 
 ### 🖥️ Instalação Local
 
@@ -155,7 +155,7 @@ cp .env.example .env
 # Configurações básicas
 PORT=200
 API_KEY=sua_chave_api_aqui
-BASE_WEBHOOK_URL=http://localhost:200/
+BASE_WEBHOOK_URL=whatsapp-backend-production-9cdd.up.railway.app/
 
 # Configuração do navegador
 HEADLESS_BROWSER=false  # true para headless, false para visível
@@ -172,7 +172,7 @@ npm start
 
 6. **Acesse a interface**:
 ```
-http://localhost:200
+whatsapp-backend-production-9cdd.up.railway.app
 ```
 
 ## Configuração
@@ -305,7 +305,7 @@ x-api-key: SUA_CHAVE_API
 
 ### 📱 Interface Web
 
-A interface web está disponível em `http://localhost:200` e inclui:
+A interface web está disponível em `whatsapp-backend-production-9cdd.up.railway.app` e inclui:
 
 - Dashboard de sessões com estatísticas
 - Gerenciamento visual de sessões
