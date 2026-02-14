@@ -23,11 +23,11 @@ process.on('uncaughtException', (error) => {
 // Start the server
 const port = process.env.PORT || 3000
 
-// Validar webhook: precisa ter BASE_WEBHOOK_URL OU webhook local ativo
+// Validar webhook (OPCIONAL): avisar se não houver webhook configurado
 if (!baseWebhookURL && !(localWebhookEnabled && localWebhookURL)) {
-  console.error('⚠️ Nenhum webhook configurado!')
-  console.error('Configure BASE_WEBHOOK_URL ou ative LOCAL_WEBHOOK_ENABLED com LOCAL_WEBHOOK_URL')
-  process.exit(1) // Terminate the application with an error code
+  console.warn('⚠️ Nenhum webhook configurado!')
+  console.warn('ℹ️ O servidor funcionará normalmente, mas eventos não serão enviados para webhooks')
+  console.warn('ℹ️ Para habilitar webhooks, configure BASE_WEBHOOK_URL ou ative LOCAL_WEBHOOK_ENABLED com LOCAL_WEBHOOK_URL')
 }
 
 // Avisar se estiver usando apenas webhook local

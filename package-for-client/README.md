@@ -15,7 +15,7 @@
 Abra o arquivo `.env` e configure:
 
 ```bash
-# Mudar para seu servidor de webhooks (se necessário)
+# OPCIONAL: Configurar webhook para receber eventos (se não configurar, a API funcionará normalmente)
 BASE_WEBHOOK_URL=http://SEU_SERVIDOR:3000/webhook
 
 # Definir sua chave de API

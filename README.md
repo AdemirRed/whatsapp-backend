@@ -184,7 +184,7 @@ whatsapp-backend-production-9cdd.up.railway.app
 | `PORT` | 200 | Porta do servidor |
 | `API_KEY` | "" | Chave de autenticação da API |
 | `HEADLESS_BROWSER` | true | Executar navegador em modo headless |
-| `BASE_WEBHOOK_URL` | localhost:200 | URL base para webhooks |
+| `BASE_WEBHOOK_URL` | (opcional) | URL base para webhooks - Se não configurado, eventos não serão enviados |
 | `SESSIONS_PATH` | ./sessions | Diretório para salvar sessões |
 | `WEB_VERSION` | 2.2328.5 | Versão do WhatsApp Web |
 | `RATE_LIMIT_MAX` | 1000 | Limite de requisições |

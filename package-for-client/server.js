@@ -5,10 +5,10 @@ require('dotenv').config()
 // Start the server
 const port = process.env.PORT || 3000
 
-// Check if BASE_WEBHOOK_URL environment variable is available
+// Check if BASE_WEBHOOK_URL environment variable is available (OPCIONAL)
 if (!baseWebhookURL) {
-  console.error('BASE_WEBHOOK_URL environment variable is not available. Exiting...')
-  process.exit(1) // Terminate the application with an error code
+  console.warn('⚠️ BASE_WEBHOOK_URL não configurado')
+  console.warn('ℹ️ O servidor funcionará normalmente, mas eventos não serão enviados para webhooks')
 }
 
 app.listen(port, () => {
@@ -17,7 +17,7 @@ app.listen(port, () => {
   console.log('='.repeat(60))
   console.log(`📍 Porta: ${port}`)
   console.log(`🌐 URL Base: http://localhost:${port}`)
-  console.log(`🔗 Webhook URL: ${baseWebhookURL}`)
+  console.log(`🔗 Webhook URL: ${baseWebhookURL || '(não configurado)'}`)
   console.log(`🔑 API Key configurada: ${globalApiKey ? '✓ Sim' : '✗ Não'}`)
   
   if (enableSwaggerEndpoint) {
