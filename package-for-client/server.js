@@ -5,6 +5,20 @@ require('dotenv').config()
 // Start the server
 const port = process.env.PORT || 3000
 
+// Validar API_KEY (OBRIGATÓRIA para segurança)
+if (!globalApiKey || globalApiKey.trim() === '') {
+  console.error('\n' + '='.repeat(60))
+  console.error('❌ ERRO CRÍTICO: API_KEY não configurada!')
+  console.error('='.repeat(60))
+  console.error('⚠️  A API_KEY é OBRIGATÓRIA para proteger seus endpoints!')
+  console.error('⚠️  Sem ela, qualquer pessoa pode acessar e controlar sua API.')
+  console.error('\n📝 Configure no arquivo .env:')
+  console.error('   API_KEY=sua-chave-secreta-aqui')
+  console.error('\n🚫 Servidor NÃO SERÁ INICIADO sem API_KEY configurada.')
+  console.error('='.repeat(60) + '\n')
+  process.exit(1)
+}
+
 // Check if BASE_WEBHOOK_URL environment variable is available (OPCIONAL)
 if (!baseWebhookURL) {
   console.warn('⚠️ BASE_WEBHOOK_URL não configurado')

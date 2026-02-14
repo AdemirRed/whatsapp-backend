@@ -182,7 +182,7 @@ whatsapp-backend-production-9cdd.up.railway.app
 | Variável | Padrão | Descrição |
 |----------|--------|-----------|
 | `PORT` | 200 | Porta do servidor |
-| `API_KEY` | "" | Chave de autenticação da API |
+| `API_KEY` | **(obrigatória)** | Chave de autenticação da API - OBRIGATÓRIA para segurança |
 | `HEADLESS_BROWSER` | true | Executar navegador em modo headless |
 | `BASE_WEBHOOK_URL` | (opcional) | URL base para webhooks - Se não configurado, eventos não serão enviados |
 | `SESSIONS_PATH` | ./sessions | Diretório para salvar sessões |

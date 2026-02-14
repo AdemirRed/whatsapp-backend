@@ -18,7 +18,7 @@ Abra o arquivo `.env` e configure:
 # OPCIONAL: Configurar webhook para receber eventos (se não configurar, a API funcionará normalmente)
 BASE_WEBHOOK_URL=http://SEU_SERVIDOR:3000/webhook
 
-# Definir sua chave de API
+# OBRIGATÓRIA: Definir sua chave de API para proteger os endpoints
 API_KEY=sua-chave-secreta-aqui
 
 # Porta do servidor (padrão: 200)
