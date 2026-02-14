@@ -3,10 +3,19 @@ const { restoreSessions } = require('./sessions')
 const { routes } = require('./routes')
 const app = require('express')()
 const bodyParser = require('body-parser')
+const cors = require('cors')
 const { maxAttachmentSize } = require('./config')
 
 // Initialize Express app
 app.disable('x-powered-by')
+
+// Habilitar CORS para todas as origens
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key'],
+  credentials: true
+}))
 
 // Configurar timeout para requisições longas (3 minutos para transcrições)
 app.use((req, res, next) => {
