@@ -16,6 +16,7 @@ const contactController = require('./controllers/contactController')
 const audioController = require('./controllers/audioController')
 const stickerController = require('./controllers/stickerController')
 const fileController = require('./controllers/fileController')
+const diagnosticsController = require('./controllers/diagnosticsController')
 
 /**
  * ================
@@ -70,6 +71,21 @@ sessionRouter.post('/requestPairingCode/:sessionId', middleware.sessionNameValid
 sessionRouter.get('/diagnosePairingCode/:sessionId', middleware.sessionNameValidation, sessionController.diagnosePairingCode)
 sessionRouter.get('/applyPatch/:sessionId', middleware.sessionNameValidation, sessionController.applyPatch)
 sessionRouter.get('/applyPatchAll', sessionController.applyPatchAll)
+
+/**
+ * ================
+ * DIAGNOSTICS ENDPOINTS
+ * ================
+ */
+const diagnosticsRouter = express.Router()
+diagnosticsRouter.use(middleware.apikey)
+routes.use('/diagnostics', diagnosticsRouter)
+
+diagnosticsRouter.get('/session/:sessionId', middleware.sessionNameValidation, diagnosticsController.getSessionDiagnostics)
+diagnosticsRouter.get('/test/:sessionId', middleware.sessionNameValidation, diagnosticsController.testMessageRetrieval)
+diagnosticsRouter.get('/health', diagnosticsController.healthCheck)
+diagnosticsRouter.post('/polling/start/:sessionId', middleware.sessionNameValidation, diagnosticsController.startPolling)
+diagnosticsRouter.post('/polling/stop/:sessionId', middleware.sessionNameValidation, diagnosticsController.stopPolling)
 
 /**
  * ================
