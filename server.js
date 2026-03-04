@@ -23,11 +23,25 @@ process.on('uncaughtException', (error) => {
 // Start the server
 const port = process.env.PORT || 3000
 
-// Validar webhook: precisa ter BASE_WEBHOOK_URL OU webhook local ativo
+// Validar API_KEY (OBRIGATÓRIA para segurança)
+if (!globalApiKey || globalApiKey.trim() === '') {
+  console.error('\n' + '='.repeat(60))
+  console.error('❌ ERRO CRÍTICO: API_KEY não configurada!')
+  console.error('='.repeat(60))
+  console.error('⚠️  A API_KEY é OBRIGATÓRIA para proteger seus endpoints!')
+  console.error('⚠️  Sem ela, qualquer pessoa pode acessar e controlar sua API.')
+  console.error('\n📝 Configure no arquivo .env:')
+  console.error('   API_KEY=sua-chave-secreta-aqui')
+  console.error('\n🚫 Servidor NÃO SERÁ INICIADO sem API_KEY configurada.')
+  console.error('='.repeat(60) + '\n')
+  process.exit(1)
+}
+
+// Validar webhook (OPCIONAL): avisar se não houver webhook configurado
 if (!baseWebhookURL && !(localWebhookEnabled && localWebhookURL)) {
-  console.error('⚠️ Nenhum webhook configurado!')
-  console.error('Configure BASE_WEBHOOK_URL ou ative LOCAL_WEBHOOK_ENABLED com LOCAL_WEBHOOK_URL')
-  process.exit(1) // Terminate the application with an error code
+  console.warn('⚠️ Nenhum webhook configurado!')
+  console.warn('ℹ️ O servidor funcionará normalmente, mas eventos não serão enviados para webhooks')
+  console.warn('ℹ️ Para habilitar webhooks, configure BASE_WEBHOOK_URL ou ative LOCAL_WEBHOOK_ENABLED com LOCAL_WEBHOOK_URL')
 }
 
 // Avisar se estiver usando apenas webhook local

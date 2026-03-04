@@ -46,11 +46,11 @@ cd whatsapp-backend
 docker-compose pull && docker-compose up
 ```
 
-3. Acesse a interface: http://localhost:200
+3. Acesse a interface: whatsapp-backend-production-9cdd.up.railway.app
 
 4. Escaneie o QR Code ou use autenticação por código
 
-5. Comece a usar: http://localhost:200/client/getContacts/SUA_SESSAO
+5. Comece a usar: whatsapp-backend-production-9cdd.up.railway.app/client/getContacts/SUA_SESSAO
 
 ### 🖥️ Instalação Local
 
@@ -155,7 +155,7 @@ cp .env.example .env
 # Configurações básicas
 PORT=200
 API_KEY=sua_chave_api_aqui
-BASE_WEBHOOK_URL=http://localhost:200/
+BASE_WEBHOOK_URL=whatsapp-backend-production-9cdd.up.railway.app/
 
 # Configuração do navegador
 HEADLESS_BROWSER=false  # true para headless, false para visível
@@ -172,7 +172,7 @@ npm start
 
 6. **Acesse a interface**:
 ```
-http://localhost:200
+whatsapp-backend-production-9cdd.up.railway.app
 ```
 
 ## Configuração
@@ -182,9 +182,9 @@ http://localhost:200
 | Variável | Padrão | Descrição |
 |----------|--------|-----------|
 | `PORT` | 200 | Porta do servidor |
-| `API_KEY` | "" | Chave de autenticação da API |
+| `API_KEY` | **(obrigatória)** | Chave de autenticação da API - OBRIGATÓRIA para segurança |
 | `HEADLESS_BROWSER` | true | Executar navegador em modo headless |
-| `BASE_WEBHOOK_URL` | localhost:200 | URL base para webhooks |
+| `BASE_WEBHOOK_URL` | (opcional) | URL base para webhooks - Se não configurado, eventos não serão enviados |
 | `SESSIONS_PATH` | ./sessions | Diretório para salvar sessões |
 | `WEB_VERSION` | 2.2328.5 | Versão do WhatsApp Web |
 | `RATE_LIMIT_MAX` | 1000 | Limite de requisições |
@@ -305,7 +305,7 @@ x-api-key: SUA_CHAVE_API
 
 ### 📱 Interface Web
 
-A interface web está disponível em `http://localhost:200` e inclui:
+A interface web está disponível em `whatsapp-backend-production-9cdd.up.railway.app` e inclui:
 
 - Dashboard de sessões com estatísticas
 - Gerenciamento visual de sessões

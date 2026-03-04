@@ -3,6 +3,14 @@ const { globalApiKey, disabledCallbacks, verboseLogs } = require('./config')
 
 // Trigger webhook endpoint com tratamento melhorado de erros
 const triggerWebhook = (webhookURL, sessionId, dataType, data) => {
+  // Se não houver webhook configurado, apenas retornar
+  if (!webhookURL || !webhookURL.trim()) {
+    if (verboseLogs) {
+      console.log(`⚠️ [Webhook] Nenhum webhook configurado para ${dataType}`)
+    }
+    return Promise.resolve()
+  }
+  
   if (verboseLogs) {
     console.log(`📤 [Webhook] ${dataType} → ${webhookURL.split('/').pop()}`)
   }

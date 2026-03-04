@@ -5,10 +5,24 @@ require('dotenv').config()
 // Start the server
 const port = process.env.PORT || 3000
 
-// Check if BASE_WEBHOOK_URL environment variable is available
+// Validar API_KEY (OBRIGATÓRIA para segurança)
+if (!globalApiKey || globalApiKey.trim() === '') {
+  console.error('\n' + '='.repeat(60))
+  console.error('❌ ERRO CRÍTICO: API_KEY não configurada!')
+  console.error('='.repeat(60))
+  console.error('⚠️  A API_KEY é OBRIGATÓRIA para proteger seus endpoints!')
+  console.error('⚠️  Sem ela, qualquer pessoa pode acessar e controlar sua API.')
+  console.error('\n📝 Configure no arquivo .env:')
+  console.error('   API_KEY=sua-chave-secreta-aqui')
+  console.error('\n🚫 Servidor NÃO SERÁ INICIADO sem API_KEY configurada.')
+  console.error('='.repeat(60) + '\n')
+  process.exit(1)
+}
+
+// Check if BASE_WEBHOOK_URL environment variable is available (OPCIONAL)
 if (!baseWebhookURL) {
-  console.error('BASE_WEBHOOK_URL environment variable is not available. Exiting...')
-  process.exit(1) // Terminate the application with an error code
+  console.warn('⚠️ BASE_WEBHOOK_URL não configurado')
+  console.warn('ℹ️ O servidor funcionará normalmente, mas eventos não serão enviados para webhooks')
 }
 
 app.listen(port, () => {
@@ -17,7 +31,7 @@ app.listen(port, () => {
   console.log('='.repeat(60))
   console.log(`📍 Porta: ${port}`)
   console.log(`🌐 URL Base: http://localhost:${port}`)
-  console.log(`🔗 Webhook URL: ${baseWebhookURL}`)
+  console.log(`🔗 Webhook URL: ${baseWebhookURL || '(não configurado)'}`)
   console.log(`🔑 API Key configurada: ${globalApiKey ? '✓ Sim' : '✗ Não'}`)
   
   if (enableSwaggerEndpoint) {

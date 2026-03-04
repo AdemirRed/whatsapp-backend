@@ -35,7 +35,7 @@ $headers = @{
     "x-api-key" = "redblack"
 }
 
-Invoke-WebRequest -Uri "http://localhost:200/session/start/teste" -Headers $headers
+Invoke-WebRequest -Uri "whatsapp-backend-production-9cdd.up.railway.app/session/start/teste" -Headers $headers
 ```
 
 ## 📊 Verificando os Webhooks

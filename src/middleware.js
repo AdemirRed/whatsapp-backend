@@ -18,12 +18,16 @@ const apikey = async (req, res, next) => {
         }
       }
   */
-  if (globalApiKey) {
-    const apiKey = req.headers['x-api-key']
-    if (!apiKey || apiKey !== globalApiKey) {
-      return sendErrorResponse(res, 403, 'Invalid API key')
-    }
+  // API_KEY é OBRIGATÓRIA para segurança
+  if (!globalApiKey) {
+    return sendErrorResponse(res, 500, 'API_KEY não configurada no servidor. Configure no .env')
   }
+  
+  const apiKey = req.headers['x-api-key']
+  if (!apiKey || apiKey !== globalApiKey) {
+    return sendErrorResponse(res, 403, 'Invalid API key')
+  }
+  
   next()
 }
 
