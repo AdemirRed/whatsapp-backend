@@ -463,14 +463,22 @@ const getProfilePictureUrl = async (req, res) => {
     const { contactId } = req.body
     const client = sessions.get(req.params.sessionId)
 
-    // Busca a foto de perfil diretamente pelo WID usando profilePicFind,
-    // evitando requestProfilePicFromServer que depende do contato estar
-    // carregado no store interno do WhatsApp Web (causa TypeError: isNewsletter)
+    // Usa window.require() diretamente (window.Store foi removido na nova versão do whatsapp-web.js)
+    // Tenta requestProfilePicFromServer (v >= 2.3000.0) com fallback para profilePicFind
     const result = await client.pupPage.evaluate(async (contactId) => {
       try {
-        const chatWid = window.Store.WidFactory.createWid(contactId)
-        // profilePicFind: busca direta no servidor pelo WID, não precisa do contato no store
-        const profilePic = await window.Store.ProfilePic.profilePicFind(chatWid)
+        const chatWid = window.require('WAWebWidFactory').createWid(contactId)
+        const ProfilePic = window.require('WAWebContactProfilePicThumbBridge')
+        let profilePic
+        try {
+          profilePic = await ProfilePic.requestProfilePicFromServer(chatWid)
+        } catch (e) {
+          try {
+            profilePic = await ProfilePic.profilePicFind(chatWid)
+          } catch (e2) {
+            return null
+          }
+        }
         return profilePic ? profilePic.eurl || null : null
       } catch (err) {
         return null
