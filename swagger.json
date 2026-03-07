@@ -948,6 +948,538 @@
         ]
       }
     },
+    "/diagnostics/session/{sessionId}": {
+      "get": {
+        "tags": [
+          "Session"
+        ],
+        "summary": "Get session event diagnostics",
+        "description": "Returns detailed event diagnostics for a session including event counters, recent events, and polling status.",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unique identifier for the session (alphanumeric and - allowed)",
+            "example": "redblack"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session diagnostics data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "sessionId": {
+                      "type": "string",
+                      "example": "session-ademir"
+                    },
+                    "diagnostics": {
+                      "type": "object",
+                      "properties": {
+                        "counters": {
+                          "type": "object",
+                          "properties": {
+                            "message": {
+                              "type": "number",
+                              "example": 42
+                            },
+                            "message_create": {
+                              "type": "number",
+                              "example": 38
+                            },
+                            "qr": {
+                              "type": "number",
+                              "example": 1
+                            },
+                            "ready": {
+                              "type": "number",
+                              "example": 1
+                            },
+                            "lastMessageTimestamp": {
+                              "type": "string",
+                              "example": "2026-01-29T10:30:00Z"
+                            }
+                          }
+                        },
+                        "recentEvents": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "event": {
+                                "type": "string",
+                                "example": "message"
+                              },
+                              "timestamp": {
+                                "type": "string",
+                                "example": "2026-01-29T10:30:00Z"
+                              },
+                              "from": {
+                                "type": "string",
+                                "example": "555197756708@c.us"
+                              }
+                            }
+                          }
+                        },
+                        "pollingActive": {
+                          "type": "boolean",
+                          "example": false
+                        }
+                      }
+                    },
+                    "clientInfo": {
+                      "type": "object",
+                      "properties": {
+                        "connected": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "state": {
+                          "type": "string",
+                          "example": "CONNECTED"
+                        },
+                        "pupPageExists": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "storeExists": {
+                          "type": "boolean",
+                          "example": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/diagnostics/test/{sessionId}": {
+      "get": {
+        "tags": [
+          "Session"
+        ],
+        "summary": "Test message retrieval",
+        "description": "Manually tests if the client can retrieve messages from WhatsApp by fetching recent chats and their messages.",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unique identifier for the session (alphanumeric and - allowed)",
+            "example": "redblack"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Message retrieval test results.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "sessionId": {
+                      "type": "string",
+                      "example": "session-ademir"
+                    },
+                    "state": {
+                      "type": "string",
+                      "example": "CONNECTED"
+                    },
+                    "totalChats": {
+                      "type": "number",
+                      "example": 50
+                    },
+                    "testedChats": {
+                      "type": "number",
+                      "example": 5
+                    },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "chatId": {
+                            "type": "string",
+                            "example": "555197756708@c.us"
+                          },
+                          "chatName": {
+                            "type": "string",
+                            "example": "Exemplo"
+                          },
+                          "messageCount": {
+                            "type": "number",
+                            "example": 5
+                          },
+                          "lastMessage": {
+                            "type": "object",
+                            "properties": {
+                              "from": {
+                                "type": "string",
+                                "example": "555197756708@c.us"
+                              },
+                              "timestamp": {
+                                "type": "number",
+                                "example": 1738147200
+                              },
+                              "body": {
+                                "type": "string",
+                                "example": "Olá, tudo bem?"
+                              },
+                              "hasMedia": {
+                                "type": "boolean",
+                                "example": false
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Session not connected.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/diagnostics/health": {
+      "get": {
+        "tags": [
+          "Session"
+        ],
+        "summary": "System health check",
+        "description": "Returns overall system health including all sessions status and event diagnostics.",
+        "responses": {
+          "200": {
+            "description": "System health status.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "totalSessions": {
+                      "type": "number",
+                      "example": 2
+                    },
+                    "connectedSessions": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "sessions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "sessionId": {
+                            "type": "string",
+                            "example": "session-ademir"
+                          },
+                          "state": {
+                            "type": "string",
+                            "example": "CONNECTED"
+                          },
+                          "connected": {
+                            "type": "boolean",
+                            "example": true
+                          },
+                          "eventCounters": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "number",
+                                "example": 42
+                              },
+                              "message_create": {
+                                "type": "number",
+                                "example": 38
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/diagnostics/polling/start/{sessionId}": {
+      "post": {
+        "tags": [
+          "Session"
+        ],
+        "summary": "Start message polling",
+        "description": "Activates polling-based message detection as a fallback when native events are not working.",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unique identifier for the session (alphanumeric and - allowed)",
+            "example": "redblack"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Polling started successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Polling iniciado com sucesso"
+                    },
+                    "sessionId": {
+                      "type": "string",
+                      "example": "session-ademir"
+                    },
+                    "intervalSeconds": {
+                      "type": "number",
+                      "example": 5
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Polling already active.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "intervalSeconds": {
+                    "type": "number",
+                    "example": 5,
+                    "description": "Polling interval in seconds (default: 5)"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/diagnostics/polling/stop/{sessionId}": {
+      "post": {
+        "tags": [
+          "Session"
+        ],
+        "summary": "Stop message polling",
+        "description": "Deactivates polling-based message detection for a session.",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unique identifier for the session (alphanumeric and - allowed)",
+            "example": "redblack"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Polling stopped successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Polling parado com sucesso"
+                    },
+                    "sessionId": {
+                      "type": "string",
+                      "example": "session-ademir"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ]
+      }
+    },
     "/client/getClassInfo/{sessionId}": {
       "get": {
         "tags": [
@@ -992,6 +1524,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1052,6 +1594,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1148,6 +1700,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1237,6 +1799,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1297,6 +1869,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1350,6 +1932,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1446,6 +2038,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1535,6 +2137,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1588,6 +2200,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1684,6 +2306,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1766,6 +2398,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1862,6 +2504,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1915,6 +2567,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2011,6 +2673,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2100,6 +2772,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2153,6 +2835,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2259,6 +2951,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2348,6 +3050,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2430,6 +3142,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2576,6 +3298,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2658,6 +3390,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2764,6 +3506,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2846,6 +3598,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2945,6 +3707,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3162,6 +3934,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3222,6 +4004,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3275,6 +4067,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3371,6 +4173,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3453,6 +4265,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3559,6 +4381,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3641,6 +4473,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3737,6 +4579,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3819,6 +4671,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3915,6 +4777,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3968,6 +4840,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4064,6 +4946,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4146,6 +5038,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4242,6 +5144,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4324,6 +5236,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4430,6 +5352,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4512,6 +5444,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4608,6 +5550,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4690,6 +5642,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4786,6 +5748,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4868,6 +5840,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4964,6 +5946,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5046,6 +6038,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -5142,6 +6144,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5224,6 +6236,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -5320,6 +6342,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5402,6 +6434,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -5498,6 +6540,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5580,6 +6632,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -5676,6 +6738,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5758,6 +6830,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -5854,6 +6936,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5936,6 +7028,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6042,6 +7144,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -6134,6 +7246,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6240,6 +7362,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -6332,6 +7464,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6438,6 +7580,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -6530,6 +7682,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6636,6 +7798,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -6728,6 +7900,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6834,6 +8016,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -6926,6 +8118,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -7032,6 +8234,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -7124,6 +8336,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -7264,6 +8486,16 @@
           },
           "500": {
             "description": "Server Failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -7421,6 +8653,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -7499,6 +8741,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -7595,6 +8847,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -7677,6 +8939,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -7773,6 +9045,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -7855,6 +9137,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -7951,6 +9243,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -8040,6 +9342,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -8122,6 +9434,16 @@
           },
           "422": {
             "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -8239,6 +9561,16 @@
           },
           "500": {
             "description": "Server Failure.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable.",
             "content": {
               "application/json": {
                 "schema": {

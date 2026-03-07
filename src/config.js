@@ -25,6 +25,8 @@ const rateLimitWindowMs = process.env.RATE_LIMIT_WINDOW_MS || 1000
 const recoverSessions = (process.env.RECOVER_SESSIONS || '').toLowerCase() === 'true'
 const headlessBrowser = (process.env.HEADLESS_BROWSER || 'true').toLowerCase() === 'true'
 const verboseLogs = (process.env.VERBOSE_LOGS || 'false').toLowerCase() === 'true'
+const autoStartPolling = (process.env.AUTO_START_POLLING || 'false').toLowerCase() === 'true'
+const pollingIntervalSeconds = parseInt(process.env.POLLING_INTERVAL_SECONDS) || 5
 
 module.exports = {
   sessionFolderPath,
@@ -44,5 +46,7 @@ module.exports = {
   rateLimitWindowMs,
   recoverSessions,
   headlessBrowser,
-  verboseLogs
+  verboseLogs,
+  autoStartPolling,
+  pollingIntervalSeconds
 }

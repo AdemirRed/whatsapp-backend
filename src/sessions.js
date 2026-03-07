@@ -4,8 +4,72 @@ const path = require('path')
 const sessions = new Map()
 const sessionRetryCount = new Map() // Rastreamento de tentativas de reinício
 const sessionRestartLock = new Map() // Lock para evitar múltiplas restaurações simultâneas
-const { baseWebhookURL, sessionFolderPath, maxAttachmentSize, setMessagesAsSeen, webVersion, webVersionCacheType, recoverSessions, headlessBrowser, verboseLogs } = require('./config')
+const { baseWebhookURL, sessionFolderPath, maxAttachmentSize, setMessagesAsSeen, webVersion, webVersionCacheType, recoverSessions, headlessBrowser, verboseLogs, autoStartPolling, pollingIntervalSeconds } = require('./config')
 const { triggerWebhook, waitForNestedObject, checkIfEventisEnabled, applyMarkedUnreadPatch } = require('./utils')
+
+// Sistema de Diagnóstico de Eventos
+const eventCounters = new Map() // Contador de eventos por sessão
+const eventTimestamps = new Map() // Últimos timestamps de eventos
+const pollingIntervals = new Map() // Intervalos de polling ativo
+
+// Inicializar contadores de eventos para uma sessão
+function initEventCounters(sessionId) {
+  eventCounters.set(sessionId, {
+    message: 0,
+    message_create: 0,
+    message_ack: 0,
+    qr: 0,
+    ready: 0,
+    authenticated: 0,
+    lastMessageTimestamp: null,
+    lastCreateTimestamp: null,
+    sessionStartTime: new Date().toISOString()
+  })
+  eventTimestamps.set(sessionId, [])
+}
+
+// Registrar evento disparado
+function logEventFired(sessionId, eventType, extraData = {}) {
+  const counters = eventCounters.get(sessionId)
+  if (!counters) return
+
+  const timestamp = new Date().toISOString()
+  
+  // Incrementar contador
+  if (counters[eventType] !== undefined) {
+    counters[eventType]++
+  }
+  
+  // Atualizar timestamp específico
+  if (eventType === 'message') {
+    counters.lastMessageTimestamp = timestamp
+  } else if (eventType === 'message_create') {
+    counters.lastCreateTimestamp = timestamp
+  }
+  
+  // Guardar histórico (últimos 50 eventos)
+  const timestamps = eventTimestamps.get(sessionId) || []
+  timestamps.push({
+    event: eventType,
+    timestamp,
+    ...extraData
+  })
+  if (timestamps.length > 50) timestamps.shift()
+  eventTimestamps.set(sessionId, timestamps)
+  
+  if (verboseLogs) {
+    console.log(`📊 [${sessionId}] Evento '${eventType}' disparado (total: ${counters[eventType]})`, extraData)
+  }
+}
+
+// Obter diagnóstico de eventos de uma sessão
+function getEventDiagnostics(sessionId) {
+  return {
+    counters: eventCounters.get(sessionId) || {},
+    recentEvents: (eventTimestamps.get(sessionId) || []).slice(-10),
+    pollingActive: pollingIntervals.has(sessionId)
+  }
+}
 
 // Constantes para controle de retry
 const MAX_RETRY_ATTEMPTS = 3
@@ -351,6 +415,10 @@ const initializeEvents = (client, sessionId) => {
         
         console.log(`✅ Sessão ${sessionId} pronta e conectada!`)
         
+        // Inicializar contadores de eventos
+        initEventCounters(sessionId)
+        logEventFired(sessionId, 'ready')
+        
         // Aplicar patch para corrigir erro markedUnread
         await applyMarkedUnreadPatch(client, sessionId)
         
@@ -358,6 +426,12 @@ const initializeEvents = (client, sessionId) => {
         sessionRetryCount.set(sessionId, 0)
         sessionRestartLock.delete(sessionId)
         triggerWebhook(sessionWebhook, sessionId, 'ready')
+        
+        // Auto-start polling se configurado
+        if (autoStartPolling && !isPollingActive(sessionId)) {
+          console.log(`🔄 Auto-iniciando polling para ${sessionId} (intervalo: ${pollingIntervalSeconds}s)`)
+          startMessagePolling(sessionId, client, sessionWebhook, pollingIntervalSeconds)
+        }
       })
     })
 
@@ -623,6 +697,13 @@ const initializeEvents = (client, sessionId) => {
           return // Ignorar mensagens de status do WhatsApp
         }
         
+        // Logging detalhado para diagnóstico
+        logEventFired(sessionId, 'message', {
+          from: message.from,
+          hasMedia: message.hasMedia,
+          type: message.type
+        })
+        
         triggerWebhook(sessionWebhook, sessionId, 'message', { message })
         if (message.hasMedia && message._data?.size < maxAttachmentSize) {
           // custom service event
@@ -677,6 +758,14 @@ const initializeEvents = (client, sessionId) => {
         if (message.from === 'status@broadcast' || message.isStatus) {
           return // Ignorar mensagens de status do WhatsApp
         }
+        
+        // Logging detalhado para diagnóstico
+        logEventFired(sessionId, 'message_create', {
+          from: message.from,
+          hasMedia: message.hasMedia,
+          type: message.type,
+          fromMe: message.fromMe
+        })
         
         triggerWebhook(sessionWebhook, sessionId, 'message_create', { message })
         if (setMessagesAsSeen) {
@@ -784,6 +873,170 @@ const initializeEvents = (client, sessionId) => {
         triggerWebhook(sessionWebhook, sessionId, 'unread_count', { chat })
       })
     })
+}
+
+/**
+ * Sistema de Fallback com Polling
+ * 
+ * Quando os eventos nativos do whatsapp-web.js não estão funcionando,
+ * este sistema faz polling periódico dos chats para detectar novas mensagens.
+ * 
+ * Características:
+ * 1. Verifica chats ativos a cada X segundos (configurável)
+ * 2. Detecta novas mensagens comparando timestamps
+ * 3. Dispara webhooks manualmente para manter compatibilidade
+ * 4. Pode ser ativado/desativado por sessão
+ * 5. Registra mensagens já processadas para evitar duplicatas
+ */
+
+// Mapa para rastrear mensagens já processadas
+const processedMessages = new Map()
+
+// Inicializar set de mensagens processadas para uma sessão
+function initProcessedMessages(sessionId) {
+  if (!processedMessages.has(sessionId)) {
+    processedMessages.set(sessionId, new Set())
+  }
+}
+
+// Verificar se mensagem já foi processada
+function isMessageProcessed(sessionId, messageId) {
+  const processed = processedMessages.get(sessionId)
+  if (!processed) return false
+  return processed.has(messageId)
+}
+
+// Marcar mensagem como processada (manter apenas últimas 1000)
+function markMessageProcessed(sessionId, messageId) {
+  let processed = processedMessages.get(sessionId)
+  if (!processed) {
+    processed = new Set()
+    processedMessages.set(sessionId, processed)
+  }
+  
+  processed.add(messageId)
+  
+  // Limitar tamanho do Set
+  if (processed.size > 1000) {
+    const arr = Array.from(processed)
+    processed.clear()
+    arr.slice(-800).forEach(id => processed.add(id))
+  }
+}
+
+// Sistema de polling para detectar mensagens
+async function startMessagePolling(sessionId, client, sessionWebhook, intervalSeconds = 5) {
+  // Verificar se já existe polling ativo
+  if (pollingIntervals.has(sessionId)) {
+    console.log(`⚠️ Polling já está ativo para ${sessionId}`)
+    return
+  }
+  
+  initProcessedMessages(sessionId)
+  
+  console.log(`🔄 Iniciando polling de mensagens para ${sessionId} (intervalo: ${intervalSeconds}s)`)
+  
+  const pollFunction = async () => {
+    try {
+      const state = await client.getState()
+      if (state !== 'CONNECTED') {
+        return // Não fazer polling se não estiver conectado
+      }
+      
+      // Buscar chats com mensagens não lidas
+      const chats = await client.getChats()
+      const unreadChats = chats.filter(chat => chat.unreadCount > 0)
+      
+      if (verboseLogs && unreadChats.length > 0) {
+        console.log(`📨 Polling ${sessionId}: ${unreadChats.length} chats com mensagens não lidas`)
+      }
+      
+      for (const chat of unreadChats) {
+        try {
+          // Buscar últimas mensagens do chat
+          const messages = await chat.fetchMessages({ limit: chat.unreadCount + 5 })
+          
+          for (const message of messages) {
+            // Filtrar mensagens de status
+            if (message.from === 'status@broadcast' || message.isStatus) {
+              continue
+            }
+            
+            // Verificar se mensagem já foi processada
+            if (isMessageProcessed(sessionId, message.id._serialized)) {
+              continue
+            }
+            
+            // Marcar como processada
+            markMessageProcessed(sessionId, message.id._serialized)
+            
+            // Disparar webhook manualmente (simulando evento)
+            console.log(`🔔 [POLLING] Nova mensagem detectada em ${sessionId}: ${message.from}`)
+            logEventFired(sessionId, 'message_polled', {
+              from: message.from,
+              hasMedia: message.hasMedia,
+              type: message.type,
+              method: 'polling'
+            })
+            
+            // Disparar webhook igual aos eventos nativos
+            await triggerWebhook(sessionWebhook, sessionId, 'message', { message })
+            
+            // Se tiver mídia, baixar também
+            if (message.hasMedia && message._data?.size < maxAttachmentSize) {
+              try {
+                const messageMedia = await message.downloadMedia()
+                await triggerWebhook(sessionWebhook, sessionId, 'media', { messageMedia, message })
+              } catch (e) {
+                console.log('Download media error (polling):', e.message)
+              }
+            }
+            
+            // Marcar como lida se configurado
+            if (setMessagesAsSeen) {
+              try {
+                if (chat && typeof chat.sendSeen === 'function') {
+                  await chat.sendSeen()
+                }
+              } catch (error) {
+                // Ignorar erros
+              }
+            }
+          }
+        } catch (chatError) {
+          if (verboseLogs) {
+            console.log(`⚠️ Erro ao processar chat no polling (${sessionId}):`, chatError.message)
+          }
+        }
+      }
+    } catch (error) {
+      if (verboseLogs) {
+        console.log(`⚠️ Erro no polling de mensagens (${sessionId}):`, error.message)
+      }
+    }
+  }
+  
+  // Executar polling imediatamente e depois em intervalos
+  pollFunction()
+  const intervalId = setInterval(pollFunction, intervalSeconds * 1000)
+  pollingIntervals.set(sessionId, intervalId)
+}
+
+// Parar polling de mensagens
+function stopMessagePolling(sessionId) {
+  const intervalId = pollingIntervals.get(sessionId)
+  if (intervalId) {
+    clearInterval(intervalId)
+    pollingIntervals.delete(sessionId)
+    console.log(`⏹️ Polling parado para ${sessionId}`)
+    return true
+  }
+  return false
+}
+
+// Verificar se polling está ativo
+function isPollingActive(sessionId) {
+  return pollingIntervals.has(sessionId)
 }
 
 // Function to delete client session folder
@@ -900,5 +1153,13 @@ module.exports = {
   validateSession,
   deleteSession,
   reloadSession,
-  flushSessions
+  flushSessions,
+  // Funções de diagnóstico
+  getEventDiagnostics,
+  eventCounters,
+  pollingIntervals,
+  // Funções de polling
+  startMessagePolling,
+  stopMessagePolling,
+  isPollingActive
 }
