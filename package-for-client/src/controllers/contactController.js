@@ -174,7 +174,13 @@ const getProfilePicUrl = async (req, res) => {
     const client = sessions.get(req.params.sessionId)
     const contact = await client.getContactById(contactId)
     if (!contact) { sendErrorResponse(res, 404, 'Contact not Found') }
-    const result = await contact.getProfilePicUrl() || null
+    let result = null
+    try {
+      result = await contact.getProfilePicUrl() || null
+    } catch (innerErr) {
+      // Captura erros internos do WhatsApp Web (ex: contato sem foto ou propriedade 'isNewsletter' indefinida)
+      result = null
+    }
     res.json({ success: true, result })
   } catch (error) {
     sendErrorResponse(res, 500, error.message)
