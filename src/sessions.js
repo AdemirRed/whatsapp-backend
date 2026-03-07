@@ -163,35 +163,45 @@ const validateSession = async (sessionId) => {
 const restoreSessions = () => {
   try {
     if (!fs.existsSync(sessionFolderPath)) {
-      fs.mkdirSync(sessionFolderPath) // Create the session directory if it doesn't exist
+      fs.mkdirSync(sessionFolderPath) // Cria a pasta de sessões se não existir
     }
-    // Read the contents of the folder
+    // Lê o conteúdo da pasta de sessões
     fs.readdir(sessionFolderPath, (_, files) => {
-      // Iterate through the files in the parent folder
+      if (!files) return
+
+      // Filtra apenas pastas de sessão válidas
       const sessionFiles = files.filter(file => file.match(/^session-(.+)$/))
-      
-      if (sessionFiles.length > 0) {
-        console.log(`\n📱 Restaurando ${sessionFiles.length} sessão(ões) existente(s)...`)
-      }
-      
+
+      if (sessionFiles.length === 0) return
+
+      console.log(`\n📱 Restaurando ${sessionFiles.length} sessão(ões) existente(s)...`)
+
+      // Restaura sessões com delay escalonado de 5s entre cada uma
+      // Evita que múltiplas instâncias do Chrome subam ao mesmo tempo e sobrecarreguem a memória
+      let index = 0
       for (const file of sessionFiles) {
-        // Use regular expression to extract the string from the folder name
         const match = file.match(/^session-(.+)$/)
-        if (match) {
-          const sessionId = match[1]
-          // Verificar se a sessão já não está sendo restaurada
+        if (!match) continue
+
+        const sessionId = match[1]
+
+        if (sessions.has(sessionId) || sessionRestartLock.get(sessionId)) {
+          console.log(`   ↳ ⏭️ Sessão ${sessionId} já está em processo de restauração, ignorando...`)
+          continue
+        }
+
+        const delayMs = index * 5000 // 5 segundos de intervalo entre cada sessão
+        index++
+
+        setTimeout(() => {
           if (!sessions.has(sessionId) && !sessionRestartLock.get(sessionId)) {
             console.log(`   ↳ 🔄 Restaurando sessão: ${sessionId}`)
             setupSession(sessionId)
-          } else {
-            console.log(`   ↳ ⏭️ Sessão ${sessionId} já está em processo de restauração, ignorando...`)
           }
-        }
+        }, delayMs)
       }
-      
-      if (sessionFiles.length > 0) {
-        console.log(`✅ Todas as sessões foram iniciadas!\n`)
-      }
+
+      console.log(`✅ Agendadas ${index} sessão(ões) para restauração (intervalo de 5s entre cada uma)\n`)
     })
   } catch (error) {
     console.log(error)
