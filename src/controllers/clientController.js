@@ -462,13 +462,30 @@ const getProfilePictureUrl = async (req, res) => {
   try {
     const { contactId } = req.body
     const client = sessions.get(req.params.sessionId)
-    let result = null
-    try {
-      result = await client.getProfilePicUrl(contactId)
-    } catch (innerErr) {
-      // Captura erros internos do WhatsApp Web (ex: contato sem foto ou não carregado no store)
-      result = null
-    }
+
+    // Implementação direta via pupPage para contornar o bug do isNewsletter no requestProfilePicFromServer
+    // Tenta o método moderno (requestProfilePicFromServer) e faz fallback para o método legado (profilePicFind)
+    const result = await client.pupPage.evaluate(async (contactId) => {
+      try {
+        const chatWid = window.Store.WidFactory.createWid(contactId)
+        let profilePic
+        try {
+          // Método moderno (versões >= 2.3000.0)
+          profilePic = await window.Store.ProfilePic.requestProfilePicFromServer(chatWid)
+        } catch (e) {
+          // Fallback: método legado, não depende do contact.isNewsletter
+          try {
+            profilePic = await window.Store.ProfilePic.profilePicFind(chatWid)
+          } catch (e2) {
+            return null
+          }
+        }
+        return profilePic ? profilePic.eurl || null : null
+      } catch (err) {
+        return null
+      }
+    }, contactId)
+
     res.json({ success: true, result: result || null })
   } catch (error) {
     sendErrorResponse(res, 500, error.message)

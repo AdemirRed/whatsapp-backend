@@ -174,14 +174,28 @@ const getProfilePicUrl = async (req, res) => {
     const client = sessions.get(req.params.sessionId)
     const contact = await client.getContactById(contactId)
     if (!contact) { sendErrorResponse(res, 404, 'Contact not Found') }
-    let result = null
-    try {
-      result = await contact.getProfilePicUrl() || null
-    } catch (innerErr) {
-      // Captura erros internos do WhatsApp Web (ex: contato sem foto ou propriedade 'isNewsletter' indefinida)
-      result = null
-    }
-    res.json({ success: true, result })
+
+    // Implementação direta via pupPage para contornar o bug do isNewsletter no requestProfilePicFromServer
+    const result = await client.pupPage.evaluate(async (serializedId) => {
+      try {
+        const chatWid = window.Store.WidFactory.createWid(serializedId)
+        let profilePic
+        try {
+          profilePic = await window.Store.ProfilePic.requestProfilePicFromServer(chatWid)
+        } catch (e) {
+          try {
+            profilePic = await window.Store.ProfilePic.profilePicFind(chatWid)
+          } catch (e2) {
+            return null
+          }
+        }
+        return profilePic ? profilePic.eurl || null : null
+      } catch (err) {
+        return null
+      }
+    }, contact.id._serialized)
+
+    res.json({ success: true, result: result || null })
   } catch (error) {
     sendErrorResponse(res, 500, error.message)
   }
