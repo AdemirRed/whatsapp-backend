@@ -175,23 +175,22 @@ const getProfilePicUrl = async (req, res) => {
     const contact = await client.getContactById(contactId)
     if (!contact) { sendErrorResponse(res, 404, 'Contact not Found') }
 
-    // Usa window.require() diretamente (window.Store foi removido na nova versão do whatsapp-web.js)
-    // Tenta requestProfilePicFromServer (v >= 2.3000.0) com fallback para profilePicFind
+    // Pré-carrega o contato no store interno do WA Web antes de chamar requestProfilePicFromServer.
     const result = await client.pupPage.evaluate(async (serializedId) => {
       try {
-        const chatWid = window.require('WAWebWidFactory').createWid(serializedId)
-        const ProfilePic = window.require('WAWebContactProfilePicThumbBridge')
-        let profilePic
+        const chatWid = window.Store.WidFactory.createWid(serializedId)
+        try { await window.Store.Contact.find(chatWid) } catch (_) {}
         try {
-          profilePic = await ProfilePic.requestProfilePicFromServer(chatWid)
+          const profilePic = await window.Store.ProfilePic.requestProfilePicFromServer(chatWid)
+          return profilePic ? profilePic.eurl || null : null
         } catch (e) {
           try {
-            profilePic = await ProfilePic.profilePicFind(chatWid)
+            const profilePic = await window.Store.ProfilePic.profilePicFind(chatWid)
+            return profilePic ? profilePic.eurl || null : null
           } catch (e2) {
             return null
           }
         }
-        return profilePic ? profilePic.eurl || null : null
       } catch (err) {
         return null
       }
