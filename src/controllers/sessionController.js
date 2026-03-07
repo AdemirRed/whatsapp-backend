@@ -557,6 +557,17 @@ const requestPairingCode = async (req, res) => {
       // Tentar diferentes métodos de pairing code
       let pairingCode
       let method = 'unknown'
+
+      // Garantir que onCodeReceivedEvent está registrado na página antes de chamar requestPairingCode
+      // Isso resolve o erro "window.onCodeReceivedEvent is not a function" quando a sessão
+      // não foi inicializada com a opção pairWithPhoneNumber
+      try {
+        await session.pupPage.exposeFunction('onCodeReceivedEvent', (code) => {
+          return code
+        })
+      } catch (exposeErr) {
+        // Ignorar: função já foi registrada anteriormente
+      }
       
       try {
         // Método 1: Usar requestPairingCode nativo (mais confiável)

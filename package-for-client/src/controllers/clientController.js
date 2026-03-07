@@ -369,8 +369,14 @@ const getProfilePictureUrl = async (req, res) => {
   try {
     const { contactId } = req.body
     const client = sessions.get(req.params.sessionId)
-    const result = await client.getProfilePicUrl(contactId)
-    res.json({ success: true, result })
+    let result = null
+    try {
+      result = await client.getProfilePicUrl(contactId)
+    } catch (innerErr) {
+      // Captura erros internos do WhatsApp Web (ex: contato sem foto ou não carregado no store)
+      result = null
+    }
+    res.json({ success: true, result: result || null })
   } catch (error) {
     sendErrorResponse(res, 500, error.message)
   }
