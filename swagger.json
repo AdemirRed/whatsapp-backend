@@ -9880,36 +9880,7 @@
           {
             "apiKeyAuth": []
           }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "contactId": {
-                    "type": "string",
-                    "description": "Unique whatsApp identifier for the contact",
-                    "example": "555197756708@c.us"
-                  }
-                }
-              }
-            },
-            "application/xml": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "contactId": {
-                    "type": "string",
-                    "description": "Unique whatsApp identifier for the contact",
-                    "example": "555197756708@c.us"
-                  }
-                }
-              }
-            }
-          }
-        }
+        ]
       }
     },
     "/channel/getChannelByInviteCode/{sessionId}": {
@@ -10120,36 +10091,7 @@
           {
             "apiKeyAuth": []
           }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "contactId": {
-                    "type": "string",
-                    "description": "Unique whatsApp identifier for the contact",
-                    "example": "555197756708@c.us"
-                  }
-                }
-              }
-            },
-            "application/xml": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "contactId": {
-                    "type": "string",
-                    "description": "Unique whatsApp identifier for the contact",
-                    "example": "555197756708@c.us"
-                  }
-                }
-              }
-            }
-          }
-        }
+        ]
       },
       "put": {
         "tags": [
@@ -10259,36 +10201,7 @@
           {
             "apiKeyAuth": []
           }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "contactId": {
-                    "type": "string",
-                    "description": "Unique whatsApp identifier for the contact",
-                    "example": "555197756708@c.us"
-                  }
-                }
-              }
-            },
-            "application/xml": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "contactId": {
-                    "type": "string",
-                    "description": "Unique whatsApp identifier for the contact",
-                    "example": "555197756708@c.us"
-                  }
-                }
-              }
-            }
-          }
-        }
+        ]
       }
     },
     "/channel-editorial/posts/{id}": {
@@ -10327,36 +10240,7 @@
           {
             "apiKeyAuth": []
           }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "contactId": {
-                    "type": "string",
-                    "description": "Unique whatsApp identifier for the contact",
-                    "example": "555197756708@c.us"
-                  }
-                }
-              }
-            },
-            "application/xml": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "contactId": {
-                    "type": "string",
-                    "description": "Unique whatsApp identifier for the contact",
-                    "example": "555197756708@c.us"
-                  }
-                }
-              }
-            }
-          }
-        }
+        ]
       },
       "delete": {
         "tags": [

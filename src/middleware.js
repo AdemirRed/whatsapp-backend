@@ -206,6 +206,13 @@ const stickerSwagger = async (req, res, next) => {
   next()
 }
 
+const channelSwagger = async (req, res, next) => {
+  /*
+    #swagger.tags = ['Channel']
+  */
+  next()
+}
+
 module.exports = {
   sessionValidation,
   apikey,
@@ -218,5 +225,6 @@ module.exports = {
   groupChatSwagger,
   audioSwagger,
   stickerSwagger,
+  channelSwagger,
   rateLimiter
 }

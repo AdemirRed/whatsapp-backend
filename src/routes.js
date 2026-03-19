@@ -278,6 +278,7 @@ fileRouter.post('/convert', upload.single('file'), fileController.convertFileToB
  */
 const channelRouter = express.Router()
 channelRouter.use(middleware.apikey)
+channelRouter.use(middleware.channelSwagger)
 routes.use('/channel', channelRouter)
 
 channelRouter.get('/getChannels/:sessionId', [middleware.sessionNameValidation, middleware.sessionValidation], channelController.getChannels)

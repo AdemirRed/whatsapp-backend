@@ -148,4 +148,16 @@ const doc = {
   }
 }
 
-swaggerAutogen(outputFile, endpointsFiles, doc)
+// Gera o swagger e remove requestBody de endpoints GET/HEAD (inválido na spec)
+swaggerAutogen(outputFile, endpointsFiles, doc).then(() => {
+  const fs = require('fs')
+  const swagger = JSON.parse(fs.readFileSync(outputFile, 'utf8'))
+  for (const path of Object.values(swagger.paths || {})) {
+    for (const method of ['get', 'head']) {
+      if (path[method] && path[method].requestBody !== undefined) {
+        delete path[method].requestBody
+      }
+    }
+  }
+  fs.writeFileSync(outputFile, JSON.stringify(swagger, null, 2))
+})

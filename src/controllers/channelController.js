@@ -8,6 +8,7 @@ const getChannels = async (req, res) => {
   // #swagger.tags = ['Channel']
   // #swagger.summary = 'Lista todos os canais do WhatsApp'
   // #swagger.description = 'Retorna todos os canais (newsletters) do WhatsApp que o cliente segue ou administra.'
+  /* #swagger.requestBody = {} */
   try {
     const { sessionId } = req.params
     const client = sessions.get(sessionId)
