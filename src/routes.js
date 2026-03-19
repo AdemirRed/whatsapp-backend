@@ -18,6 +18,7 @@ const stickerController = require('./controllers/stickerController')
 const fileController = require('./controllers/fileController')
 const diagnosticsController = require('./controllers/diagnosticsController')
 const channelEditorialController = require('./controllers/channelEditorialController')
+const channelController = require('./controllers/channelController')
 
 /**
  * ================
@@ -269,6 +270,19 @@ routes.use('/file', fileRouter)
 
 fileRouter.get('/fileToBase64', fileController.fileToBase64Page)
 fileRouter.post('/convert', upload.single('file'), fileController.convertFileToBase64)
+
+/**
+ * ================
+ * CHANNEL ENDPOINTS
+ * ================
+ */
+const channelRouter = express.Router()
+channelRouter.use(middleware.apikey)
+routes.use('/channel', channelRouter)
+
+channelRouter.get('/getChannels/:sessionId', [middleware.sessionNameValidation, middleware.sessionValidation], channelController.getChannels)
+channelRouter.post('/getChannelByInviteCode/:sessionId', [middleware.sessionNameValidation, middleware.sessionValidation], channelController.getChannelByInviteCode)
+channelRouter.post('/searchChannels/:sessionId', [middleware.sessionNameValidation, middleware.sessionValidation], channelController.searchChannels)
 
 /**
  * ============================
