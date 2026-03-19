@@ -2,7 +2,7 @@
 
 const { sessions } = require('../sessions')
 const { sendErrorResponse } = require('../utils')
-const { MessageMedia } = require('whatsapp-web.js')
+const { MessageMedia, Poll } = require('whatsapp-web.js')
 
 /**
  * Helper: busca um canal pelo ID entre os canais do cliente.
@@ -43,7 +43,7 @@ const getChannels = async (req, res) => {
 // =====================
 const sendMessage = async (req, res) => {
   // #swagger.tags = ['Channel']
-  // #swagger.summary = 'Envia mensagem de texto ou mídia para o canal'
+  // #swagger.summary = 'Envia mensagem de texto, mídia ou enquete para o canal'
   /* #swagger.requestBody = {
     required: true,
     content: { "application/json": { schema: { type: 'object', properties: {
@@ -51,26 +51,36 @@ const sendMessage = async (req, res) => {
       content: { type: 'string', example: 'Texto da publicação' },
       mediaBase64: { type: 'string', description: 'Base64 da mídia (data:image/jpeg;base64,...)' },
       caption: { type: 'string' },
-      filename: { type: 'string', example: 'imagem.jpg' }
+      filename: { type: 'string', example: 'imagem.jpg' },
+      poll: { type: 'object', description: 'Enquete. Propriedades: pollName (string), pollOptions (array de strings), allowMultipleAnswers (bool)' }
     }, required: ['channelId'] } } } } */
   try {
     const { sessionId } = req.params
-    const { channelId, content, mediaBase64, caption, filename } = req.body
+    const { channelId, content, mediaBase64, caption, filename, poll } = req.body
     if (!channelId) return sendErrorResponse(res, 400, 'channelId é obrigatório')
 
     const client = sessions.get(sessionId)
     if (!client) return sendErrorResponse(res, 404, 'Sessão não encontrada')
 
-    let msgContent
     const msgOptions = { sendSeen: false, linkPreview: false }
+    let msgContent
 
-    if (mediaBase64) {
+    if (poll) {
+      // Enquete (Poll) — suportada em canais como tipo pollCreation
+      if (!poll.pollName) return sendErrorResponse(res, 400, 'poll.pollName é obrigatório')
+      if (!Array.isArray(poll.pollOptions) || poll.pollOptions.length < 2) {
+        return sendErrorResponse(res, 400, 'poll.pollOptions deve ter pelo menos 2 opções')
+      }
+      msgContent = new Poll(poll.pollName, poll.pollOptions, {
+        allowMultipleAnswers: poll.allowMultipleAnswers === true,
+      })
+    } else if (mediaBase64) {
       const media = base64ToMedia(mediaBase64, filename || null)
       msgOptions.media = media
       if (caption) msgOptions.caption = caption
       msgContent = caption || ''
     } else {
-      if (!content) return sendErrorResponse(res, 400, 'content é obrigatório quando não há mídia')
+      if (!content) return sendErrorResponse(res, 400, 'content é obrigatório quando não há mídia ou poll')
       msgContent = content
     }
 

@@ -205,6 +205,7 @@ messageRouter.post('/star/:sessionId', [middleware.sessionNameValidation, middle
 messageRouter.post('/unstar/:sessionId', [middleware.sessionNameValidation, middleware.sessionValidation], messageController.unstar)
 messageRouter.post('/edit/:sessionId', [middleware.sessionNameValidation, middleware.sessionValidation], messageController.editMessage)
 messageRouter.post('/sync/:sessionId', [middleware.sessionNameValidation, middleware.sessionValidation], messageController.syncMessages)
+messageRouter.post('/getPollVotes/:sessionId', [middleware.sessionNameValidation, middleware.sessionValidation], messageController.getPollVotes)
 
 /**
  * ================

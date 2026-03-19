@@ -722,6 +722,32 @@ const syncMessages = async (req, res) => {
   }
 }
 
+// =====================
+// POST /message/getPollVotes/:sessionId
+// =====================
+const getPollVotes = async (req, res) => {
+  // #swagger.tags = ['Message']
+  // #swagger.summary = 'Retorna os votos de uma enquete'
+  /* #swagger.requestBody = {
+    required: true,
+    content: { "application/json": { schema: { type: 'object', properties: {
+      messageId: { type: 'string', description: 'ID serializado da mensagem de tipo poll_creation', example: 'true_555197756708@c.us_ABCDEF1234567890' }
+    }, required: ['messageId'] } } } } */
+  try {
+    const { sessionId } = req.params
+    const { messageId } = req.body
+    if (!messageId) return sendErrorResponse(res, 400, 'messageId é obrigatório')
+
+    const client = sessions.get(sessionId)
+    if (!client) return sendErrorResponse(res, 404, 'Sessão não encontrada')
+
+    const votes = await client.getPollVotes(messageId)
+    res.json({ success: true, votes })
+  } catch (error) {
+    sendErrorResponse(res, 500, error.message || String(error))
+  }
+}
+
 module.exports = {
   getClassInfo,
   deleteMessage,
@@ -737,5 +763,6 @@ module.exports = {
   star,
   unstar,
   editMessage,
-  syncMessages
+  syncMessages,
+  getPollVotes,
 }
