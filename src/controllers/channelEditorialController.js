@@ -121,7 +121,8 @@ const sendToChannel = async (config, content) => {
   const client = sessions.get(config.sessionId)
   if (!client) throw new Error(`Sessão "${config.sessionId}" não encontrada ou não está ativa`)
 
-  await client.sendMessage(config.channel_id, content)
+  // sendSeen:false evita erro em canais (newsletters não suportam marcação de lido)
+  await client.sendMessage(config.channel_id, content, { sendSeen: false, linkPreview: false })
 }
 
 // ============================
