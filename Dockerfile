@@ -1,20 +1,32 @@
-# Use the official Node.js Alpine image as the base image
-FROM node:20-alpine
+# Usa Debian slim - mais estável que Alpine para Chromium em ambientes cloud
+FROM node:20-slim
 
 # Set the working directory
 WORKDIR /usr/src/app
 
-# Install Chromium
-ENV CHROME_BIN="/usr/bin/chromium-browser" \
+# Instala Chromium e dependências necessárias
+ENV CHROME_BIN="/usr/bin/chromium" \
     PUPPETEER_SKIP_CHROMIUM_DOWNLOAD="true" \
     NODE_ENV="production"
-RUN set -x \
-    && apk update \
-    && apk upgrade \
-    && apk add --no-cache \
-    udev \
-    ttf-freefont \
-    chromium
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    chromium \
+    fonts-freefont-ttf \
+    libx11-xcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    libgbm1 \
+    libasound2 \
+    libpangocairo-1.0-0 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libnspr4 \
+    libnss3 \
+    libxss1 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy package.json and package-lock.json to the working directory
 COPY package*.json ./

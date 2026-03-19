@@ -76,7 +76,7 @@ const sendErrorResponse = (res, status, message) => {
 }
 
 // Function to wait for a specific item not to be null
-const waitForNestedObject = (rootObj, nestedPath, maxWaitTime = 10000, interval = 100) => {
+const waitForNestedObject = (rootObj, nestedPath, maxWaitTime = 60000, interval = 100) => {
   const start = Date.now()
   return new Promise((resolve, reject) => {
     const checkObject = () => {
