@@ -40,7 +40,7 @@ RUN npm ci --only=production
 COPY . .
 
 # Expose the port the API will run on
-EXPOSE 3000
+EXPOSE 200
 
 # Start the API
 CMD ["npm", "start"]
