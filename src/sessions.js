@@ -195,8 +195,9 @@ const restoreSessions = () => {
     console.log('🧹 Limpando processos Chromium órfãos e locks residuais...')
     killOrphanChromium()
     // Remover TODOS os locks de todas as sessões antes de restaurar
+    // Usar find sem parentheses para evitar problema de escaping de template literals JS
     try {
-      execSync(`find "${sessionFolderPath}" \( -name "SingletonLock" -o -name "SingletonSocket" -o -name "SingletonCookie" \) -delete 2>/dev/null || true`, { shell: true, stdio: 'ignore' })
+      execSync(`find "${sessionFolderPath}" -name "SingletonLock" -delete 2>/dev/null; find "${sessionFolderPath}" -name "SingletonSocket" -delete 2>/dev/null; find "${sessionFolderPath}" -name "SingletonCookie" -delete 2>/dev/null; true`, { shell: true, stdio: 'ignore' })
     } catch (_) {}
 
     // Lê o conteúdo da pasta de sessões
@@ -244,7 +245,9 @@ const restoreSessions = () => {
 }
 
 // Remove Chromium SingletonLock para evitar erro "profile in use" após restart do container
-// Busca em sessionDir E Default/ pois Chromium pode guardar em qualquer um dos dois
+// Remove locks do Chromium — SingletonLock é um SYMLINK QUEBRADO no novo container
+// fs.existsSync retorna false para symlinks quebrados (segue o target), por isso
+// usamos fs.rmSync({ force: true }) que remove o symlink sem verificar o target
 const clearChromiumLocks = (sessionId) => {
   try {
     const sessionDir = path.join(sessionFolderPath, `session-${sessionId}`)
@@ -254,17 +257,16 @@ const clearChromiumLocks = (sessionId) => {
       for (const lockFile of lockFiles) {
         const lockPath = path.join(dir, lockFile)
         try {
-          if (fs.existsSync(lockPath)) {
-            fs.unlinkSync(lockPath)
-            console.log(`🔓 Lock removido: ${lockPath}`)
-          }
+          // force:true: não lança erro se não existir; remove symlink sem seguir o target
+          fs.rmSync(lockPath, { force: true })
         } catch (_) {}
       }
     }
-    // Garantia extra: find recursivo para pegar qualquer lock restante
+    // find com -maxdepth e sem parentheses para evitar problema de escaping em JS
     try {
-      execSync(`find "${sessionDir}" \( -name "SingletonLock" -o -name "SingletonSocket" -o -name "SingletonCookie" \) -delete 2>/dev/null || true`, { shell: true, stdio: 'ignore' })
+      execSync(`find "${sessionDir}" -name "SingletonLock" -delete 2>/dev/null; find "${sessionDir}" -name "SingletonSocket" -delete 2>/dev/null; find "${sessionDir}" -name "SingletonCookie" -delete 2>/dev/null; true`, { shell: true, stdio: 'ignore' })
     } catch (_) {}
+    console.log(`🔓 Locks limpos para sessão ${sessionId}`)
   } catch (e) {
     console.warn(`⚠️ Não foi possível remover lock para ${sessionId}:`, e.message)
   }
@@ -308,7 +310,7 @@ const setupSession = (sessionId) => {
           '--no-sandbox', 
           '--disable-setuid-sandbox', 
           '--disable-gpu', 
-          '--single-process',           // Desabilita SingletonLock — evita "profile in use" entre containers
+          '--no-process-singleton-dialog', // Impede o Chromium de bloquear por SingletonLock entre containers
           '--disable-dev-shm-usage',
           '--disable-accelerated-2d-canvas',
           '--no-first-run',
