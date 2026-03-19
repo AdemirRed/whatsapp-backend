@@ -189,6 +189,16 @@ const restoreSessions = () => {
     if (!fs.existsSync(sessionFolderPath)) {
       fs.mkdirSync(sessionFolderPath) // Cria a pasta de sessões se não existir
     }
+
+    // Matar processos Chromium órfãos do container anterior antes de restaurar
+    // (evita erro "profile in use" / Code: 21 no startup)
+    console.log('🧹 Limpando processos Chromium órfãos e locks residuais...')
+    killOrphanChromium()
+    // Remover TODOS os locks de todas as sessões antes de restaurar
+    try {
+      execSync(`find "${sessionFolderPath}" \( -name "SingletonLock" -o -name "SingletonSocket" -o -name "SingletonCookie" \) -delete 2>/dev/null || true`, { shell: true, stdio: 'ignore' })
+    } catch (_) {}
+
     // Lê o conteúdo da pasta de sessões
     fs.readdir(sessionFolderPath, (_, files) => {
       if (!files) return
@@ -234,22 +244,39 @@ const restoreSessions = () => {
 }
 
 // Remove Chromium SingletonLock para evitar erro "profile in use" após restart do container
+// Busca em sessionDir E Default/ pois Chromium pode guardar em qualquer um dos dois
 const clearChromiumLocks = (sessionId) => {
   try {
-    // LocalAuth salva em <sessionFolderPath>/session-<sessionId>/Default/
-    const profileDir = path.join(sessionFolderPath, `session-${sessionId}`, 'Default')
+    const sessionDir = path.join(sessionFolderPath, `session-${sessionId}`)
     const lockFiles = ['SingletonLock', 'SingletonSocket', 'SingletonCookie']
-    for (const lockFile of lockFiles) {
-      const lockPath = path.join(profileDir, lockFile)
-      if (fs.existsSync(lockPath)) {
-        fs.unlinkSync(lockPath)
-        console.log(`🔓 Lock removido: ${lockPath}`)
+    const searchDirs = [sessionDir, path.join(sessionDir, 'Default')]
+    for (const dir of searchDirs) {
+      for (const lockFile of lockFiles) {
+        const lockPath = path.join(dir, lockFile)
+        try {
+          if (fs.existsSync(lockPath)) {
+            fs.unlinkSync(lockPath)
+            console.log(`🔓 Lock removido: ${lockPath}`)
+          }
+        } catch (_) {}
       }
     }
+    // Garantia extra: find recursivo para pegar qualquer lock restante
+    try {
+      execSync(`find "${sessionDir}" \( -name "SingletonLock" -o -name "SingletonSocket" -o -name "SingletonCookie" \) -delete 2>/dev/null || true`, { shell: true, stdio: 'ignore' })
+    } catch (_) {}
   } catch (e) {
-    // Ignorar erros silenciosamente — se não conseguir remover, o Chromium tentará assim mesmo
     console.warn(`⚠️ Não foi possível remover lock para ${sessionId}:`, e.message)
   }
+}
+
+// Mata todos os processos Chromium órfãos do container anterior
+const killOrphanChromium = () => {
+  try {
+    execSync('pkill -9 -f chromium 2>/dev/null || true', { shell: true, stdio: 'ignore' })
+    execSync('pkill -9 -f chrome 2>/dev/null || true', { shell: true, stdio: 'ignore' })
+    execSync('pkill -9 -f "headless_shell" 2>/dev/null || true', { shell: true, stdio: 'ignore' })
+  } catch (_) {}
 }
 
 // Setup Session
@@ -367,12 +394,14 @@ const setupSession = (sessionId) => {
         sessionRestartLock.set(sessionId, true)
         try { await client.destroy().catch(() => {}) } catch (e) {}
         sessions.delete(sessionId)
+        killOrphanChromium()
         clearChromiumLocks(sessionId)
-        sessionRestartLock.delete(sessionId)
+        // NÃO deletar o lock aqui — deletar DENTRO do setTimeout para evitar cascade
         setTimeout(() => {
+          sessionRestartLock.delete(sessionId)
           console.log(`🔄 Reiniciando ${sessionId} após remoção do lock...`)
           setupSession(sessionId)
-        }, 3000)
+        }, 5000)
         return
       }
       
