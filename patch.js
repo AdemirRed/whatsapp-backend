@@ -16,9 +16,9 @@ const patches = [
   },
   {
     file: './node_modules/whatsapp-web.js/src/util/Injected/Utils.js',
-    description: 'Utils.js: safe msgs.add() for newsletter chats without msgs collection',
-    find: 'chat.msgs.add(msg);',
-    replace: 'chat.msgs?.add(msg);',
+    description: 'Utils.js: wrap addNewsletterMsgsRecords em try-catch para evitar erro reading add',
+    find: '            await window.Store.SendChannelMessage.addNewsletterMsgsRecords([msgDataFromMsgModel]);\n            chat.msgs?.add(msg);\n            chat.t = msg.t;',
+    replace: '            try {\n                await window.Store.SendChannelMessage.addNewsletterMsgsRecords([msgDataFromMsgModel]);\n                chat.msgs?.add(msg);\n            } catch (e) {\n                // Ignorar erros de cache local — não afeta o envio real para o canal\n            }\n            chat.t = msg.t;',
   },
 ];
 
