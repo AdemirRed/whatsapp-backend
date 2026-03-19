@@ -239,7 +239,6 @@ const setupSession = (sessionId) => {
           '--disable-accelerated-2d-canvas',
           '--no-first-run',
           '--no-zygote',
-          '--single-process',
           '--disable-extensions',
           '--disable-background-networking',
           '--disable-default-apps',
@@ -256,8 +255,7 @@ const setupSession = (sessionId) => {
           '--disable-software-rasterizer',
           '--disable-background-timer-throttling',
           '--disable-backgrounding-occluded-windows',
-          '--disable-renderer-backgrounding',
-          '--js-flags=--max-old-space-size=256'
+          '--disable-renderer-backgrounding'
         ],
         handleSIGINT: false,
         handleSIGTERM: false,
