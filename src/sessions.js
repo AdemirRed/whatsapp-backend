@@ -308,6 +308,7 @@ const setupSession = (sessionId) => {
           '--no-sandbox', 
           '--disable-setuid-sandbox', 
           '--disable-gpu', 
+          '--single-process',           // Desabilita SingletonLock — evita "profile in use" entre containers
           '--disable-dev-shm-usage',
           '--disable-accelerated-2d-canvas',
           '--no-first-run',
