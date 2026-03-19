@@ -30,10 +30,11 @@ RUN apt-get update \
     libxss1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy package.json and package-lock.json to the working directory
-COPY package*.json ./
+# Copy package.json, package-lock.json e patch.js antes do npm ci
+# (patch.js precisa existir antes do postinstall rodar durante npm ci)
+COPY package*.json patch.js ./
 
-# Install the dependencies (postinstall aplica o patch no Channel.js automaticamente)
+# Install the dependencies (postinstall roda node patch.js automaticamente)
 RUN npm ci --only=production
 
 # Copy the rest of the source code to the working directory
