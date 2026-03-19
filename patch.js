@@ -28,6 +28,13 @@ const patches = [
     find: '            await window.Store.SendChannelMessage.addNewsletterMsgsRecords([msgDataFromMsgModel]);\n            chat.msgs?.add(msg);\n            chat.t = msg.t;',
     replace: '            try {\n                await window.Store.SendChannelMessage.addNewsletterMsgsRecords([msgDataFromMsgModel]);\n                chat.msgs?.add(msg);\n            } catch (_patchErr) {\n                // patched: ignore local cache errors for channels\n            }\n            chat.t = msg.t;',
   },
+  // Bug da lib: Client.deleteChannel usa this.client.pupPage em vez de this.pupPage
+  {
+    file: './node_modules/whatsapp-web.js/src/Client.js',
+    description: 'Client.js: fix deleteChannel - this.client.pupPage -> this.pupPage',
+    find: '    async deleteChannel(channelId) {\n        return await this.client.pupPage.evaluate',
+    replace: '    async deleteChannel(channelId) {\n        return await this.pupPage.evaluate',
+  },
 ];
 
 let allOk = true;
