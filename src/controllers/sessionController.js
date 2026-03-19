@@ -41,9 +41,9 @@ const startSession = async (req, res) => {
       }
     }
     */
-    // wait until the client is created
-    waitForNestedObject(setupSessionReturn.client, 'pupPage')
-      .then(res.json({ success: true, message: setupSessionReturn.message }))
+    // wait until the client is created (timeout de 60s para dar tempo de inicializar)
+    waitForNestedObject(setupSessionReturn.client, 'pupPage', 60000)
+      .then(() => res.json({ success: true, message: setupSessionReturn.message }))
       .catch((err) => { sendErrorResponse(res, 500, err.message) })
   } catch (error) {
   /* #swagger.responses[500] = {
