@@ -1,11 +1,35 @@
 const { Client, LocalAuth } = require('whatsapp-web.js')
 const fs = require('fs')
 const path = require('path')
+const { execSync } = require('child_process')
 const sessions = new Map()
 const sessionRetryCount = new Map() // Rastreamento de tentativas de reinício
 const sessionRestartLock = new Map() // Lock para evitar múltiplas restaurações simultâneas
 const { baseWebhookURL, sessionFolderPath, maxAttachmentSize, setMessagesAsSeen, webVersion, webVersionCacheType, recoverSessions, headlessBrowser, verboseLogs, autoStartPolling, pollingIntervalSeconds } = require('./config')
 const { triggerWebhook, waitForNestedObject, checkIfEventisEnabled, applyMarkedUnreadPatch } = require('./utils')
+
+// Detecta o caminho do Chromium automaticamente
+const detectChromiumPath = () => {
+  if (process.env.CHROME_BIN) {
+    if (fs.existsSync(process.env.CHROME_BIN)) return process.env.CHROME_BIN
+    console.warn(`⚠️  CHROME_BIN definido como "${process.env.CHROME_BIN}" mas não existe. Tentando auto-detectar...`)
+  }
+  const candidates = [
+    '/usr/bin/chromium',
+    '/usr/bin/chromium-browser',
+    '/usr/bin/google-chrome',
+    '/usr/bin/google-chrome-stable',
+    '/usr/local/bin/chromium'
+  ]
+  for (const p of candidates) {
+    if (fs.existsSync(p)) {
+      console.log(`✅ Chromium encontrado em: ${p}`)
+      return p
+    }
+  }
+  return null // Deixa o puppeteer usar o bundled
+}
+const chromiumExecutablePath = detectChromiumPath()
 
 // Sistema de Diagnóstico de Eventos
 const eventCounters = new Map() // Contador de eventos por sessão
@@ -229,7 +253,7 @@ const setupSession = (sessionId) => {
 
     const clientOptions = {
       puppeteer: {
-        executablePath: process.env.CHROME_BIN || null,
+        executablePath: chromiumExecutablePath,
         headless: headlessBrowser,
         args: [
           '--no-sandbox', 
