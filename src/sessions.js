@@ -233,6 +233,25 @@ const restoreSessions = () => {
   }
 }
 
+// Remove Chromium SingletonLock para evitar erro "profile in use" após restart do container
+const clearChromiumLocks = (sessionId) => {
+  try {
+    // LocalAuth salva em <sessionFolderPath>/session-<sessionId>/Default/
+    const profileDir = path.join(sessionFolderPath, `session-${sessionId}`, 'Default')
+    const lockFiles = ['SingletonLock', 'SingletonSocket', 'SingletonCookie']
+    for (const lockFile of lockFiles) {
+      const lockPath = path.join(profileDir, lockFile)
+      if (fs.existsSync(lockPath)) {
+        fs.unlinkSync(lockPath)
+        console.log(`🔓 Lock removido: ${lockPath}`)
+      }
+    }
+  } catch (e) {
+    // Ignorar erros silenciosamente — se não conseguir remover, o Chromium tentará assim mesmo
+    console.warn(`⚠️ Não foi possível remover lock para ${sessionId}:`, e.message)
+  }
+}
+
 // Setup Session
 const setupSession = (sessionId) => {
   try {
@@ -245,6 +264,9 @@ const setupSession = (sessionId) => {
         return { success: false, message: `Session already exists for: ${sessionId}`, client: existingClient }
       }
     }
+
+    // Limpar locks do Chromium antes de iniciar (evita erro "profile in use" após crash/restart)
+    clearChromiumLocks(sessionId)
 
     // Disable the delete folder from the logout function (will be handled separately)
     const localAuth = new LocalAuth({ clientId: sessionId, dataPath: sessionFolderPath })
@@ -333,6 +355,26 @@ const setupSession = (sessionId) => {
       }
       
       const currentRetries = sessionRetryCount.get(sessionId) || 0
+
+      // Detectar erro de profile lock do Chromium (Code: 21 / "profile appears to be in use")
+      // Ocorre após restart do container quando o processo anterior não encerrou limpo
+      const isProfileLocked = err.message.includes('profile appears to be in use') ||
+                              err.message.includes('Code: 21') ||
+                              err.message.includes('SingletonLock')
+
+      if (isProfileLocked) {
+        console.log(`🔓 Profile lock detectado para ${sessionId}. Removendo lock e reconectando...`)
+        sessionRestartLock.set(sessionId, true)
+        try { await client.destroy().catch(() => {}) } catch (e) {}
+        sessions.delete(sessionId)
+        clearChromiumLocks(sessionId)
+        sessionRestartLock.delete(sessionId)
+        setTimeout(() => {
+          console.log(`🔄 Reiniciando ${sessionId} após remoção do lock...`)
+          setupSession(sessionId)
+        }, 3000)
+        return
+      }
       
       // Detectar se o navegador já está rodando
       const isBrowserAlreadyRunning = err.message.includes('browser is already running')
@@ -1105,20 +1147,25 @@ const reloadSession = async (sessionId) => {
     if (!client) {
       return
     }
-    client.pupPage.removeAllListeners('close')
-    client.pupPage.removeAllListeners('error')
+    // Protege contra pupPage null (quando o browser nunca chegou a inicializar)
+    if (client.pupPage) {
+      client.pupPage.removeAllListeners('close')
+      client.pupPage.removeAllListeners('error')
+    }
     try {
-      const pages = await client.pupBrowser.pages()
-      await Promise.all(pages.map((page) => page.close()))
-      await Promise.race([
-        client.pupBrowser.close(),
-        new Promise(resolve => setTimeout(resolve, 5000))
-      ])
-    } catch (e) {
-      const childProcess = client.pupBrowser.process()
-      if (childProcess) {
-        childProcess.kill(9)
+      if (client.pupBrowser) {
+        const pages = await client.pupBrowser.pages()
+        await Promise.all(pages.map((page) => page.close()))
+        await Promise.race([
+          client.pupBrowser.close(),
+          new Promise(resolve => setTimeout(resolve, 5000))
+        ])
       }
+    } catch (e) {
+      try {
+        const childProcess = client.pupBrowser?.process()
+        if (childProcess) childProcess.kill(9)
+      } catch (_) {}
     }
     sessions.delete(sessionId)
     setupSession(sessionId)
@@ -1134,8 +1181,10 @@ const deleteSession = async (sessionId, validation) => {
     if (!client) {
       return
     }
-    client.pupPage.removeAllListeners('close')
-    client.pupPage.removeAllListeners('error')
+    if (client.pupPage) {
+      client.pupPage.removeAllListeners('close')
+      client.pupPage.removeAllListeners('error')
+    }
     if (validation.success) {
       // Client Connected, request logout
       console.log(`Logging out session ${sessionId}`)
@@ -1147,7 +1196,7 @@ const deleteSession = async (sessionId, validation) => {
     }
     // Wait 10 secs for client.pupBrowser to be disconnected before deleting the folder
     let maxDelay = 0
-    while (client.pupBrowser.isConnected() && (maxDelay < 10)) {
+    while (client.pupBrowser?.isConnected() && (maxDelay < 10)) {
       await new Promise(resolve => setTimeout(resolve, 1000))
       maxDelay++
     }
