@@ -393,18 +393,40 @@ const setupSession = (sessionId) => {
                               err.message.includes('SingletonLock')
 
       if (isProfileLocked) {
-        console.log(`🔓 Profile lock detectado para ${sessionId}. Removendo lock e reconectando...`)
+        const lockRetries = (sessionRetryCount.get(sessionId) || 0) + 1
+        sessionRetryCount.set(sessionId, lockRetries)
+
+        // Após 3 tentativas sem sucesso: o process 1176 do container anterior
+        // ainda mantém o lock no volume. Parar de tentar — aguardar 10 min
+        // para o Railway limpar definitivamente o container antigo.
+        const MAX_LOCK_RETRIES = 3
+        if (lockRetries > MAX_LOCK_RETRIES) {
+          const waitMin = 10
+          console.warn(`⛔ Profile lock persistente em ${sessionId} após ${lockRetries} tentativas. O container anterior (processo 1176) ainda segura o lock no volume. Aguardando ${waitMin} min antes de tentar novamente.`)
+          sessionRestartLock.set(sessionId, true)
+          try { await client.destroy().catch(() => {}) } catch (e) {}
+          sessions.delete(sessionId)
+          setTimeout(() => {
+            console.log(`🔁 Retomando tentativa de iniciar ${sessionId} após ${waitMin} min de espera...`)
+            sessionRetryCount.set(sessionId, 0)
+            sessionRestartLock.delete(sessionId)
+            setupSession(sessionId)
+          }, waitMin * 60 * 1000)
+          return
+        }
+
+        const delayMs = lockRetries * 10000 // 10s, 20s, 30s
+        console.log(`🔓 Profile lock detectado para ${sessionId} (tentativa ${lockRetries}/${MAX_LOCK_RETRIES}). Removendo lock e reconectando em ${delayMs / 1000}s...`)
         sessionRestartLock.set(sessionId, true)
         try { await client.destroy().catch(() => {}) } catch (e) {}
         sessions.delete(sessionId)
         killOrphanChromium()
         clearChromiumLocks(sessionId)
-        // NÃO deletar o lock aqui — deletar DENTRO do setTimeout para evitar cascade
         setTimeout(() => {
           sessionRestartLock.delete(sessionId)
           console.log(`🔄 Reiniciando ${sessionId} após remoção do lock...`)
           setupSession(sessionId)
-        }, 5000)
+        }, delayMs)
         return
       }
       
