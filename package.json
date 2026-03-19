@@ -12,7 +12,8 @@
     "build:win": "pkg . --targets node18-win-x64 --out-path dist/ --no-bytecode --public-packages=axios,express,whatsapp-web.js",
     "build:linux": "pkg . --targets node18-linux-x64 --out-path dist/",
     "build:mac": "pkg . --targets node18-macos-x64 --out-path dist/",
-    "build:all": "pkg . --targets node18-win-x64,node18-linux-x64,node18-macos-x64 --out-path dist/"
+    "build:all": "pkg . --targets node18-win-x64,node18-linux-x64,node18-macos-x64 --out-path dist/",
+    "postinstall": "node -e \"const fs=require('fs'),f='./node_modules/whatsapp-web.js/src/structures/Channel.js';let c=fs.readFileSync(f,'utf8');if(c.includes('data.channelMetadata.description')){c=c.replace('data.channelMetadata.description','data.channelMetadata?.description');fs.writeFileSync(f,c);console.log('✅ Channel.js patch aplicado');}else{console.log('✅ Channel.js já está com patch');}\" || true"
   },
   "dependencies": {
     "axios": "^1.13.1",

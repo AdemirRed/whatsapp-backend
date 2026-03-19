@@ -2,12 +2,14 @@
 FROM node:20-slim
 
 # Set the working directory
-WORKDIR /usr/src/app
+WORKDIR /app
 
 # Instala Chromium e dependências necessárias
 ENV CHROME_BIN="/usr/bin/chromium" \
     PUPPETEER_SKIP_CHROMIUM_DOWNLOAD="true" \
-    NODE_ENV="production"
+    NODE_ENV="production" \
+    # Aponta sessões para o volume do Railway (/app/.wwebjs_auth)
+    SESSIONS_PATH="/app/.wwebjs_auth"
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     chromium \
@@ -31,8 +33,8 @@ RUN apt-get update \
 # Copy package.json and package-lock.json to the working directory
 COPY package*.json ./
 
-# Install the dependencies
-RUN npm ci --only=production --ignore-scripts
+# Install the dependencies (postinstall aplica o patch no Channel.js automaticamente)
+RUN npm ci --only=production
 
 # Copy the rest of the source code to the working directory
 COPY . .
