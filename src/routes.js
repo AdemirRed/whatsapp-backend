@@ -17,6 +17,7 @@ const audioController = require('./controllers/audioController')
 const stickerController = require('./controllers/stickerController')
 const fileController = require('./controllers/fileController')
 const diagnosticsController = require('./controllers/diagnosticsController')
+const channelEditorialController = require('./controllers/channelEditorialController')
 
 /**
  * ================
@@ -268,6 +269,24 @@ routes.use('/file', fileRouter)
 
 fileRouter.get('/fileToBase64', fileController.fileToBase64Page)
 fileRouter.post('/convert', upload.single('file'), fileController.convertFileToBase64)
+
+/**
+ * ============================
+ * CHANNEL EDITORIAL ENDPOINTS
+ * ============================
+ */
+const channelEditorialRouter = express.Router()
+channelEditorialRouter.use(middleware.apikey)
+routes.use('/channel-editorial', channelEditorialRouter)
+
+channelEditorialRouter.get('/config', channelEditorialController.getConfig)
+channelEditorialRouter.put('/config', channelEditorialController.updateConfig)
+channelEditorialRouter.get('/posts', channelEditorialController.listPosts)
+channelEditorialRouter.get('/posts/:id', channelEditorialController.getPostById)
+channelEditorialRouter.post('/preview', channelEditorialController.previewPost)
+channelEditorialRouter.post('/send-now', channelEditorialController.sendNow)
+channelEditorialRouter.post('/send-post/:id', channelEditorialController.sendPostById)
+channelEditorialRouter.delete('/posts/:id', channelEditorialController.deletePost)
 
 /**
  * ================

@@ -50,6 +50,10 @@ const doc = {
     {
       name: 'File',
       description: 'File conversion and utilities'
+    },
+    {
+      name: 'Channel Editorial',
+      description: 'Gerenciamento do canal editorial: configuração, posts e publicação via LLM'
     }
   ],
   definitions: {
@@ -126,6 +130,20 @@ const doc = {
     ForbiddenResponse: {
       success: false,
       error: 'Invalid API key'
+    },
+    ChannelEditorialConfigBody: {
+      channel_id: '555197756708@newsletter',
+      sessionId: 'minha-sessao',
+      posts_per_day: 3,
+      send_hours: [8, 12, 18],
+      llm_api_url: 'https://api.openai.com/v1/chat/completions',
+      llm_api_key: 'sk-...',
+      llm_model: 'gpt-4o-mini',
+      llm_system_prompt: 'Você é um assistente editorial.',
+      llm_user_prompt_template: 'Gere um post sobre {{postType}}.'
+    },
+    ChannelEditorialPostTypeBody: {
+      postType: 'notícias'
     }
   }
 }
