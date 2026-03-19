@@ -14,11 +14,19 @@ const patches = [
     find: 'data.channelMetadata.description',
     replace: 'data.channelMetadata?.description',
   },
+  // Caso 1: source original do npm (sem optional chaining)
   {
     file: './node_modules/whatsapp-web.js/src/util/Injected/Utils.js',
-    description: 'Utils.js: wrap addNewsletterMsgsRecords em try-catch para evitar erro reading add',
+    description: 'Utils.js: wrap addNewsletterMsgsRecords em try-catch (source original)',
+    find: '            await window.Store.SendChannelMessage.addNewsletterMsgsRecords([msgDataFromMsgModel]);\n            chat.msgs.add(msg);\n            chat.t = msg.t;',
+    replace: '            try {\n                await window.Store.SendChannelMessage.addNewsletterMsgsRecords([msgDataFromMsgModel]);\n                chat.msgs?.add(msg);\n            } catch (_patchErr) {\n                // patched: ignore local cache errors for channels\n            }\n            chat.t = msg.t;',
+  },
+  // Caso 2: source com optional chaining (patch antigo parcial)
+  {
+    file: './node_modules/whatsapp-web.js/src/util/Injected/Utils.js',
+    description: 'Utils.js: wrap addNewsletterMsgsRecords em try-catch (com optional chaining)',
     find: '            await window.Store.SendChannelMessage.addNewsletterMsgsRecords([msgDataFromMsgModel]);\n            chat.msgs?.add(msg);\n            chat.t = msg.t;',
-    replace: '            try {\n                await window.Store.SendChannelMessage.addNewsletterMsgsRecords([msgDataFromMsgModel]);\n                chat.msgs?.add(msg);\n            } catch (e) {\n                // Ignorar erros de cache local — não afeta o envio real para o canal\n            }\n            chat.t = msg.t;',
+    replace: '            try {\n                await window.Store.SendChannelMessage.addNewsletterMsgsRecords([msgDataFromMsgModel]);\n                chat.msgs?.add(msg);\n            } catch (_patchErr) {\n                // patched: ignore local cache errors for channels\n            }\n            chat.t = msg.t;',
   },
 ];
 
