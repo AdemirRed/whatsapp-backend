@@ -175,31 +175,7 @@ const getProfilePicUrl = async (req, res) => {
     const contact = await client.getContactById(contactId)
     if (!contact) { sendErrorResponse(res, 404, 'Contact not Found') }
 
-    // Pré-carrega o contato no store interno do WA Web antes de chamar requestProfilePicFromServer.
-    // requestProfilePicFromServer lê contact.isNewsletter do store — se o contato não estiver em
-    // memória o retorno é undefined e ocorre TypeError.
-    const result = await client.pupPage.evaluate(async (serializedId) => {
-      try {
-        const chatWid = window.Store.WidFactory.createWid(serializedId)
-        // Força o contato a entrar no store (resolve o TypeError: isNewsletter)
-        try { await window.Store.Contact.find(chatWid) } catch (_) {}
-        try {
-          const profilePic = await window.Store.ProfilePic.requestProfilePicFromServer(chatWid)
-          return profilePic ? profilePic.eurl || null : null
-        } catch (e) {
-          // Fallback para método legado caso requestProfilePicFromServer ainda falhe
-          try {
-            const profilePic = await window.Store.ProfilePic.profilePicFind(chatWid)
-            return profilePic ? profilePic.eurl || null : null
-          } catch (e2) {
-            return null
-          }
-        }
-      } catch (err) {
-        return null
-      }
-    }, contact.id._serialized)
-
+    const result = await client.getProfilePicUrl(contact.id._serialized).catch(() => null)
     res.json({ success: true, result: result || null })
   } catch (error) {
     sendErrorResponse(res, 500, error.message)
