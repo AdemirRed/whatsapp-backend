@@ -35,11 +35,11 @@ const patches = [
     find: '    async deleteChannel(channelId) {\n        return await this.client.pupPage.evaluate',
     replace: '    async deleteChannel(channelId) {\n        return await this.pupPage.evaluate',
   },
-  // Bug: requestProfilePicFromServer lê contact.isNewsletter sem garantir que o contato
-  // está carregado no store, causando TypeError e retornando null.
+  // Bug: requestProfilePicFromServer e profilePicFind falham em WA 2.3000.x.
+  // Usa ProfilePicThumb.find que funciona em todas as versões modernas.
   {
     file: './node_modules/whatsapp-web.js/src/Client.js',
-    description: 'Client.js: pré-carrega contato no store antes de requestProfilePicFromServer (resolve TypeError isNewsletter)',
+    description: 'Client.js: usar ProfilePicThumb.find em getProfilePicUrl (resolve TypeError isNewsletter e profilePicFind not a function)',
     find: `    async getProfilePicUrl(contactId) {
         const profilePic = await this.pupPage.evaluate(async contactId => {
             try {
@@ -51,33 +51,23 @@ const patches = [
                 if(err.name === 'ServerStatusCodeError') return undefined;
                 throw err;
             }
-        }, contactId);`,
+        }, contactId);
+
+        return profilePic ? profilePic.eurl : undefined;
+    }`,
     replace: `    async getProfilePicUrl(contactId) {
         const profilePic = await this.pupPage.evaluate(async contactId => {
             try {
                 const chatWid = window.Store.WidFactory.createWid(contactId);
-                // Garante que o contato está no store (evita TypeError: isNewsletter)
-                try { await window.Store.Contact.find(chatWid); } catch (_) {}
-                try {
-                    const pic = window.compareWwebVersions(window.Debug.VERSION, '<', '2.3000.0')
-                        ? await window.Store.ProfilePic.profilePicFind(chatWid)
-                        : await window.Store.ProfilePic.requestProfilePicFromServer(chatWid);
-                    if (pic) return pic;
-                } catch (e) {
-                    if (e.name !== 'ServerStatusCodeError') {
-                        // Fallback: tenta profilePicFind diretamente
-                        try {
-                            const pic = await window.Store.ProfilePic.profilePicFind(chatWid);
-                            if (pic) return pic;
-                        } catch (_) {}
-                    }
-                }
-                return undefined;
+                const thumb = await window.Store.ProfilePicThumb.find(chatWid);
+                return thumb || undefined;
             } catch (err) {
-                if(err.name === 'ServerStatusCodeError') return undefined;
-                throw err;
+                return undefined;
             }
-        }, contactId);`,
+        }, contactId);
+
+        return profilePic ? (profilePic.eurl || profilePic.img || undefined) : undefined;
+    }`,
   },
 ];
 

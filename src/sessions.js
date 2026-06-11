@@ -524,9 +524,25 @@ const setupSession = (sessionId) => {
   }
 }
 
+const getSessionWebhookUrls = (sessionId) => {
+  try {
+    const file = path.join(sessionFolderPath, 'webhooks.json')
+    const data = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {}
+    return [
+      ...(data[sessionId] || []),
+      ...(data['*'] || []),
+      process.env[sessionId.toUpperCase() + '_WEBHOOK_URL'],
+      baseWebhookURL
+    ].filter(Boolean)
+  } catch (_) {
+    return [baseWebhookURL].filter(Boolean)
+  }
+}
+
 const initializeEvents = (client, sessionId) => {
-  // check if the session webhook is overridden
-  const sessionWebhook = process.env[sessionId.toUpperCase() + '_WEBHOOK_URL'] || baseWebhookURL
+  // Mescla webhooks do JSON persistido + env var + global
+  const webhookUrls = getSessionWebhookUrls(sessionId)
+  const sessionWebhook = webhookUrls.length === 1 ? webhookUrls[0] : webhookUrls
 
   // Flags para evitar eventos duplicados
   let readyFired = false

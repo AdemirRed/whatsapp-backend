@@ -73,6 +73,10 @@ sessionRouter.post('/requestPairingCode/:sessionId', middleware.sessionNameValid
 sessionRouter.get('/diagnosePairingCode/:sessionId', middleware.sessionNameValidation, sessionController.diagnosePairingCode)
 sessionRouter.get('/applyPatch/:sessionId', middleware.sessionNameValidation, sessionController.applyPatch)
 sessionRouter.get('/applyPatchAll', sessionController.applyPatchAll)
+sessionRouter.get('/webhooks', sessionController.listWebhooks)
+sessionRouter.get('/webhook/:sessionId', middleware.sessionNameValidation, sessionController.getSessionWebhooks)
+sessionRouter.post('/webhook/:sessionId', middleware.sessionNameValidation, sessionController.addSessionWebhook)
+sessionRouter.delete('/webhook/:sessionId', middleware.sessionNameValidation, sessionController.removeSessionWebhook)
 
 /**
  * ================

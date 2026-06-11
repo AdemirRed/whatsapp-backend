@@ -900,6 +900,35 @@
             <div id="globalResult" class="result-box" style="display: none;"></div>
         </div>
 
+        <!-- Webhook Manager Section -->
+        <div class="sessions-section" style="margin-top:24px;">
+            <div class="section-header">
+                <h2 class="section-title">🔗 Gerenciar Webhooks</h2>
+                <button class="btn btn-primary" onclick="loadWebhooks()">🔄 Atualizar</button>
+            </div>
+            <div style="background:#1e1e2e;border-radius:12px;padding:20px;margin-bottom:16px;">
+                <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+                    <div style="flex:1;min-width:220px;">
+                        <label style="color:#a0a0b0;font-size:12px;display:block;margin-bottom:4px;">URL do Webhook</label>
+                        <input id="webhookUrl" type="text" placeholder="https://seusite.com.br/api/webhook"
+                            style="width:100%;padding:10px 12px;background:#2a2a3e;border:1px solid #3a3a5c;border-radius:8px;color:#e0e0f0;font-size:14px;box-sizing:border-box;">
+                    </div>
+                    <div style="min-width:160px;">
+                        <label style="color:#a0a0b0;font-size:12px;display:block;margin-bottom:4px;">Sessão</label>
+                        <select id="webhookSession"
+                            style="width:100%;padding:10px 12px;background:#2a2a3e;border:1px solid #3a3a5c;border-radius:8px;color:#e0e0f0;font-size:14px;">
+                            <option value="*">⭐ Todas as sessões</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-success" onclick="addWebhook()" style="height:40px;white-space:nowrap;">➕ Adicionar</button>
+                </div>
+                <div id="webhookResult" style="margin-top:10px;font-size:13px;color:#a0a0b0;"></div>
+            </div>
+            <div id="webhooksTable" style="background:#1e1e2e;border-radius:12px;padding:20px;">
+                <p style="color:#a0a0b0;text-align:center;">Carregando webhooks...</p>
+            </div>
+        </div>
+
         <!-- Sessions Section -->
         <div class="sessions-section">
             <div class="section-header">
@@ -1150,9 +1179,87 @@
     </div>
 
     <script>
-        const API_BASE = 'https://whatsapp-backend-production-b874.up.railway.app';
+        const API_BASE = '';
         const API_KEY = 'redblack';
         let currentSessionForQR = null;
+
+        // =====================================
+        // FUNÇÕES DE GERENCIAMENTO DE WEBHOOKS
+        // =====================================
+
+        async function loadWebhooks() {
+            const container = document.getElementById('webhooksTable');
+            try {
+                const res = await apiRequest('/session/webhooks');
+                const data = res.result || {};
+                const entries = Object.entries(data);
+                if (entries.length === 0) {
+                    container.innerHTML = '<p style="color:#a0a0b0;text-align:center;">Nenhum webhook configurado ainda.</p>';
+                    return;
+                }
+                let html = '<table style="width:100%;border-collapse:collapse;">';
+                html += '<thead><tr style="color:#a0a0b0;font-size:12px;text-align:left;border-bottom:1px solid #3a3a5c;">'
+                    + '<th style="padding:8px 12px;">Sessão</th>'
+                    + '<th style="padding:8px 12px;">Webhook URLs</th>'
+                    + '<th style="padding:8px 12px;width:80px;"></th>'
+                    + '</tr></thead><tbody>';
+                for (const [sessionId, urls] of entries) {
+                    const label = sessionId === '*' ? '⭐ Todas' : sessionId;
+                    for (const url of urls) {
+                        html += `<tr style="border-bottom:1px solid #2a2a3e;">
+                            <td style="padding:10px 12px;color:#e0e0f0;font-weight:500;">${label}</td>
+                            <td style="padding:10px 12px;color:#7c9fff;word-break:break-all;">${url}</td>
+                            <td style="padding:10px 12px;text-align:right;">
+                                <button onclick="removeWebhook('${sessionId}','${url}')"
+                                    style="background:#e74c3c;border:none;color:#fff;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px;">🗑 Remover</button>
+                            </td>
+                        </tr>`;
+                    }
+                }
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            } catch (e) {
+                container.innerHTML = `<p style="color:#e74c3c;">Erro: ${e.message}</p>`;
+            }
+        }
+
+        async function addWebhook() {
+            const url = document.getElementById('webhookUrl').value.trim();
+            const sessionId = document.getElementById('webhookSession').value;
+            const resultEl = document.getElementById('webhookResult');
+            if (!url) { resultEl.textContent = '⚠️ Informe a URL do webhook.'; return; }
+            try {
+                await apiRequest(`/session/webhook/${sessionId}`, 'POST', { url });
+                document.getElementById('webhookUrl').value = '';
+                resultEl.style.color = '#2ecc71';
+                resultEl.textContent = '✅ Webhook adicionado!';
+                loadWebhooks();
+            } catch (e) {
+                resultEl.style.color = '#e74c3c';
+                resultEl.textContent = `Erro: ${e.message}`;
+            }
+        }
+
+        async function removeWebhook(sessionId, url) {
+            try {
+                await apiRequest(`/session/webhook/${sessionId}`, 'DELETE', { url });
+                loadWebhooks();
+            } catch (e) {
+                alert('Erro ao remover: ' + e.message);
+            }
+        }
+
+        function populateWebhookSessionSelect(sessions) {
+            const sel = document.getElementById('webhookSession');
+            // Mantém opção "Todas"
+            sel.innerHTML = '<option value="*">⭐ Todas as sessões</option>';
+            for (const s of sessions) {
+                const opt = document.createElement('option');
+                opt.value = s.id || s;
+                opt.textContent = s.id || s;
+                sel.appendChild(opt);
+            }
+        }
 
         // =====================================
         // FUNÇÕES PARA GERENCIAR ENQUETES
@@ -1657,7 +1764,8 @@
                            Array.isArray(result.data) ? result.data : [];
             
             console.log('Sessions:', sessions);
-            
+            populateWebhookSessionSelect(sessions);
+
             if (sessions.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
@@ -2763,6 +2871,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             checkApiStatus();
             loadSessions();
+            loadWebhooks();
             
             // Verificar status da API a cada 60 segundos (reduzido de 30s)
             setInterval(checkApiStatus, 60000);

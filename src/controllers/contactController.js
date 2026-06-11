@@ -175,38 +175,14 @@ const getProfilePicUrl = async (req, res) => {
     const contact = await client.getContactById(contactId)
     if (!contact) { sendErrorResponse(res, 404, 'Contact not Found') }
 
-    let result = null
-    let debug = null
-    try {
-      result = await client.pupPage.evaluate(async (serializedId) => {
-        try {
-          const chatWid = window.Store.WidFactory.createWid(serializedId)
-          try { await window.Store.Contact.find(chatWid) } catch (_) {}
-          const version = window.Debug?.VERSION ?? 'unknown'
-          const useNew = !window.compareWwebVersions(window.Debug.VERSION, '<', '2.3000.0')
-          try {
-            const pic = useNew
-              ? await window.Store.ProfilePic.requestProfilePicFromServer(chatWid)
-              : await window.Store.ProfilePic.profilePicFind(chatWid)
-            return { eurl: pic ? pic.eurl : null, status: pic ? pic.status : null, version, useNew, method: useNew ? 'requestProfilePicFromServer' : 'profilePicFind' }
-          } catch (e) {
-            try {
-              const pic = await window.Store.ProfilePic.profilePicFind(chatWid)
-              return { eurl: pic ? pic.eurl : null, status: pic ? pic.status : null, version, useNew, method: 'profilePicFind-fallback', error1: e.message }
-            } catch (e2) {
-              return { eurl: null, version, useNew, method: 'both-failed', error1: e.message, error2: e2.message }
-            }
-          }
-        } catch (err) {
-          return { eurl: null, fatalError: err.message }
-        }
-      }, contact.id._serialized)
-      debug = result
-      result = result?.eurl || null
-    } catch (e) {
-      debug = { threw: e.message }
-    }
-    res.json({ success: true, result, debug })
+    const result = await client.pupPage.evaluate(async (serializedId) => {
+      try {
+        const chatWid = window.Store.WidFactory.createWid(serializedId)
+        const thumb = await window.Store.ProfilePicThumb.find(chatWid)
+        return thumb?.eurl || thumb?.img || null
+      } catch (_) { return null }
+    }, contact.id._serialized)
+    res.json({ success: true, result: result || null })
   } catch (error) {
     sendErrorResponse(res, 500, error.message)
   }

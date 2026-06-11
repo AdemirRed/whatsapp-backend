@@ -1,6 +1,23 @@
 const qr = require('qr-image')
+const fs = require('fs')
+const path = require('path')
 const { setupSession, deleteSession, reloadSession, validateSession, flushSessions, sessions } = require('../sessions')
 const { sendErrorResponse, waitForNestedObject, applyMarkedUnreadPatch } = require('../utils')
+const { sessionFolderPath } = require('../config')
+
+const WEBHOOKS_FILE = path.join(sessionFolderPath, 'webhooks.json')
+
+const readWebhooksFile = () => {
+  try {
+    if (!fs.existsSync(WEBHOOKS_FILE)) return {}
+    return JSON.parse(fs.readFileSync(WEBHOOKS_FILE, 'utf8'))
+  } catch (_) { return {} }
+}
+
+const writeWebhooksFile = (data) => {
+  if (!fs.existsSync(sessionFolderPath)) fs.mkdirSync(sessionFolderPath, { recursive: true })
+  fs.writeFileSync(WEBHOOKS_FILE, JSON.stringify(data, null, 2))
+}
 
 /**
  * Starts a session for the given session ID.
@@ -815,6 +832,37 @@ const applyPatchAll = async (req, res) => {
   }
 }
 
+const listWebhooks = (req, res) => {
+  res.json({ success: true, result: readWebhooksFile() })
+}
+
+const getSessionWebhooks = (req, res) => {
+  const data = readWebhooksFile()
+  res.json({ success: true, result: data[req.params.sessionId] || [] })
+}
+
+const addSessionWebhook = (req, res) => {
+  const { url } = req.body
+  if (!url) return sendErrorResponse(res, 400, 'url is required')
+  const sessionId = req.params.sessionId
+  const data = readWebhooksFile()
+  if (!data[sessionId]) data[sessionId] = []
+  if (!data[sessionId].includes(url)) data[sessionId].push(url)
+  writeWebhooksFile(data)
+  res.json({ success: true, result: data[sessionId] })
+}
+
+const removeSessionWebhook = (req, res) => {
+  const { url } = req.body
+  if (!url) return sendErrorResponse(res, 400, 'url is required')
+  const sessionId = req.params.sessionId
+  const data = readWebhooksFile()
+  data[sessionId] = (data[sessionId] || []).filter(u => u !== url)
+  if (data[sessionId].length === 0) delete data[sessionId]
+  writeWebhooksFile(data)
+  res.json({ success: true, result: data[sessionId] || [] })
+}
+
 module.exports = {
   startSession,
   statusSession,
@@ -828,5 +876,9 @@ module.exports = {
   requestPairingCode,
   diagnosePairingCode,
   applyPatch,
-  applyPatchAll
+  applyPatchAll,
+  listWebhooks,
+  getSessionWebhooks,
+  addSessionWebhook,
+  removeSessionWebhook
 }
