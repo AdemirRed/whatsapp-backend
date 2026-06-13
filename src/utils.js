@@ -4,7 +4,14 @@ const { globalApiKey, disabledCallbacks, verboseLogs, additionalWebhooks, localW
 // Trigger webhook endpoint com tratamento melhorado de erros e suporte a múltiplos destinos
 const triggerWebhook = (webhookURL, sessionId, dataType, data) => {
   // Lista de todos os webhooks a serem chamados (apenas se não vazio)
-  const webhooks = webhookURL ? [webhookURL] : []
+  let webhooks = []
+  if (webhookURL) {
+    if (Array.isArray(webhookURL)) {
+      webhooks = [...webhookURL]
+    } else {
+      webhooks = [webhookURL]
+    }
+  }
   
   // Adicionar webhooks adicionais
   if (additionalWebhooks && additionalWebhooks.length > 0) {
@@ -17,7 +24,7 @@ const triggerWebhook = (webhookURL, sessionId, dataType, data) => {
   }
   
   // Remover duplicatas e valores vazios
-  const uniqueWebhooks = [...new Set(webhooks)].filter(url => url && url.trim())
+  const uniqueWebhooks = [...new Set(webhooks)].filter(url => typeof url === 'string' && url.trim())
   
   // Se não houver webhooks configurados, apenas retornar
   if (uniqueWebhooks.length === 0) {
