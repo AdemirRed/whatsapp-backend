@@ -1255,8 +1255,9 @@
             sel.innerHTML = '<option value="*">⭐ Todas as sessões</option>';
             for (const s of sessions) {
                 const opt = document.createElement('option');
-                opt.value = s.id || s;
-                opt.textContent = s.id || s;
+                const val = s.sessionId || s.id || s;
+                opt.value = val;
+                opt.textContent = s.pushName ? `${s.pushName} (${val})` : val;
                 sel.appendChild(opt);
             }
         }
