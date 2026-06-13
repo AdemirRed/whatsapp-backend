@@ -1190,7 +1190,7 @@
         async function loadWebhooks() {
             const container = document.getElementById('webhooksTable');
             try {
-                const res = await apiRequest('/session/webhooks');
+                const res = await apiRequest(`/session/webhooks?_t=${Date.now()}`);
                 const data = res.result || {};
                 const entries = Object.entries(data);
                 if (entries.length === 0) {
@@ -1526,7 +1526,10 @@
                     method,
                     headers: {
                         'accept': 'application/json',
-                        'x-api-key': API_KEY
+                        'x-api-key': API_KEY,
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
                     }
                 };
 
