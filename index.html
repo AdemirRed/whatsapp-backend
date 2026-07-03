@@ -914,13 +914,24 @@
                             style="width:100%;padding:10px 12px;background:#2a2a3e;border:1px solid #3a3a5c;border-radius:8px;color:#e0e0f0;font-size:14px;box-sizing:border-box;">
                     </div>
                     <div style="min-width:160px;">
-                        <label style="color:#a0a0b0;font-size:12px;display:block;margin-bottom:4px;">Sessão</label>
+                        <label style="color:#a0a0b0;font-size:12px;display:block;margin-bottom:4px;">Tipo</label>
+                        <select id="webhookTargetType" onchange="renderWebhookTargetSelect()"
+                            style="width:100%;padding:10px 12px;background:#2a2a3e;border:1px solid #3a3a5c;border-radius:8px;color:#e0e0f0;font-size:14px;">
+                            <option value="session">Sessão exata</option>
+                            <option value="prefix">Prefixo (inicial)</option>
+                        </select>
+                    </div>
+                    <div style="min-width:230px;">
+                        <label style="color:#a0a0b0;font-size:12px;display:block;margin-bottom:4px;">Sessão / Prefixo</label>
                         <select id="webhookSession"
                             style="width:100%;padding:10px 12px;background:#2a2a3e;border:1px solid #3a3a5c;border-radius:8px;color:#e0e0f0;font-size:14px;">
                             <option value="">Selecione uma sessão</option>
                         </select>
                     </div>
                     <button class="btn btn-success" onclick="addWebhook()" style="height:40px;white-space:nowrap;">➕ Adicionar</button>
+                </div>
+                <div style="margin-top:8px;color:#94a3b8;font-size:12px;">
+                    Dica: use IDs como <b>explorar-loja-x</b> e <b>linksAgenda-loja-y</b>. Em modo prefixo, a webhook é aplicada em todas as sessões que começam com a chave.
                 </div>
                 <div id="webhookResult" style="margin-top:10px;font-size:13px;color:#a0a0b0;"></div>
             </div>
@@ -1182,6 +1193,55 @@
         const API_BASE = '';
         const API_KEY = 'redblack';
         let currentSessionForQR = null;
+        let webhookSessionIds = [];
+
+        function normalizeSessionId(item) {
+            if (typeof item === 'string') return item;
+            if (item && typeof item.sessionId === 'string') return item.sessionId;
+            if (item && typeof item.id === 'string') return item.id;
+            return '';
+        }
+
+        function getSessionPrefix(sessionId) {
+            const idx = sessionId.indexOf('-');
+            if (idx > 0) return sessionId.substring(0, idx + 1);
+            return `${sessionId}-`;
+        }
+
+        function renderWebhookTargetSelect() {
+            const sel = document.getElementById('webhookSession');
+            const targetType = document.getElementById('webhookTargetType')?.value || 'session';
+
+            if (targetType === 'prefix') {
+                const prefixCountMap = new Map();
+                for (const sessionId of webhookSessionIds) {
+                    const prefix = getSessionPrefix(sessionId);
+                    prefixCountMap.set(prefix, (prefixCountMap.get(prefix) || 0) + 1);
+                }
+
+                sel.innerHTML = '<option value="">Selecione um prefixo</option>';
+                Array.from(prefixCountMap.entries())
+                    .sort((a, b) => a[0].localeCompare(b[0]))
+                    .forEach(([prefix, count]) => {
+                        const opt = document.createElement('option');
+                        opt.value = prefix;
+                        opt.textContent = `${prefix} (${count} sessão(ões))`;
+                        sel.appendChild(opt);
+                    });
+                return;
+            }
+
+            sel.innerHTML = '<option value="">Selecione uma sessão</option>';
+            webhookSessionIds
+                .slice()
+                .sort((a, b) => a.localeCompare(b))
+                .forEach((sessionId) => {
+                    const opt = document.createElement('option');
+                    opt.value = sessionId;
+                    opt.textContent = sessionId;
+                    sel.appendChild(opt);
+                });
+        }
 
         // =====================================
         // FUNÇÕES DE GERENCIAMENTO DE WEBHOOKS
@@ -1234,15 +1294,43 @@
 
         async function addWebhook() {
             const url = document.getElementById('webhookUrl').value.trim();
-            const sessionId = document.getElementById('webhookSession').value;
+            const targetValue = document.getElementById('webhookSession').value;
+            const targetType = document.getElementById('webhookTargetType')?.value || 'session';
             const resultEl = document.getElementById('webhookResult');
             if (!url) { resultEl.textContent = '⚠️ Informe a URL do webhook.'; return; }
-            if (!sessionId) { resultEl.textContent = '⚠️ Selecione a sessão.'; return; }
+            if (!targetValue) {
+                resultEl.textContent = targetType === 'prefix' ? '⚠️ Selecione o prefixo.' : '⚠️ Selecione a sessão.';
+                return;
+            }
+
             try {
-                const result = await apiRequest(`/session/webhook/${sessionId}`, 'POST', { url });
-                if (!result.success) {
-                    throw new Error(result.error || 'Falha ao adicionar webhook');
+                if (targetType === 'prefix') {
+                    const matchedSessions = webhookSessionIds.filter((sessionId) => sessionId.startsWith(targetValue));
+                    if (matchedSessions.length === 0) {
+                        throw new Error('Nenhuma sessão encontrada para este prefixo.');
+                    }
+
+                    const responses = await Promise.allSettled(
+                        matchedSessions.map((sessionId) => apiRequest(`/session/webhook/${sessionId}`, 'POST', { url }))
+                    );
+
+                    const successCount = responses.filter((r) => r.status === 'fulfilled' && r.value.success).length;
+                    if (successCount === 0) {
+                        const firstError = responses.find((r) => r.status === 'fulfilled' && !r.value.success);
+                        const reason = firstError?.value?.error || 'Falha ao adicionar webhook por prefixo';
+                        throw new Error(reason);
+                    }
+
+                    document.getElementById('webhookUrl').value = '';
+                    resultEl.style.color = '#2ecc71';
+                    resultEl.textContent = `✅ Webhook aplicada em ${successCount}/${matchedSessions.length} sessão(ões) do prefixo ${targetValue}.`;
+                    loadWebhooks();
+                    return;
                 }
+
+                const result = await apiRequest(`/session/webhook/${targetValue}`, 'POST', { url });
+                if (!result.success) throw new Error(result.error || 'Falha ao adicionar webhook');
+
                 document.getElementById('webhookUrl').value = '';
                 resultEl.style.color = '#2ecc71';
                 resultEl.textContent = '✅ Webhook adicionado!';
@@ -1267,15 +1355,10 @@
         }
 
         function populateWebhookSessionSelect(sessions) {
-            const sel = document.getElementById('webhookSession');
-            sel.innerHTML = '<option value="">Selecione uma sessão</option>';
-            for (const s of sessions) {
-                const opt = document.createElement('option');
-                const val = s.sessionId || s.id || s;
-                opt.value = val;
-                opt.textContent = s.pushName ? `${s.pushName} (${val})` : val;
-                sel.appendChild(opt);
-            }
+            webhookSessionIds = sessions
+                .map(normalizeSessionId)
+                .filter(Boolean);
+            renderWebhookTargetSelect();
         }
 
         // =====================================
