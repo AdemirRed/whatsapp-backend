@@ -7,6 +7,16 @@ const { sessionFolderPath } = require('../config')
 
 const WEBHOOKS_FILE = path.join(sessionFolderPath, 'webhooks.json')
 const SESSION_NAME_REGEX = /^[\w-]+$/
+const PREFIX_NAME_REGEX = /^[\w-]+$/
+
+const toPrefixKey = (prefix) => `${prefix}*`
+
+const isWebhookTargetKeyValid = (key) => {
+  if (SESSION_NAME_REGEX.test(key)) return true
+  if (!key.endsWith('*')) return false
+  const prefix = key.slice(0, -1)
+  return PREFIX_NAME_REGEX.test(prefix)
+}
 
 const normalizeWebhookURL = (url) => {
   if (!url || typeof url !== 'string') return null
@@ -29,17 +39,15 @@ const sanitizeWebhookStore = (data) => {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return {}
 
   const sanitized = {}
-  for (const [sessionId, urls] of Object.entries(data)) {
-    if (!SESSION_NAME_REGEX.test(sessionId)) continue
+  for (const [targetKey, urls] of Object.entries(data)) {
+    if (!isWebhookTargetKeyValid(targetKey)) continue
     if (!Array.isArray(urls)) continue
 
     const normalizedUrls = [...new Set(urls
       .map((url) => normalizeWebhookURL(url))
       .filter(Boolean))]
 
-    if (normalizedUrls.length > 0) {
-      sanitized[sessionId] = normalizedUrls
-    }
+    if (normalizedUrls.length > 0) sanitized[targetKey] = normalizedUrls
   }
 
   return sanitized
@@ -899,6 +907,28 @@ const addSessionWebhook = (req, res) => {
   res.json({ success: true, result: data[sessionId] })
 }
 
+const addPrefixWebhook = (req, res) => {
+  const { url } = req.body
+  if (!url) return sendErrorResponse(res, 400, 'url is required')
+
+  const prefix = String(req.params.prefix || '').trim()
+  if (!PREFIX_NAME_REGEX.test(prefix)) {
+    return sendErrorResponse(res, 422, 'prefix should be alphanumerical or -')
+  }
+
+  const normalizedUrl = normalizeWebhookURL(url)
+  if (!normalizedUrl) {
+    return sendErrorResponse(res, 422, 'invalid webhook url')
+  }
+
+  const key = toPrefixKey(prefix)
+  const data = readWebhooksFile()
+  if (!data[key]) data[key] = []
+  if (!data[key].includes(normalizedUrl)) data[key].push(normalizedUrl)
+  writeWebhooksFile(data)
+  res.json({ success: true, result: data[key], prefix })
+}
+
 const removeSessionWebhook = (req, res) => {
   const { url } = req.body
   if (!url) return sendErrorResponse(res, 400, 'url is required')
@@ -919,6 +949,28 @@ const removeSessionWebhook = (req, res) => {
   res.json({ success: true, result: data[sessionId] || [] })
 }
 
+const removePrefixWebhook = (req, res) => {
+  const { url } = req.body
+  if (!url) return sendErrorResponse(res, 400, 'url is required')
+
+  const prefix = String(req.params.prefix || '').trim()
+  if (!PREFIX_NAME_REGEX.test(prefix)) {
+    return sendErrorResponse(res, 422, 'prefix should be alphanumerical or -')
+  }
+
+  const normalizedUrl = normalizeWebhookURL(url)
+  if (!normalizedUrl) {
+    return sendErrorResponse(res, 422, 'invalid webhook url')
+  }
+
+  const key = toPrefixKey(prefix)
+  const data = readWebhooksFile()
+  data[key] = (data[key] || []).filter(u => u !== normalizedUrl)
+  if (data[key].length === 0) delete data[key]
+  writeWebhooksFile(data)
+  res.json({ success: true, result: data[key] || [], prefix })
+}
+
 module.exports = {
   startSession,
   statusSession,
@@ -936,5 +988,7 @@ module.exports = {
   listWebhooks,
   getSessionWebhooks,
   addSessionWebhook,
-  removeSessionWebhook
+  removeSessionWebhook,
+  addPrefixWebhook,
+  removePrefixWebhook
 }

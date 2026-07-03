@@ -529,12 +529,18 @@ const getSessionWebhookUrls = (sessionId) => {
     const file = path.join(sessionFolderPath, 'webhooks.json')
     const data = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {}
     const sessionWebhooks = Array.isArray(data[sessionId]) ? data[sessionId] : []
+    const prefixWebhooks = Object.entries(data)
+      .filter(([key, urls]) => key.endsWith('*') && Array.isArray(urls) && sessionId.startsWith(key.slice(0, -1)))
+      .flatMap(([, urls]) => urls)
 
-    return [
+    const uniqueWebhooks = [...new Set([
       ...sessionWebhooks,
+      ...prefixWebhooks,
       process.env[sessionId.toUpperCase() + '_WEBHOOK_URL'],
       baseWebhookURL
-    ].filter(Boolean)
+    ].filter(Boolean))]
+
+    return uniqueWebhooks
   } catch (_) {
     return [baseWebhookURL].filter(Boolean)
   }

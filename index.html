@@ -1269,6 +1269,9 @@
                     + '</tr></thead><tbody>';
                 for (const [sessionId, urls] of entries) {
                     const safeSessionId = encodeURIComponent(sessionId);
+                    const label = sessionId.endsWith('*')
+                        ? `Prefixo: ${sessionId.slice(0, -1)}`
+                        : sessionId;
                     for (const url of urls) {
                         const escapedUrl = String(url)
                             .replace(/&/g, '&amp;')
@@ -1276,7 +1279,7 @@
                             .replace(/>/g, '&gt;');
 
                         html += `<tr style="border-bottom:1px solid #2a2a3e;">
-                            <td style="padding:10px 12px;color:#e0e0f0;font-weight:500;">${sessionId}</td>
+                            <td style="padding:10px 12px;color:#e0e0f0;font-weight:500;">${label}</td>
                             <td style="padding:10px 12px;color:#7c9fff;word-break:break-all;">${escapedUrl}</td>
                             <td style="padding:10px 12px;text-align:right;">
                                 <button onclick="removeWebhook(decodeURIComponent('${safeSessionId}'),'${encodeURIComponent(url)}')"
@@ -1305,25 +1308,12 @@
 
             try {
                 if (targetType === 'prefix') {
-                    const matchedSessions = webhookSessionIds.filter((sessionId) => sessionId.startsWith(targetValue));
-                    if (matchedSessions.length === 0) {
-                        throw new Error('Nenhuma sessão encontrada para este prefixo.');
-                    }
-
-                    const responses = await Promise.allSettled(
-                        matchedSessions.map((sessionId) => apiRequest(`/session/webhook/${sessionId}`, 'POST', { url }))
-                    );
-
-                    const successCount = responses.filter((r) => r.status === 'fulfilled' && r.value.success).length;
-                    if (successCount === 0) {
-                        const firstError = responses.find((r) => r.status === 'fulfilled' && !r.value.success);
-                        const reason = firstError?.value?.error || 'Falha ao adicionar webhook por prefixo';
-                        throw new Error(reason);
-                    }
+                    const result = await apiRequest(`/session/webhook-prefix/${encodeURIComponent(targetValue)}`, 'POST', { url });
+                    if (!result.success) throw new Error(result.error || 'Falha ao adicionar webhook por prefixo');
 
                     document.getElementById('webhookUrl').value = '';
                     resultEl.style.color = '#2ecc71';
-                    resultEl.textContent = `✅ Webhook aplicada em ${successCount}/${matchedSessions.length} sessão(ões) do prefixo ${targetValue}.`;
+                    resultEl.textContent = `✅ Regra por prefixo salva: ${targetValue}* (novas sessões também receberão esta webhook).`;
                     loadWebhooks();
                     return;
                 }
@@ -1344,7 +1334,9 @@
         async function removeWebhook(sessionId, encodedUrl) {
             try {
                 const url = decodeURIComponent(encodedUrl);
-                const result = await apiRequest(`/session/webhook/${sessionId}`, 'DELETE', { url });
+                const result = sessionId.endsWith('*')
+                    ? await apiRequest(`/session/webhook-prefix/${encodeURIComponent(sessionId.slice(0, -1))}`, 'DELETE', { url })
+                    : await apiRequest(`/session/webhook/${sessionId}`, 'DELETE', { url });
                 if (!result.success) {
                     throw new Error(result.error || 'Falha ao remover webhook');
                 }
