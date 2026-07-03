@@ -6,17 +6,55 @@ const { sendErrorResponse, waitForNestedObject, applyMarkedUnreadPatch } = requi
 const { sessionFolderPath } = require('../config')
 
 const WEBHOOKS_FILE = path.join(sessionFolderPath, 'webhooks.json')
+const SESSION_NAME_REGEX = /^[\w-]+$/
+
+const normalizeWebhookURL = (url) => {
+  if (!url || typeof url !== 'string') return null
+
+  const trimmed = url.trim()
+  if (!trimmed) return null
+
+  const candidate = /^https?:\/\//i.test(trimmed) ? trimmed : `http://${trimmed}`
+
+  try {
+    const parsed = new URL(candidate)
+    if (!['http:', 'https:'].includes(parsed.protocol)) return null
+    return parsed.toString().replace(/\/$/, '')
+  } catch (_) {
+    return null
+  }
+}
+
+const sanitizeWebhookStore = (data) => {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return {}
+
+  const sanitized = {}
+  for (const [sessionId, urls] of Object.entries(data)) {
+    if (!SESSION_NAME_REGEX.test(sessionId)) continue
+    if (!Array.isArray(urls)) continue
+
+    const normalizedUrls = [...new Set(urls
+      .map((url) => normalizeWebhookURL(url))
+      .filter(Boolean))]
+
+    if (normalizedUrls.length > 0) {
+      sanitized[sessionId] = normalizedUrls
+    }
+  }
+
+  return sanitized
+}
 
 const readWebhooksFile = () => {
   try {
     if (!fs.existsSync(WEBHOOKS_FILE)) return {}
-    return JSON.parse(fs.readFileSync(WEBHOOKS_FILE, 'utf8'))
+    return sanitizeWebhookStore(JSON.parse(fs.readFileSync(WEBHOOKS_FILE, 'utf8')))
   } catch (_) { return {} }
 }
 
 const writeWebhooksFile = (data) => {
   if (!fs.existsSync(sessionFolderPath)) fs.mkdirSync(sessionFolderPath, { recursive: true })
-  fs.writeFileSync(WEBHOOKS_FILE, JSON.stringify(data, null, 2))
+  fs.writeFileSync(WEBHOOKS_FILE, JSON.stringify(sanitizeWebhookStore(data), null, 2))
 }
 
 /**
@@ -845,9 +883,18 @@ const addSessionWebhook = (req, res) => {
   const { url } = req.body
   if (!url) return sendErrorResponse(res, 400, 'url is required')
   const sessionId = req.params.sessionId
+  if (!SESSION_NAME_REGEX.test(sessionId)) {
+    return sendErrorResponse(res, 422, 'sessionId should be alphanumerical or -')
+  }
+
+  const normalizedUrl = normalizeWebhookURL(url)
+  if (!normalizedUrl) {
+    return sendErrorResponse(res, 422, 'invalid webhook url')
+  }
+
   const data = readWebhooksFile()
   if (!data[sessionId]) data[sessionId] = []
-  if (!data[sessionId].includes(url)) data[sessionId].push(url)
+  if (!data[sessionId].includes(normalizedUrl)) data[sessionId].push(normalizedUrl)
   writeWebhooksFile(data)
   res.json({ success: true, result: data[sessionId] })
 }
@@ -856,8 +903,17 @@ const removeSessionWebhook = (req, res) => {
   const { url } = req.body
   if (!url) return sendErrorResponse(res, 400, 'url is required')
   const sessionId = req.params.sessionId
+  if (!SESSION_NAME_REGEX.test(sessionId)) {
+    return sendErrorResponse(res, 422, 'sessionId should be alphanumerical or -')
+  }
+
+  const normalizedUrl = normalizeWebhookURL(url)
+  if (!normalizedUrl) {
+    return sendErrorResponse(res, 422, 'invalid webhook url')
+  }
+
   const data = readWebhooksFile()
-  data[sessionId] = (data[sessionId] || []).filter(u => u !== url)
+  data[sessionId] = (data[sessionId] || []).filter(u => u !== normalizedUrl)
   if (data[sessionId].length === 0) delete data[sessionId]
   writeWebhooksFile(data)
   res.json({ success: true, result: data[sessionId] || [] })

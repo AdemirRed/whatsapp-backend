@@ -917,7 +917,7 @@
                         <label style="color:#a0a0b0;font-size:12px;display:block;margin-bottom:4px;">Sessão</label>
                         <select id="webhookSession"
                             style="width:100%;padding:10px 12px;background:#2a2a3e;border:1px solid #3a3a5c;border-radius:8px;color:#e0e0f0;font-size:14px;">
-                            <option value="*">⭐ Todas as sessões</option>
+                            <option value="">Selecione uma sessão</option>
                         </select>
                     </div>
                     <button class="btn btn-success" onclick="addWebhook()" style="height:40px;white-space:nowrap;">➕ Adicionar</button>
@@ -1191,7 +1191,11 @@
             const container = document.getElementById('webhooksTable');
             try {
                 const res = await apiRequest(`/session/webhooks?_t=${Date.now()}`);
-                const data = res.result || {};
+                if (!res.success) {
+                    throw new Error(res.error || 'Falha ao carregar webhooks');
+                }
+
+                const data = res.data?.result || {};
                 const entries = Object.entries(data);
                 if (entries.length === 0) {
                     container.innerHTML = '<p style="color:#a0a0b0;text-align:center;">Nenhum webhook configurado ainda.</p>';
@@ -1204,13 +1208,18 @@
                     + '<th style="padding:8px 12px;width:80px;"></th>'
                     + '</tr></thead><tbody>';
                 for (const [sessionId, urls] of entries) {
-                    const label = sessionId === '*' ? '⭐ Todas' : sessionId;
+                    const safeSessionId = encodeURIComponent(sessionId);
                     for (const url of urls) {
+                        const escapedUrl = String(url)
+                            .replace(/&/g, '&amp;')
+                            .replace(/</g, '&lt;')
+                            .replace(/>/g, '&gt;');
+
                         html += `<tr style="border-bottom:1px solid #2a2a3e;">
-                            <td style="padding:10px 12px;color:#e0e0f0;font-weight:500;">${label}</td>
-                            <td style="padding:10px 12px;color:#7c9fff;word-break:break-all;">${url}</td>
+                            <td style="padding:10px 12px;color:#e0e0f0;font-weight:500;">${sessionId}</td>
+                            <td style="padding:10px 12px;color:#7c9fff;word-break:break-all;">${escapedUrl}</td>
                             <td style="padding:10px 12px;text-align:right;">
-                                <button onclick="removeWebhook('${sessionId}','${url}')"
+                                <button onclick="removeWebhook(decodeURIComponent('${safeSessionId}'),'${encodeURIComponent(url)}')"
                                     style="background:#e74c3c;border:none;color:#fff;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px;">🗑 Remover</button>
                             </td>
                         </tr>`;
@@ -1228,8 +1237,12 @@
             const sessionId = document.getElementById('webhookSession').value;
             const resultEl = document.getElementById('webhookResult');
             if (!url) { resultEl.textContent = '⚠️ Informe a URL do webhook.'; return; }
+            if (!sessionId) { resultEl.textContent = '⚠️ Selecione a sessão.'; return; }
             try {
-                await apiRequest(`/session/webhook/${sessionId}`, 'POST', { url });
+                const result = await apiRequest(`/session/webhook/${sessionId}`, 'POST', { url });
+                if (!result.success) {
+                    throw new Error(result.error || 'Falha ao adicionar webhook');
+                }
                 document.getElementById('webhookUrl').value = '';
                 resultEl.style.color = '#2ecc71';
                 resultEl.textContent = '✅ Webhook adicionado!';
@@ -1240,9 +1253,13 @@
             }
         }
 
-        async function removeWebhook(sessionId, url) {
+        async function removeWebhook(sessionId, encodedUrl) {
             try {
-                await apiRequest(`/session/webhook/${sessionId}`, 'DELETE', { url });
+                const url = decodeURIComponent(encodedUrl);
+                const result = await apiRequest(`/session/webhook/${sessionId}`, 'DELETE', { url });
+                if (!result.success) {
+                    throw new Error(result.error || 'Falha ao remover webhook');
+                }
                 loadWebhooks();
             } catch (e) {
                 alert('Erro ao remover: ' + e.message);
@@ -1251,8 +1268,7 @@
 
         function populateWebhookSessionSelect(sessions) {
             const sel = document.getElementById('webhookSession');
-            // Mantém opção "Todas"
-            sel.innerHTML = '<option value="*">⭐ Todas as sessões</option>';
+            sel.innerHTML = '<option value="">Selecione uma sessão</option>';
             for (const s of sessions) {
                 const opt = document.createElement('option');
                 const val = s.sessionId || s.id || s;
@@ -1526,10 +1542,7 @@
                     method,
                     headers: {
                         'accept': 'application/json',
-                        'x-api-key': API_KEY,
-                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                        'Pragma': 'no-cache',
-                        'Expires': '0'
+                        'x-api-key': API_KEY
                     }
                 };
 

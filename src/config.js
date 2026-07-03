@@ -12,7 +12,7 @@ const additionalWebhooks = process.env.ADDITIONAL_WEBHOOKS
   ? process.env.ADDITIONAL_WEBHOOKS.split(',').map(s => s.trim()).filter(s => s) 
   : []
 const localWebhookEnabled = (process.env.LOCAL_WEBHOOK_ENABLED || 'true').toLowerCase() === 'true'
-const localWebhookURL = process.env.LOCAL_WEBHOOK_URL || 'http://localhost:3000/api/webhook/local'
+const localWebhookURL = process.env.LOCAL_WEBHOOK_URL || `http://localhost:${process.env.PORT || 3000}/api/webhook/local`
 
 const maxAttachmentSize = parseInt(process.env.MAX_ATTACHMENT_SIZE) || 10000000
 const setMessagesAsSeen = (process.env.SET_MESSAGES_AS_SEEN || '').toLowerCase() === 'true'

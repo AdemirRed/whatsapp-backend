@@ -4,6 +4,13 @@ require('dotenv').config()
 
 // Handlers globais de erros não capturados para evitar crashes
 process.on('unhandledRejection', (reason, promise) => {
+  const reasonMessage = reason && reason.message ? reason.message : String(reason)
+
+  if (reasonMessage.includes('Execution context was destroyed')) {
+    console.warn('⚠️ Unhandled Rejection suprimido: contexto do Puppeteer foi destruído durante navegação/reload da sessão.')
+    return
+  }
+
   console.error('❌ Erro não tratado (Unhandled Rejection):', reason)
   console.error('Promise:', promise)
   // Não encerrar o processo, apenas logar o erro
