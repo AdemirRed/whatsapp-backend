@@ -225,6 +225,10 @@ const sendMessage = async (req, res) => {
     res.json({ success: true, message: messageOut })
   } catch (error) {
     console.log(error)
+    // Número não registrado no WhatsApp
+    if (error.message && error.message.includes('No LID for user')) {
+      return sendErrorResponse(res, 400, 'Número não encontrado no WhatsApp. Verifique se o chatId está correto e se o número possui conta no WhatsApp.')
+    }
     sendErrorResponse(res, 500, error.message)
   }
 }
