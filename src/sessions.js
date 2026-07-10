@@ -528,21 +528,30 @@ const getSessionWebhookUrls = (sessionId) => {
   try {
     const file = path.join(sessionFolderPath, 'webhooks.json')
     const data = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {}
-    return [
-      ...(data[sessionId] || []),
-      ...(data['*'] || []),
+    const sessionWebhooks = Array.isArray(data[sessionId]) ? data[sessionId] : []
+    const prefixWebhooks = Object.entries(data)
+      .filter(([key, urls]) => key.endsWith('*') && Array.isArray(urls) && sessionId.startsWith(key.slice(0, -1)))
+      .flatMap(([, urls]) => urls)
+
+    const uniqueWebhooks = [...new Set([
+      ...sessionWebhooks,
+      ...prefixWebhooks,
       process.env[sessionId.toUpperCase() + '_WEBHOOK_URL'],
       baseWebhookURL
-    ].filter(Boolean)
+    ].filter(Boolean))]
+
+    return uniqueWebhooks
   } catch (_) {
     return [baseWebhookURL].filter(Boolean)
   }
 }
 
 const initializeEvents = (client, sessionId) => {
-  // Mescla webhooks do JSON persistido + env var + global
-  const webhookUrls = getSessionWebhookUrls(sessionId)
-  const sessionWebhook = webhookUrls.length === 1 ? webhookUrls[0] : webhookUrls
+  // Resolve webhooks dinamicamente para refletir alterações no painel sem reiniciar sessão
+  const sessionWebhook = () => {
+    const webhookUrls = getSessionWebhookUrls(sessionId)
+    return webhookUrls.length === 1 ? webhookUrls[0] : webhookUrls
+  }
 
   // Flags para evitar eventos duplicados
   let readyFired = false
@@ -988,13 +997,6 @@ const initializeEvents = (client, sessionId) => {
         triggerWebhook(sessionWebhook, sessionId, 'qr', { qr })
       })
   })
-
-  checkIfEventisEnabled('ready')
-    .then(_ => {
-      client.on('ready', () => {
-        triggerWebhook(sessionWebhook, sessionId, 'ready')
-      })
-    })
 
   checkIfEventisEnabled('contact_changed')
     .then(_ => {

@@ -77,6 +77,8 @@ sessionRouter.get('/webhooks', sessionController.listWebhooks)
 sessionRouter.get('/webhook/:sessionId', middleware.sessionNameValidation, sessionController.getSessionWebhooks)
 sessionRouter.post('/webhook/:sessionId', middleware.sessionNameValidation, sessionController.addSessionWebhook)
 sessionRouter.delete('/webhook/:sessionId', middleware.sessionNameValidation, sessionController.removeSessionWebhook)
+sessionRouter.post('/webhook-prefix/:prefix', sessionController.addPrefixWebhook)
+sessionRouter.delete('/webhook-prefix/:prefix', sessionController.removePrefixWebhook)
 
 /**
  * ================

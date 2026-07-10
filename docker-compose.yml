@@ -7,8 +7,10 @@ services:
     image: chrishubert/whatsapp-web-api:latest # Pull the image from Docker Hub
     restart: always
     ports:
-      - "3000:3000"
+      - "${PORT:-200}:${PORT:-200}"
     environment:
+      - PORT=${PORT:-200}
+      - SESSIONS_PATH=/usr/src/app/sessions
       # - API_KEY=your_global_api_key_here  # OPTIONAL
       - BASE_WEBHOOK_URL=http://localhost:3000/localCallbackExample
       - ENABLE_LOCAL_CALLBACK_EXAMPLE=TRUE # OPTIONAL, NOT RECOMMENDED FOR PRODUCTION
@@ -23,4 +25,4 @@ services:
       # - WEB_VERSION_CACHE_TYPE=none # OPTIONAL, DETERMINES WHERE TO GET THE WHATSAPP WEB VERSION(local, remote or none), DEFAULT 'none'
       # - RECOVER_SESSIONS=TRUE # OPTIONAL, SHOULD WE RECOVER THE SESSION IN CASE OF PAGE FAILURES
     volumes:
-      - ./sessions:/usr/src/app/sessions # Mount the local ./sessions/ folder to the container's /usr/src/app/sessions folder
+      - ./sessions:/usr/src/app/sessions

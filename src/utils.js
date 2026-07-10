@@ -1,8 +1,32 @@
 const axios = require('axios')
 const { globalApiKey, disabledCallbacks, verboseLogs, additionalWebhooks, localWebhookEnabled, localWebhookURL } = require('./config')
 
+// Guarda avisos já emitidos para evitar spam de logs com URLs inválidas repetidas
+const warnedInvalidWebhooks = new Set()
+
+const normalizeWebhookURL = (url) => {
+  if (!url || typeof url !== 'string') return null
+
+  const trimmed = url.trim()
+  if (!trimmed) return null
+
+  const candidate = /^https?:\/\//i.test(trimmed) ? trimmed : `http://${trimmed}`
+
+  try {
+    const parsed = new URL(candidate)
+    if (!['http:', 'https:'].includes(parsed.protocol)) return null
+    return parsed.toString().replace(/\/$/, '')
+  } catch (_) {
+    return null
+  }
+}
+
 // Trigger webhook endpoint com tratamento melhorado de erros e suporte a múltiplos destinos
 const triggerWebhook = (webhookURL, sessionId, dataType, data) => {
+  if (typeof webhookURL === 'function') {
+    webhookURL = webhookURL(sessionId, dataType, data)
+  }
+
   // Lista de todos os webhooks a serem chamados (apenas se não vazio)
   let webhooks = []
   if (webhookURL) {
@@ -23,8 +47,21 @@ const triggerWebhook = (webhookURL, sessionId, dataType, data) => {
     webhooks.push(localWebhookURL)
   }
   
-  // Remover duplicatas e valores vazios
-  const uniqueWebhooks = [...new Set(webhooks)].filter(url => typeof url === 'string' && url.trim())
+  // Normaliza, valida e remove duplicatas
+  const uniqueWebhooks = [...new Set(
+    webhooks
+      .map(url => ({ original: url, normalized: normalizeWebhookURL(url) }))
+      .filter(({ normalized, original }) => {
+        if (normalized) return true
+        const originalValue = typeof original === 'string' ? original.trim() : String(original)
+        if (originalValue && !warnedInvalidWebhooks.has(originalValue)) {
+          warnedInvalidWebhooks.add(originalValue)
+          console.warn(`⚠️ [Webhook] URL inválida ignorada: ${originalValue}`)
+        }
+        return false
+      })
+      .map(({ normalized }) => normalized)
+  )]
   
   // Se não houver webhooks configurados, apenas retornar
   if (uniqueWebhooks.length === 0) {
@@ -57,7 +94,10 @@ const triggerWebhook = (webhookURL, sessionId, dataType, data) => {
           'ETIMEDOUT',        // Timeout na conexão
           'timeout',          // Timeout do axios
           'socket hang up',   // Conexão encerrada
-          'ERR_NETWORK'       // Erro genérico de rede
+          'ERR_NETWORK',      // Erro genérico de rede
+          'Network Error',    // Axios network error
+          'ENOTFOUND',        // DNS não resolvido
+          'EAI_AGAIN'         // Falha temporária de DNS
         ]
         
         const shouldIgnore = ignorableErrors.some(err => error.message.includes(err)) ||
