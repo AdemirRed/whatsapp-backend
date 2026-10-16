@@ -4,6 +4,27 @@ const fs = require('fs').promises
 const path = require('path')
 
 const BIPTEXT_NUMBER = '553172280540@c.us'
+
+// WA Web 2.3000: o id da mensagem enviada pode vir em id.$1 (ou sendMessage pode nem devolver a mensagem)
+const serializedId = (msg) => msg?.id?._serialized || msg?.id?.$1 || null
+
+// Com a migracao para LID, as respostas do BipText podem chegar como "<lid>@lid" em vez do numero.
+const bipTextLids = new Set()
+const isFromBipText = async (session, from) => {
+  if (!from) return false
+  if (from === BIPTEXT_NUMBER) return true
+  if (!from.endsWith('@lid')) return false
+  if (bipTextLids.has(from)) return true
+  try {
+    const [info] = await session.getContactLidAndPhone([from])
+    if (info?.pn === BIPTEXT_NUMBER) { bipTextLids.add(from); return true }
+  } catch (_e) { /* ignora: segue para getContact */ }
+  try {
+    const contact = await session.getContactById(from)
+    if (contact?.number === BIPTEXT_NUMBER.replace('@c.us', '')) { bipTextLids.add(from); return true }
+  } catch (_e) { /* nao foi possivel resolver o LID */ }
+  return false
+}
 const TRANSCRIPTION_HEADER = 'Transcrição ✏️'
 
 // Store para controlar o estado das conversas com BipText
@@ -308,7 +329,7 @@ const transcribeAudio = async (req, res) => {
   const messageHandler = async (message) => {
       try {
         // Verificar se a mensagem é do BipText
-        if (message.from !== BIPTEXT_NUMBER) return
+        if (!(await isFromBipText(session, message.from))) return
         
         // Buscar conversação ativa para esta sessão (mais recente)
         let activeConversation = null
@@ -493,13 +514,13 @@ const transcribeAudio = async (req, res) => {
       }
       
       const sentMessage = await session.sendMessage(BIPTEXT_NUMBER, audioMedia)
-      console.log(`✅ Áudio enviado com sucesso! Message ID: ${sentMessage.id._serialized}`)
+      console.log(`✅ Áudio enviado com sucesso! Message ID: ${serializedId(sentMessage) || 'não retornado'}`)
       
       // Atualizar estado para indicar que áudio foi enviado
       conversationState.set(transcriptionId, {
         ...conversationData,
         audioSent: true,
-        sentMessageId: sentMessage.id._serialized
+        sentMessageId: serializedId(sentMessage)
       })
       
     } catch (error) {
@@ -512,7 +533,7 @@ const transcribeAudio = async (req, res) => {
         await new Promise(resolve => setTimeout(resolve, 5000))
         try {
           const retryMessage = await session.sendMessage(BIPTEXT_NUMBER, audioMedia)
-          console.log(`✅ Áudio enviado na segunda tentativa! Message ID: ${retryMessage.id._serialized}`)
+          console.log(`✅ Áudio enviado na segunda tentativa! Message ID: ${serializedId(retryMessage) || 'não retornado'}`)
         } catch (retryError) {
           console.error(`❌ Falha na segunda tentativa:`, retryError.message)
           throw retryError
