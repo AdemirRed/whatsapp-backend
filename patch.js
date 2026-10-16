@@ -69,6 +69,14 @@ const patches = [
         return profilePic ? (profilePic.eurl || profilePic.img || undefined) : undefined;
     }`,
   },
+  // WA Web 2.3000 (jul/2026) renomeou id._serialized -> id.$1: downloadMedia/getMessageById quebram com "r: r".
+  // Ver wwebjs/whatsapp-web.js#201833. Preenche _serialized a partir de $1 quando faltar.
+  {
+    file: './node_modules/whatsapp-web.js/src/structures/Message.js',
+    description: 'Message.js: backfill id._serialized a partir de id.$1 (WA 2.3000)',
+    find: '        this.id = data.id;\n',
+    replace: '        this.id = (data.id && data.id._serialized == null && data.id.$1 != null) ? Object.assign({}, data.id, { _serialized: data.id.$1 }) : data.id;\n',
+  },
 ];
 
 let allOk = true;
