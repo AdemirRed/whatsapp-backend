@@ -114,7 +114,10 @@ const downloadMedia = async (req, res) => {
   try {
     const { messageId, chatId, everyone } = req.body
     const client = sessions.get(req.params.sessionId)
-    const message = await _getMessageById(client, messageId, chatId)
+    // WA Web 2.3000: chat.fetchMessages falha com "r"; getMessageById continua funcionando.
+    let message = null
+    try { message = await client.getMessageById(messageId) } catch (_e) { message = null }
+    if (!message) message = await _getMessageById(client, messageId, chatId)
     if (!message) { throw new Error('Message not Found') }
     const messageMedia = await message.downloadMedia(everyone)
     res.json({ success: true, messageMedia })
